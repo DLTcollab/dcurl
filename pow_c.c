@@ -178,6 +178,56 @@ void *pworkThread(void *pitem)
     pthread_exit(NULL);
 }
 
+char *tx_to_cstate(Trytes *tx)
+{
+    Curl *c = NewCurl();
+    char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+
+    for (int i = 0; i < (transactionTrinarySize - HashSize) / 3; i++) {
+        tyt[i] = tx->data[i];
+    }
+
+    Trytes *inn = NULL;
+    init_Trytes(&inn);
+    inn->toTrytes(inn, tyt, (transactionTrinarySize - HashSize) / 3);
+
+    c->Absorb(c, inn);
+
+    Trits *tr = tx->toTrits(tx);
+
+    char *c_state = (char *) malloc(c->state->len);
+    /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
+    for (int i = 0; i < tr->len - (transactionTrinarySize - HashSize); i++) {
+        int idx = transactionTrinarySize - HashSize + i;
+        c_state[i] = tr->data[idx];
+    }
+    for (int i =  tr->len - (transactionTrinarySize - HashSize); i < c->state->len; i++) {
+        c_state[i] = c->state->data[i];
+    }
+    
+    return c_state;
+}
+
+Trytes *nonce_to_result(Trytes *tx, Trytes *nonce)
+{
+    int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
+    char *rst = (char *) malloc(rst_len);
+
+    for (int i = 0; i < tx->len - NonceTrinarySize / 3; i++) {
+        rst[i] = tx->data[i];
+    }
+    for (int i = 0; i < rst_len - (tx->len - NonceTrinarySize / 3); i++) {
+        int idx = tx->len - NonceTrinarySize / 3 + i;
+        rst[idx] = nonce->data[i];
+    }
+
+    Trytes *final = NULL;
+    init_Trytes(&final);
+    final->toTrytes(final, rst, rst_len);
+
+    return final->Hash(final);
+}
+
 char *PowC(char *trytes, int mwm, int index)
 {
     stopC[index] = 0;
@@ -186,33 +236,9 @@ char *PowC(char *trytes, int mwm, int index)
     Trytes *trytes_t = NULL;
     init_Trytes(&trytes_t);
     trytes_t->toTrytes(trytes_t, trytes, 2673);
-
-    Curl *c = NewCurl();
-
-    /* Preapre trytes passing to curl */
-    char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
-    for (int i = 0; i < (transactionTrinarySize - HashSize) / 3; i++) {
-        tyt[i] = trytes_t->data[i];
-    }
-    Trytes *inn = NULL;
-    init_Trytes(&inn);
-    inn->toTrytes(inn, tyt, (transactionTrinarySize - HashSize) / 3);
-
-    c->Absorb(c, inn);
-
-    Trits *tr = trytes_t->toTrits(trytes_t);
-
-    char *c_state = (char *) malloc(c->state->len);
-    /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
-    for (int i = 0; i < tr->len - (transactionTrinarySize - HashSize); i++) {
-        int idx = transactionTrinarySize - HashSize + i;
-        c_state[i] = tr->data[idx];
-        
-    }
-    for (int i =  tr->len - (transactionTrinarySize - HashSize); i < c->state->len; i++) {
-        c_state[i] = c->state->data[i];
-    }
     
+    char *c_state = tx_to_cstate(trytes_t);
+
     int num_cpu = get_nprocs_conf() - 1;
     
     pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_cpu);
@@ -244,23 +270,8 @@ char *PowC(char *trytes, int mwm, int index)
     nonce_t->toTrits(nonce_t, nonce_array[completedIndex], NonceTrinarySize);
     
     Trytes *nonce = nonce_t->toTrytes(nonce_t);
-
-    int rst_len = trytes_t->len - NonceTrinarySize / 3 + nonce->len;
-    char *rst = (char *) malloc(rst_len);
     
-    for (int i = 0; i < trytes_t->len - NonceTrinarySize / 3; i++) {
-        rst[i] = trytes_t->data[i];
-    }
-    for (int i = 0; i < rst_len - (trytes_t->len - NonceTrinarySize / 3); i++) {
-        int idx = trytes_t->len - NonceTrinarySize / 3 + i;
-        rst[idx] = nonce->data[i];
-    }
-
-    Trytes *last = NULL;
-    init_Trytes(&last);
-    last->toTrytes(last, rst, rst_len);
-
-    Trytes *last_result = last->Hash(last);
+    Trytes *last_result = nonce_to_result(trytes_t, nonce);
 
     return last_result->data;
 }
