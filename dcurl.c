@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include "dcurl.h"
 
 /* number of task that CPU can execute concurrently */
 #define MAX_CPU_THREAD 5
@@ -25,7 +26,7 @@ void dcurl_init(void)
     sem_init(&notify, 0, 0);
 }
 
-void dcurl_entry(int data)
+void dcurl_entry(char *trytes, int mwm)
 {
     static int num_cpu_thread = 0;
     static int num_gpu_thread = 0;
@@ -42,9 +43,10 @@ void dcurl_entry(int data)
     }
 
     /* TODO: GPU entry */
-
+    printf("%s\n", PowC(trytes, mwm, 0));
+    
     /* Do something */
-    printf("data: %d num_cpu_thread: %d\n", data, num_cpu_thread);
+    //printf("data: %d num_cpu_thread: %d\n", data, num_cpu_thread);
 
     pthread_mutex_lock(&mtx);
     if (num_waiting_thread > 0) {
@@ -53,7 +55,7 @@ void dcurl_entry(int data)
     } else {
         num_cpu_thread--;
     }
-    pthread_mutex_lock(&mtx);
+    pthread_mutex_unlock(&mtx);
 }
 
 

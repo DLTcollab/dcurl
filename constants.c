@@ -1,0 +1,1 @@
+char TryteAlphabet[] = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ";
