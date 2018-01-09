@@ -19,5 +19,5 @@ test: test.c curl.o constants.o trinary.o dcurl.o pow_c.o
 #dcurl.o: dcurl.c
 #	gcc -fPIC -c dcurl.c
 #
-#libdcurl.so: dcurl.o
-#	gcc -shared -o libdcurl.so dcurl.o -lpthread
+#libdcurl.so: dcurl.o curl.o constants.o trinary.o pow_c.o
+#	gcc -shared -o libdcurl.so $^ -lpthread
