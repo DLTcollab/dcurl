@@ -24,10 +24,6 @@ int isInitialized = 0;
 int cpu_mutex_id[MAX_CPU_THREAD] = {0};
 int gpu_mutex_id[MAX_GPU_THREAD] = {0};
 
-/* Foreign Functions */
-void pwork_ctx_init(void);
-char *PowCL(char *trytes, int mwm, int index);
-
 int get_mutex_id(int *mutex_id, int env)
 {
     int MAX = (env == 1) ? MAX_CPU_THREAD : MAX_GPU_THREAD;
@@ -82,8 +78,6 @@ void dcurl_entry(char *trytes, int mwm)
         }
         pthread_mutex_unlock(&mtx);
     }
-
-    //printf("%s\n", PowC(trytes, mwm, selected_mutex_id));
 
     switch (selected_entry) {
         case 1:

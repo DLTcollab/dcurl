@@ -29,3 +29,6 @@ test: test.c curl.o constants.o trinary.o dcurl.o pow_c.o
 #
 libdcurl.so: dcurl.o curl.o constants.o trinary.o pow_c.o pow_cl.o clcontext.o
 	gcc -shared -L/usr/local/lib/ -L$(OPENCL_LIB) -o libdcurl.so $^ -lpthread -lOpenCL
+
+clean:
+	rm *.o
