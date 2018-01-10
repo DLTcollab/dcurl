@@ -1,3 +1,5 @@
+OPENCL_LIB ?= /usr/local/cuda-9.1/lib64/
+
 curl.o: curl.c
 	gcc -fPIC -g -c $<
 
@@ -13,11 +15,14 @@ dcurl.o: dcurl.c
 pow_c.o: pow_c.c
 	gcc -fPIC -g -c $<
 
+pow_cl.o: pow_cl.c
+	gcc -fPIC -g -c $<
+
 test: test.c curl.o constants.o trinary.o dcurl.o pow_c.o
 	gcc -g -o $@ $^ -lpthread
 
 #dcurl.o: dcurl.c
 #	gcc -fPIC -c dcurl.c
 #
-libdcurl.so: dcurl.o curl.o constants.o trinary.o pow_c.o
-	gcc -shared -o libdcurl.so $^ -lpthread
+libdcurl.so: dcurl.o curl.o constants.o trinary.o pow_c.o pow_cl.o
+	gcc -shared -L/usr/local/lib/ -L$(OPENCL_LIB) -o libdcurl.so $^ -lpthread -lOpenCL

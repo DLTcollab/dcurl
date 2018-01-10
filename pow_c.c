@@ -240,7 +240,7 @@ char *PowC(char *trytes, int mwm, int index)
     char *c_state = tx_to_cstate(trytes_t);
 
     int num_cpu = get_nprocs_conf() - 1;
-    
+
     pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_cpu);
     Pwork_struct *pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * num_cpu);
     /* Prepare nonce to each thread */

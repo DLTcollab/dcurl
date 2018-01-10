@@ -6,7 +6,7 @@
 #include "dcurl.h"
 
 /* number of task that CPU can execute concurrently */
-#define MAX_CPU_THREAD 5
+#define MAX_CPU_THREAD 0
 
 /* number of task that GPU can execute concurrently */
 #define MAX_GPU_THREAD 5
@@ -21,7 +21,8 @@ sem_t notify;
 int isInitialized = 0;
 
 /* Respective number for Mutex */
-int mutex_id[MAX_CPU_THREAD] = {0};
+int cpu_mutex_id[MAX_CPU_THREAD] = {0};
+int gpu_mutex_id[MAX_GPU_THREAD] = {0};
 
 int get_mutex_id(int *mutex_id)
 {
@@ -39,10 +40,7 @@ void dcurl_init(void)
     isInitialized = 1;
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
-
-    for (int i = 0; i < MAX_CPU_THREAD; i++) {
-        mutex_id[i] = 0;
-    }
+    pwork_ctx_init();
 }
 
 void dcurl_entry(char *trytes, int mwm)
@@ -57,11 +55,12 @@ void dcurl_entry(char *trytes, int mwm)
     if (num_cpu_thread < MAX_CPU_THREAD) {
         num_cpu_thread++;
         /* get mutex number */
-        selected_mutex_id = get_mutex_id(mutex_id);
+        selected_mutex_id = get_mutex_id(cpu_mutex_id);
         selected_entry = 1;
         pthread_mutex_unlock(&mtx);
     } else if (num_gpu_thread < MAX_GPU_THREAD) {
         num_gpu_thread++;
+        selected_mutex_id = get_mutex_id(gpu_mutex_id);
         selected_entry = 2;
         pthread_mutex_unlock(&mtx);
     } else {
@@ -72,34 +71,33 @@ void dcurl_entry(char *trytes, int mwm)
         pthread_mutex_lock(&mtx);
         selected_entry = 1;
         /* get mutex number. If return value is -1, which means cpu queue full */
-        if ((selected_mutex_id = get_mutex_id(mutex_id)) == -1) {
+        if ((selected_mutex_id = get_mutex_id(cpu_mutex_id)) == -1) {
+            selected_mutex_id = get_mutex_id(gpu_mutex_id);
             selected_entry = 2;
         }
         pthread_mutex_unlock(&mtx);
     }
 
     //printf("%s\n", PowC(trytes, mwm, selected_mutex_id));
-    
-    sleep(1);
 
     switch (selected_entry) {
-        /* CPU */
         case 1:
-            printf("It's CPU! num_cpu_thread: %d\n", num_cpu_thread);
+            printf("%s\n", PowC(trytes, mwm, selected_mutex_id));
             break;
-        /* GPU */
         case 2:
-            printf("It's GPU! num_gpu_thread: %d\n", num_gpu_thread);
+            printf("%s\n", PowCL(trytes, mwm, selected_mutex_id));
             break;
         default:
             printf("error produced\n");
             exit(0);
     }
-
+   
     pthread_mutex_lock(&mtx);
     
     if (selected_entry == 1)
-        mutex_id[selected_mutex_id] = 0;
+        cpu_mutex_id[selected_mutex_id] = 0;
+    else
+        gpu_mutex_id[selected_mutex_id] = 0;
     
     if (num_waiting_thread > 0) {
         sem_post(&notify);
