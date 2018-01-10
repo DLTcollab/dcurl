@@ -6,10 +6,10 @@
 #include "dcurl.h"
 
 /* number of task that CPU can execute concurrently */
-#define MAX_CPU_THREAD 0
+static int MAX_CPU_THREAD = -1;
 
 /* number of task that GPU can execute concurrently */
-#define MAX_GPU_THREAD 5
+static int MAX_GPU_THREAD = -1;
 
 /* mutex protecting critical section */
 pthread_mutex_t mtx;
@@ -21,8 +21,8 @@ sem_t notify;
 int isInitialized = 0;
 
 /* Respective number for Mutex */
-int cpu_mutex_id[MAX_CPU_THREAD] = {0};
-int gpu_mutex_id[MAX_GPU_THREAD] = {0};
+int *cpu_mutex_id = NULL;
+int *gpu_mutex_id = NULL;
 
 int get_mutex_id(int *mutex_id, int env)
 {
@@ -36,12 +36,21 @@ int get_mutex_id(int *mutex_id, int env)
     return -1;
 }
 
-void dcurl_init(void)
+void dcurl_init(int max_cpu_thread, int max_gpu_thread)
 {
+    if (max_cpu_thread < 0 || max_gpu_thread < 0) {
+        printf("dcurl.c: Unavailable argument\n");
+        exit(0);
+    }
+
     isInitialized = 1;
+    MAX_CPU_THREAD = max_cpu_thread;
+    MAX_GPU_THREAD = max_gpu_thread;
+    cpu_mutex_id = (int *) calloc(MAX_CPU_THREAD, sizeof(int));
+    gpu_mutex_id = (int *) calloc(MAX_GPU_THREAD, sizeof(int));
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
-    pwork_ctx_init();
+    pwork_ctx_init(MAX_GPU_THREAD);
 }
 
 void dcurl_entry(char *trytes, int mwm)
@@ -81,10 +90,10 @@ void dcurl_entry(char *trytes, int mwm)
 
     switch (selected_entry) {
         case 1:
-            printf("%s\n", PowC(trytes, mwm, selected_mutex_id));
+            printf("cpu: %s\n", PowC(trytes, mwm, selected_mutex_id));
             break;
         case 2:
-            printf("%s\n", PowCL(trytes, mwm, selected_mutex_id));
+            printf("gpu: %s\n", PowCL(trytes, mwm, selected_mutex_id));
             break;
         default:
             printf("error produced\n");

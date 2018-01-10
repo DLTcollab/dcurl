@@ -30,7 +30,10 @@ if __name__ == "__main__":
 
     libdcurl = ctypes.cdll.LoadLibrary(dcurlPath)
 
-    libdcurl.dcurl_init()
+    libdcurl.dcurl_init.argtypes = [ctypes.c_int, ctypes.c_int]
+
+    # (size of cpu queue, size of gpu queue 
+    libdcurl.dcurl_init(5, 10)
 
     libdcurl.dcurl_entry.argtypes = [ctypes.c_char_p, ctypes.c_int]
 

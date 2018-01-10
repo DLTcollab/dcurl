@@ -22,7 +22,7 @@
 #define LOW_3 0xFFC0000007FFFFFF
 #define HIGH_3 0x003FFFFFFFFFFFFF
 
-CLContext *pow_ctx[5];
+CLContext **pow_ctx;
 
 static void init_BufferInfo(CLContext *ctx)
 {
@@ -78,13 +78,15 @@ static void init_state(char *state, int64_t *mid_low, int64_t *mid_high, size_t 
     mid_high[offset + 3] = HIGH_3;
 }
 
-void pwork_ctx_init(void)
+void pwork_ctx_init(int context_size)
 {
     char *kernel_name[] = {"init", "search", "finalize"};
+    
+    pow_ctx = (CLContext **) malloc(sizeof(CLContext *) * context_size);
 
     printf("Initializing OpenCL context ...\n");
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < context_size; i++) {
         init_clcontext(&pow_ctx[i]);
         init_cl_kernel(pow_ctx[i], kernel_name);
         init_BufferInfo(pow_ctx[i]);
