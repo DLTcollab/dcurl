@@ -6,9 +6,9 @@
 #include "curl.h"
 #include "constants.h"
 
-pthread_mutex_t pow_c_mutex[10];
-int stopC[10];
-long long int countC[10];
+pthread_mutex_t pow_c_mutex[32];
+int stopC[32];
+long long int countC[32];
 
 static void transform64(unsigned long *lmid, unsigned long *hmid)
 {
@@ -240,7 +240,11 @@ char *PowC(char *trytes, int mwm, int index)
     char *c_state = tx_to_cstate(trytes_t);
 
     int num_cpu = get_nprocs_conf() - 1;
-
+    const char *env_num_cpu = getenv("DCURL_NUM_CPU");
+    if (env_num_cpu) {
+        num_cpu = atoi(env_num_cpu);
+    }
+ 
     pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_cpu);
     Pwork_struct *pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * num_cpu);
     /* Prepare nonce to each thread */
