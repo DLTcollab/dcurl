@@ -10,7 +10,7 @@ pthread_mutex_t pow_c_mutex[10];
 int stopC[10];
 long long int countC[10];
 
-void transform64(unsigned long *lmid, unsigned long *hmid)
+static void transform64(unsigned long *lmid, unsigned long *hmid)
 {
     unsigned long alpha, beta, gamma, delta;
     unsigned long *lfrom = lmid, *hfrom = hmid;
@@ -45,7 +45,7 @@ void transform64(unsigned long *lmid, unsigned long *hmid)
     }
 }
 
-int incr(unsigned long *mid_low, unsigned long *mid_high)
+static int incr(unsigned long *mid_low, unsigned long *mid_high)
 {
     int i;
     unsigned long carry = 1;
@@ -58,7 +58,7 @@ int incr(unsigned long *mid_low, unsigned long *mid_high)
     return i == HASH_LENGTH;
 }
 
-void seri(unsigned long *l, unsigned long *h, int n, char *r)
+static void seri(unsigned long *l, unsigned long *h, int n, char *r)
 {
     for (int i = HASH_LENGTH - NONCE_LENGTH; i < HASH_LENGTH; i++) {
         int ll = (l[i] >> n) & 1;
@@ -75,7 +75,7 @@ void seri(unsigned long *l, unsigned long *h, int n, char *r)
     }
 }
 
-int check(unsigned long *l, unsigned long *h, int m)
+static int check(unsigned long *l, unsigned long *h, int m)
 {
     unsigned long nonce_probe = HBITS;
     for (int i = HASH_LENGTH - m; i < HASH_LENGTH; i++) {
@@ -89,7 +89,7 @@ int check(unsigned long *l, unsigned long *h, int m)
     return -1;
 }
 
-long long int loop_cpu(unsigned long *lmid, unsigned long *hmid, int m, char *nonce, int id)
+static long long int loop_cpu(unsigned long *lmid, unsigned long *hmid, int m, char *nonce, int id)
 {
     int n = 0;
     long long int i = 0;
@@ -107,7 +107,7 @@ long long int loop_cpu(unsigned long *lmid, unsigned long *hmid, int m, char *no
     return -i * 64 + 1;
 }
 
-void para(char in[], unsigned long l[], unsigned long h[])
+static void para(char in[], unsigned long l[], unsigned long h[])
 {
     for (int i = 0; i < STATE_LENGTH; i++) {
         switch (in[i]) {
@@ -127,7 +127,7 @@ void para(char in[], unsigned long l[], unsigned long h[])
     }
 }
 
-void incrN(int n, unsigned long *mid_low, unsigned long *mid_high)
+static void incrN(int n, unsigned long *mid_low, unsigned long *mid_high)
 {
 	for (int j = 0; j < n; j++) {
         unsigned long carry = 1;
@@ -140,7 +140,7 @@ void incrN(int n, unsigned long *mid_low, unsigned long *mid_high)
     }
 }
 
-long long int pwork(char mid[], int mwm, char nonce[], int n, int id)
+static long long int pwork(char mid[], int mwm, char nonce[], int n, int id)
 {
     unsigned long lmid[STATE_LENGTH] = {0}, hmid[STATE_LENGTH] = {0};
     para(mid, lmid, hmid);
@@ -159,7 +159,7 @@ long long int pwork(char mid[], int mwm, char nonce[], int n, int id)
 	return loop_cpu(lmid, hmid, mwm, nonce, id);
 }
 
-void *pworkThread(void *pitem)
+static void *pworkThread(void *pitem)
 {
     Pwork_struct *pworkInfo = (Pwork_struct *) pitem;
     int task_id = pworkInfo->index;
@@ -178,7 +178,7 @@ void *pworkThread(void *pitem)
     pthread_exit(NULL);
 }
 
-char *tx_to_cstate(Trytes *tx)
+static char *tx_to_cstate(Trytes *tx)
 {
     Curl *c = NewCurl();
     char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
@@ -208,7 +208,7 @@ char *tx_to_cstate(Trytes *tx)
     return c_state;
 }
 
-Trytes *nonce_to_result(Trytes *tx, Trytes *nonce)
+static Trytes *nonce_to_result(Trytes *tx, Trytes *nonce)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
     char *rst = (char *) malloc(rst_len);

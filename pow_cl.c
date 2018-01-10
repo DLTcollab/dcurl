@@ -24,7 +24,7 @@
 
 CLContext *pow_ctx[5];
 
-void init_BufferInfo(CLContext *ctx)
+static void init_BufferInfo(CLContext *ctx)
 {
     ctx->kernel_info.buffer_info[0] = (BufferInfo){sizeof(char) * HASH_LENGTH, CL_MEM_WRITE_ONLY};
     ctx->kernel_info.buffer_info[1] = (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
@@ -39,7 +39,7 @@ void init_BufferInfo(CLContext *ctx)
     init_cl_buffer(ctx);
 }
 
-void write_cl_buffer(CLContext *ctx, int64_t *mid_low, int64_t *mid_high, int mwm, int loop_count)
+static void write_cl_buffer(CLContext *ctx, int64_t *mid_low, int64_t *mid_high, int mwm, int loop_count)
 {
     cl_command_queue cmdq = ctx->cmdq;
     cl_mem *memobj = ctx->buffer;
@@ -51,7 +51,7 @@ void write_cl_buffer(CLContext *ctx, int64_t *mid_low, int64_t *mid_high, int mw
     clEnqueueWriteBuffer(cmdq, memobj[8], CL_TRUE, 0, buffer_info[8].size, &loop_count, 0, NULL, NULL);
 }
 
-void init_state(char *state, int64_t *mid_low, int64_t *mid_high, size_t offset)
+static void init_state(char *state, int64_t *mid_low, int64_t *mid_high, size_t offset)
 {
     for (int i = 0; i < STATE_LENGTH; i++) {
         switch (state[i]) {
@@ -93,13 +93,12 @@ void pwork_ctx_init(void)
     printf("Initialize End\n");
 }
 
-char *pwork(char *state, int mwm, int index)
+static char *pwork(char *state, int mwm, int index)
 {
     size_t local_work_size, global_work_size, global_offset, num_groups;
     char found = 0;
     cl_event ev, ev1;
     CLContext *titan = pow_ctx[index];
-    
     global_offset = 0;
     num_groups = titan->num_cores;
     local_work_size = STATE_LENGTH;
@@ -112,15 +111,7 @@ char *pwork(char *state, int mwm, int index)
     int64_t mid_low[STATE_LENGTH] = {0}, mid_high[STATE_LENGTH] = {0};
     init_state(state, mid_low, mid_high, HASH_LENGTH - NONCE_LENGTH);
     
-    const char *loop_count = 32;
-
-    if (loop_count) {
-        printf("OpenCL runs loop_count: %d\n", atoi(loop_count));
-        write_cl_buffer(titan, mid_low, mid_high, mwm, atoi(loop_count));
-    } else {
-        printf("OpenCL runs loop_count: %d\n", 32);
-        write_cl_buffer(titan, mid_low, mid_high, mwm, 32);
-    }
+    write_cl_buffer(titan, mid_low, mid_high, mwm, 32);
 
     if (CL_SUCCESS == clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[0], 1, &global_offset, &global_work_size, &local_work_size, 0, NULL, &ev)) {
         clWaitForEvents(1, &ev);
@@ -161,7 +152,7 @@ char *pwork(char *state, int mwm, int index)
     return buf;
 }
 
-char *tx_to_cstate(Trytes *tx)
+static char *tx_to_cstate(Trytes *tx)
 {
     Curl *c = NewCurl();
     char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
@@ -196,15 +187,17 @@ char *PowCL(char *trytes, int mwm, int index)
 	Trytes *trytes_t = NULL;
     init_Trytes(&trytes_t);
     trytes_t->toTrytes(trytes_t, trytes, 2673);
+    
+    Trits *tr = trytes_t->toTrits(trytes_t);
 
 	char *c_state = tx_to_cstate(trytes_t);   
-    
+ 
 	char *ret = pwork(c_state, mwm, index);
     
     memcpy(&tr->data[TRANSACTION_LENGTH - HASH_LENGTH], ret, HASH_LENGTH * sizeof(char));
     
-    Trytes *ret = tr->toTrytes(tr);
-    Trytes *last_result = ret->Hash(last);
+    Trytes *last = tr->toTrytes(tr);
+    Trytes *last_result = last->Hash(last);
 
 	return last_result->data;
 }

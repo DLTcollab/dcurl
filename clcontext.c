@@ -17,14 +17,14 @@ void init_cl_devices(CLContext *ctx)
     // We only need one Platform
     platform = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platform);
     clGetPlatformIDs(num_platform, platform, NULL);
-
+    
     // Get Device IDs
     cl_uint platform_num_device;
-    if (clGetDeviceIDs(platform[1], CL_DEVICE_TYPE_GPU, 1, &ctx->device, &platform_num_device) != CL_SUCCESS) {
+    if (clGetDeviceIDs(platform[0], CL_DEVICE_TYPE_GPU, 1, &ctx->device, &platform_num_device) != CL_SUCCESS) {
         printf("Failed to get OpenCL Device IDs for platform.\n");
         exit(0);
     }
-
+    
     // Create OpenCL context
     ctx->context =  (cl_context) clCreateContext(NULL, 1, &ctx->device, NULL, NULL, &errno);
     if (errno != CL_SUCCESS) {
@@ -134,7 +134,7 @@ void init_cl_buffer(CLContext *ctx)
             printf("Max memory pass\n");
             exit(0);
         }
-        printf("buffer %d need size: %d\n", i, mem);
+        
         // Create OpenCL Buffer
         ctx->buffer[i] = clCreateBuffer(ctx->context, ctx->kernel_info.buffer_info[i].flags, mem, NULL, &errno);
         if (CL_SUCCESS != errno) {

@@ -24,9 +24,14 @@ int isInitialized = 0;
 int cpu_mutex_id[MAX_CPU_THREAD] = {0};
 int gpu_mutex_id[MAX_GPU_THREAD] = {0};
 
-int get_mutex_id(int *mutex_id)
+/* Foreign Functions */
+void pwork_ctx_init(void);
+char *PowCL(char *trytes, int mwm, int index);
+
+int get_mutex_id(int *mutex_id, int env)
 {
-    for (int i = 0; i < MAX_CPU_THREAD; i++) {
+    int MAX = (env == 1) ? MAX_CPU_THREAD : MAX_GPU_THREAD;
+    for (int i = 0; i < MAX; i++) {
         if (mutex_id[i] == 0) {
             mutex_id[i] = 1;
             return i;
@@ -55,12 +60,12 @@ void dcurl_entry(char *trytes, int mwm)
     if (num_cpu_thread < MAX_CPU_THREAD) {
         num_cpu_thread++;
         /* get mutex number */
-        selected_mutex_id = get_mutex_id(cpu_mutex_id);
+        selected_mutex_id = get_mutex_id(cpu_mutex_id, 1);
         selected_entry = 1;
         pthread_mutex_unlock(&mtx);
     } else if (num_gpu_thread < MAX_GPU_THREAD) {
         num_gpu_thread++;
-        selected_mutex_id = get_mutex_id(gpu_mutex_id);
+        selected_mutex_id = get_mutex_id(gpu_mutex_id, 2);
         selected_entry = 2;
         pthread_mutex_unlock(&mtx);
     } else {
@@ -71,8 +76,8 @@ void dcurl_entry(char *trytes, int mwm)
         pthread_mutex_lock(&mtx);
         selected_entry = 1;
         /* get mutex number. If return value is -1, which means cpu queue full */
-        if ((selected_mutex_id = get_mutex_id(cpu_mutex_id)) == -1) {
-            selected_mutex_id = get_mutex_id(gpu_mutex_id);
+        if ((selected_mutex_id = get_mutex_id(cpu_mutex_id, 1)) == -1) {
+            selected_mutex_id = get_mutex_id(gpu_mutex_id, 2);
             selected_entry = 2;
         }
         pthread_mutex_unlock(&mtx);
