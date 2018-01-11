@@ -90,7 +90,7 @@ void dcurl_entry(char *trytes, int mwm)
 
     switch (selected_entry) {
         case 1:
-            printf("cpu: %s\n", PowC(trytes, mwm, selected_mutex_id));
+            printf("cpu: %s\n", PowSSE(trytes, mwm, selected_mutex_id));
             break;
         case 2:
             printf("gpu: %s\n", PowCL(trytes, mwm, selected_mutex_id));
