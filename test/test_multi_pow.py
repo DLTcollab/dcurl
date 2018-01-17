@@ -10,7 +10,7 @@ for i in range(NUM_TRYTES):
     join_list.append(_thread.allocate_lock())
 
 def read_trytes():
-    f = open('./trytes_list_200.txt', 'r')
+    f = open('./test/trytes_list_200.txt', 'r')
     row = f.readlines()
     tmp = []
     for r in row:

@@ -1,36 +1,38 @@
 OPENCL_LIB ?= /usr/local/cuda-9.1/lib64/
+SRC ?= ./src
+TEST ?= ./test
+BUILD ?= ./build
 
-curl.o: curl.c
-	gcc -fPIC -g -c $<
+$(BUILD)/curl.o: $(SRC)/curl.c
+	gcc -fPIC -g -o $@ -c $<
 
-constants.o: constants.c
-	gcc -fPIC -g -c $<
+$(BUILD)/constants.o: $(SRC)/constants.c
+	gcc -fPIC -g -o $@ -c $<
 
-trinary.o: trinary.c
-	gcc -fPIC -g -c $<
+$(BUILD)/trinary.o: $(SRC)/trinary.c
+	gcc -fPIC -g -o $@ -c $<
 
-dcurl.o: dcurl.c
-	gcc -fPIC -g -c $<
+$(BUILD)/dcurl.o: $(SRC)/dcurl.c
+	gcc -fPIC -g -o $@ -c $<
 
-pow_c.o: pow_c.c
-	gcc -Os -fPIC -g -c $<
+$(BUILD)/pow_c.o: $(SRC)/pow_c.c
+	gcc -Os -fPIC -o $@ -g -c $<
 
-pow_sse.o: pow_sse.c
-	gcc -Os -fPIC -g -c $<
+$(BUILD)/pow_sse.o: $(SRC)/pow_sse.c
+	gcc -Os -fPIC -o $@ -g -c $<
 
-pow_cl.o: pow_cl.c
-	gcc -fPIC -g -c $<
+$(BUILD)/pow_cl.o: $(SRC)/pow_cl.c
+	gcc -fPIC -g -o $@ -c $<
 
-clcontext.o: clcontext.c
-	gcc -fPIC -g -c $<
+$(BUILD)/clcontext.o: $(SRC)/clcontext.c
+	gcc -fPIC -g -o $@ -c $<
 
-test: test.c curl.o constants.o trinary.o dcurl.o pow_c.o pow_sse.o
-	gcc -g -o $@ $^ -lpthread
+./test_dcurl: $(TEST)/test.c $(BUILD)/curl.o $(BUILD)/constants.o $(BUILD)/trinary.o $(BUILD)/dcurl.o $(BUILD)/pow_c.o \
+	  $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
+	gcc -g -L/usr/local/lib/ -L$(OPENCL_LIB) -o $@ $^ -lpthread -lOpenCL
 
-#dcurl.o: dcurl.c
-#	gcc -fPIC -c dcurl.c
-#
-libdcurl.so: dcurl.o curl.o constants.o trinary.o pow_c.o pow_cl.o pow_sse.o clcontext.o
+./libdcurl.so: $(BUILD)/curl.o $(BUILD)/constants.o $(BUILD)/trinary.o $(BUILD)/dcurl.o $(BUILD)/pow_c.o \
+	         $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
 	gcc -msse2 -shared -L/usr/local/lib/ -L$(OPENCL_LIB) -o libdcurl.so $^ -lpthread -lOpenCL
 
 clean:
