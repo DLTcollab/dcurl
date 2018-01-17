@@ -6,9 +6,9 @@
 #include "curl.h"
 #include "constants.h"
 
-pthread_mutex_t pow_c_mutex[32];
-int stopC[32];
-long long int countC[32];
+pthread_mutex_t **pow_c_mutex;
+int *stopC;
+long long int *countC;
 
 static void transform64(unsigned long *lmid, unsigned long *hmid)
 {
@@ -226,6 +226,13 @@ static Trytes *nonce_to_result(Trytes *tx, Trytes *nonce)
     final->toTrytes(final, rst, rst_len);
 
     return final->Hash(final);
+}
+
+void pow_c_init(int num_task)
+{
+    pow_c_mutex = (pthread_mutex_t **) malloc(sizeof(pthread_mutex_t *) * num_task);
+    stopC = (int *) malloc(sizeof(int) * num_task);
+    countC = (long long int *) malloc(sizeof(long long int) * num_task);
 }
 
 char *PowC(char *trytes, int mwm, int index)
