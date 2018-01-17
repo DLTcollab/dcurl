@@ -9,6 +9,7 @@
 pthread_mutex_t **pow_c_mutex;
 int *stopC;
 long long int *countC;
+int DCURL_NUM_CPU = 0;
 
 static void transform64(unsigned long *lmid, unsigned long *hmid)
 {
@@ -233,6 +234,12 @@ void pow_c_init(int num_task)
     pow_c_mutex = (pthread_mutex_t **) malloc(sizeof(pthread_mutex_t *) * num_task);
     stopC = (int *) malloc(sizeof(int) * num_task);
     countC = (long long int *) malloc(sizeof(long long int) * num_task);
+
+    char *env_num_cpu = getenv("DCURL_NUM_CPU");
+    DCURL_NUM_CPU = get_nprocs_conf() - 1;
+    if (env_num_cpu) {
+        DCURL_NUM_CPU = atoi(env_num_cpu);
+    }
 }
 
 char *PowC(char *trytes, int mwm, int index)
@@ -246,12 +253,8 @@ char *PowC(char *trytes, int mwm, int index)
     
     char *c_state = tx_to_cstate(trytes_t);
 
-    int num_cpu = get_nprocs_conf() - 1;
-    const char *env_num_cpu = getenv("DCURL_NUM_CPU");
-    if (env_num_cpu) {
-        num_cpu = atoi(env_num_cpu);
-    }
- 
+    int num_cpu = DCURL_NUM_CPU;
+
     pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_cpu);
     Pwork_struct *pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * num_cpu);
     /* Prepare nonce to each thread */
