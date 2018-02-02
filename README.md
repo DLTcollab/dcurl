@@ -19,6 +19,7 @@ dcurl use SSE implementation for CPU and OpenCL for GPU, which are referenced fr
 * Create a multi-thread environment via python
 
 ```$ make libdcurl.so```
+
 ```$ python3 ./test/test__multi_pow.py```
 
 # Performance
@@ -26,3 +27,7 @@ Runtime is measured with 100 transaction trytes.
 ![](https://i.imgur.com/iiYkxj2.png)
 
 (8, 7, 32), which means 8 pow tasks executed in CPU, 7 pow tasks executed in GPU **AT THE SAME TIME**, and 32 threads are created to search nonce for each pow task in CPU.
+
+# Externel Source
+* ```src/pow_sse.c``` is modifed from [utamaro/curl_trials](https://github.com/utamaro/curl_trials)
+* ```src/pow_cl.c``` and ```src/pow_kernel.cl``` is modifed from [iotaledger/ccurl](https://github.com/iotaledger/ccurl)
