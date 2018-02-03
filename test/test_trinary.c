@@ -14,7 +14,7 @@ int main()
     Trytes_t *ret_trytes = trytes_from_trits(trits);
 
     if (!compareTrobject(trytes, ret_trytes)) {
-        printf("Test Failed!\n");
+        printf("Trinary Test Failed!\n");
         return -1;
     }
 
