@@ -26,13 +26,14 @@ typedef struct _trytes {
 } Trytes_t;
 */
 
-Trobject_t *initTrits(char *src, int len);
-Trobject_t *initTrytes(char *src, int len);
+Trobject_t *initTrits(signed char *src, int len);
+Trobject_t *initTrytes(signed char *src, int len);
 
 Trobject_t *trytes_from_trits(Trobject_t *trits);
 Trobject_t *trits_from_trytes(Trobject_t *trytes);
 Trobject_t *hashTrytes(Trobject_t *t);
 
+int compareTrobject(Trobject_t *a, Trobject_t *b);
 void freeTrobject(Trobject_t *t);
 
 #endif
