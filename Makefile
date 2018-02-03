@@ -35,5 +35,12 @@ $(BUILD)/clcontext.o: $(SRC)/clcontext.c
 	         $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
 	gcc -msse2 -shared -L/usr/local/lib/ -L$(OPENCL_LIB) -o libdcurl.so $^ -lpthread -lOpenCL
 
+$(BUILD)/new_trinary.o: $(SRC)/trinary/trinary.c
+	gcc -g -o $@ -c $<
+
+test_trinary: $(TEST)/test_trinary.c $(BUILD)/new_trinary.o
+	gcc -g -o $@ $^
+	./test_trinary
+
 clean:
 	rm *.o
