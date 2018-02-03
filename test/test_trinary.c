@@ -7,11 +7,11 @@ int main()
     signed char *trytes_test_case = "SCYLJDWIM9LIXCSLETSHLQOOFDKYOVFZLAHQYCCNMYHRTNIKBZRIRACFYPOWYNSOWDNXFZUG9OEOZPOTD";
     int length_test_case = 81;
 
-    Trobject_t *trytes = initTrytes(trytes_test_case, length_test_case);
+    Trytes_t *trytes = initTrytes(trytes_test_case, length_test_case);
 
-    Trobject_t *trits = trits_from_trytes(trytes);
+    Trits_t *trits = trits_from_trytes(trytes);
 
-    Trobject_t *ret_trytes = trytes_from_trits(trits);
+    Trytes_t *ret_trytes = trytes_from_trits(trits);
 
     if (!compareTrobject(trytes, ret_trytes)) {
         printf("Test Failed!\n");

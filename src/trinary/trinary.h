@@ -14,6 +14,9 @@ typedef struct _trinary_object {
     int type;
 } Trobject_t;
 
+typedef Trobject_t Trits_t;
+typedef Trobject_t Trytes_t;
+
 /*
 typedef struct _trits {
     char *data;
