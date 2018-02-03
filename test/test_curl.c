@@ -11,10 +11,8 @@ int main()
     Trytes_t *answer = initTrytes((signed char *) "WPM9JCTQH9QHBHBJCODWDNPSLFLQDZADRAEZTZDL9OEGTVRZARVLVJHZIMPBPCTAIYJKWTUSRKNNTMFOQ", 81);
 
     Trytes_t *trytes = initTrytes((signed char *) trytes_test_case, length_test_case);
-
-    Curl *c = initCurl();
-    Absorb(c, trytes);
-    Trytes_t *ret_trytes = Squeeze(c);
+    
+    Trytes_t *ret_trytes = hashTrytes(trytes);
 
     if (!compareTrobject(ret_trytes, answer)) {
         printf("Curl Test Failed!\n");
@@ -26,7 +24,6 @@ int main()
     freeTrobject(answer);
     freeTrobject(trytes);
     freeTrobject(ret_trytes);
-    freeCurl(c);
 
     return 0;
 }

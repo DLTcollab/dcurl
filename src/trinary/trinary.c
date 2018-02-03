@@ -1,4 +1,5 @@
 #include "trinary.h"
+#include "../hash/curl.h"
 
 static char TrytesToTritsMappings[][3] = {
      {0, 0, 0}, {1, 0, 0}, {-1, 1, 0}, {0, 1, 0},
@@ -163,6 +164,21 @@ Trobject_t *trits_from_trytes(Trobject_t *trytes)
     free(src);
 
     return trits;
+}
+
+Trobject_t *hashTrytes(Trobject_t *t)
+{
+    if (t->type != TYPE_TRYTES) {
+        printf("trinary.c: hashTrytes: This is not trytes\n");
+        exit(1);
+    }
+
+    Curl *c = initCurl();
+    Absorb(c, t);
+    Trobject_t *ret = Squeeze(c);
+
+    freeCurl(c);
+    return ret;
 }
 
 int compareTrobject(Trobject_t *a, Trobject_t *b)
