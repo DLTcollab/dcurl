@@ -22,7 +22,7 @@ dcurl use SSE implementation for CPU and OpenCL for GPU, which are referenced fr
 
 ```$ make libdcurl.so```
 
-```$ python3 ./test/test_multi_pow.py 1 1```
+```$ python3 ./test/test_multi_pow.py <# of CPU task> <# of GPU task>```
 
 # Performance
 Runtime is measured with 100 transaction trytes.
