@@ -13,14 +13,12 @@ dcurl use SSE implementation for CPU and OpenCL for GPU, which are referenced fr
 * Make a directory for build
 
 ```$ mkdir build ```
-* Try a IOTA transaction tryte
 
-```$ make test && ./test ```
 * Create a multi-thread environment via python
 
 ```$ make libdcurl.so```
 
-```$ python3 ./test/test__multi_pow.py```
+```$ python3 ./test/test_multi_pow.py 1 1```
 
 # Performance
 Runtime is measured with 100 transaction trytes.
