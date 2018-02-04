@@ -34,7 +34,7 @@
 #include "curl.h"
 #include "constants.h"
 
-pthread_mutex_t **pow_sse_mutex;
+pthread_mutex_t *pow_sse_mutex;
 int *stopSSE;
 long long int *countSSE;
 int DCURL_NUM_CPU = 0;
@@ -284,7 +284,7 @@ static Trytes *nonce_to_result(Trytes *tx, Trytes *nonce)
 
 void pow_sse_init(int num_task)
 {
-    pow_sse_mutex = (pthread_mutex_t **) malloc(sizeof(pthread_mutex_t *) * num_task);
+    pow_sse_mutex = (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t) * num_task);
     stopSSE = (int *) malloc(sizeof(int) * num_task);
     countSSE = (long long int *) malloc(sizeof(long long int) * num_task);
 
