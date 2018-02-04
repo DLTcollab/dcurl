@@ -323,11 +323,19 @@ char *PowSSE(char *trytes, int mwm, int index)
         if (pitem[i].n == -1) completedIndex = i;
     }
     
-    Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize);
-    
+    Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize); 
     Trytes_t *nonce = trytes_from_trits(nonce_t);
-    
     Trytes_t *last_result = nonce_to_result(trytes_t, nonce);
+    
+    free(c_state);
+    for (int i = 0; i < num_cpu; i++) {
+        free(nonce_array[i]);
+    }
+    free(nonce_array);
+    free(threads);
+    free(pitem);
+    freeTrobject(nonce_t);
+    freeTrobject(nonce);
 
     return last_result->data;
 }

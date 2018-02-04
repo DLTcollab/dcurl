@@ -200,6 +200,7 @@ char *PowCL(char *trytes, int mwm, int index)
     freeTrobject(tr);
     freeTrobject(last);
     free(c_state);
+    free(ret);
     
 	return last_result->data;
 }
