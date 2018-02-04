@@ -55,6 +55,8 @@ void init_cl_devices(CLContext *ctx)
         printf("Failed to create command queue\n");
         exit(0);
     }
+
+    free(platform);
 }
 
 
@@ -85,6 +87,8 @@ void init_cl_program(CLContext *ctx)
         printf("Failed to build program\n");
         exit(0);
     }
+
+    free(source_str);
 }
 
 

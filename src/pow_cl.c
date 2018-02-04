@@ -95,6 +95,17 @@ void pwork_ctx_init(int context_size)
     printf("Initialize End\n");
 }
 
+void pwork_ctx_destroy(int context_size)
+{
+    if (pow_ctx) {
+        for (int i = 0; i < context_size; i++) {
+            if (pow_ctx[i])
+                free(pow_ctx[i]);
+        }
+        free(pow_ctx);
+    }
+}
+
 static char *pwork(char *state, int mwm, int index)
 {
     size_t local_work_size, global_work_size, global_offset, num_groups;

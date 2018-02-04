@@ -56,6 +56,14 @@ void dcurl_init(int max_cpu_thread, int max_gpu_thread)
     pwork_ctx_init(MAX_GPU_THREAD);
 }
 
+void dcurl_destroy()
+{
+    free(cpu_mutex_id);
+    free(gpu_mutex_id);
+    pow_sse_destroy();
+    pwork_ctx_destroy(MAX_GPU_THREAD);
+}
+
 void dcurl_entry(char *trytes, int mwm)
 {
     static int num_cpu_thread = 0;
@@ -91,17 +99,23 @@ void dcurl_entry(char *trytes, int mwm)
         pthread_mutex_unlock(&mtx);
     }
 
+    char *ret = NULL;
+
     switch (selected_entry) {
         case 1:
-            printf("cpu: %s\n", PowSSE(trytes, mwm, selected_mutex_id));
+            ret = PowSSE(trytes, mwm, selected_mutex_id);
+            printf("cpu: %s\n", ret);
             break;
         case 2:
-            printf("gpu: %s\n", PowCL(trytes, mwm, selected_mutex_id));
+            ret = PowCL(trytes, mwm, selected_mutex_id);
+            printf("gpu: %s\n", ret);
             break;
         default:
             printf("error produced\n");
             exit(0);
     }
+    
+    free(ret);
    
     pthread_mutex_lock(&mtx);
     

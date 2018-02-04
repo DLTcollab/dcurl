@@ -288,6 +288,13 @@ void pow_sse_init(int num_task)
     }
 }
 
+void pow_sse_destroy()
+{
+    free(pow_sse_mutex);
+    free(stopSSE);
+    free(countSSE);
+}
+
 char *PowSSE(char *trytes, int mwm, int index)
 {
     stopSSE[index] = 0;

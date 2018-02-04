@@ -46,3 +46,5 @@ if __name__ == "__main__":
 
     for i in range(NUM_TRYTES):
         while join_list[i].locked(): pass
+
+    libdcurl.dcurl_destroy()
