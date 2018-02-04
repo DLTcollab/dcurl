@@ -4,10 +4,10 @@
 
 int main()
 {
-    signed char *trytes_test_case = "SCYLJDWIM9LIXCSLETSHLQOOFDKYOVFZLAHQYCCNMYHRTNIKBZRIRACFYPOWYNSOWDNXFZUG9OEOZPOTD";
+    char *trytes_test_case = "SCYLJDWIM9LIXCSLETSHLQOOFDKYOVFZLAHQYCCNMYHRTNIKBZRIRACFYPOWYNSOWDNXFZUG9OEOZPOTD";
     int length_test_case = 81;
 
-    Trytes_t *trytes = initTrytes(trytes_test_case, length_test_case);
+    Trytes_t *trytes = initTrytes((signed char *) trytes_test_case, length_test_case);
 
     Trits_t *trits = trits_from_trytes(trytes);
 
