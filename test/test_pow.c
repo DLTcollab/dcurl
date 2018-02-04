@@ -19,8 +19,12 @@ int main()
 
 #ifdef POW_SSE
     char *result = PowSSE(txt, 14, 0);
-    printf("%s\n", result);
+#elif POW_CL
+    pwork_ctx_init(1);
+    char *result = PowCL(txt, 14, 0);
 #endif
+
+    printf("%s\n", result);
 
     return 0;
 }

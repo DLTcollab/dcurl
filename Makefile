@@ -49,8 +49,15 @@ test_curl: $(TEST)/test_curl.c $(BUILD)/new_curl.o $(BUILD)/new_trinary.o
 	gcc -Wall -g -o $@ $^
 	./$@
 
-test_pow: $(TEST)/test_pow.c $(BUILD)/trinary.o $(BUILD)/pow_sse.o $(BUILD)/curl.o $(BUILD)/constants.o
-	gcc -Wall -DPOW_SSE -g -o $@ $^ -lpthread
+test_pow_sse: $(TEST)/test_pow.c $(BUILD)/trinary.o $(BUILD)/pow_sse.o \
+	   	      $(BUILD)/curl.o $(BUILD)/constants.o
+	gcc -Wall -msse2 -DPOW_SSE -g -o $@ $^ -lpthread
+	./$@
+
+test_pow_cl: $(TEST)/test_pow.c $(BUILD)/trinary.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o \
+	         $(BUILD)/curl.o $(BUILD)/constants.o
+	gcc -Wall -DPOW_CL -L/usr/local/lib/ -L$(OPENCL_LIB) -g -o $@ $^ -lpthread -lOpenCL
+	./$@
 
 clean:
 	rm *.o
