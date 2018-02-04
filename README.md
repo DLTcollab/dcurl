@@ -14,6 +14,10 @@ dcurl use SSE implementation for CPU and OpenCL for GPU, which are referenced fr
 
 ```$ mkdir build ```
 
+* Running test program
+
+```$ make test ```
+
 * Create a multi-thread environment via python
 
 ```$ make libdcurl.so```
