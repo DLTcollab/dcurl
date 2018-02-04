@@ -1,7 +1,4 @@
 /* Test program for pow_sse & pow_cl */
-
-#include "../src/trinary.h"
-#include "../src/curl.h"
 #include <time.h>
 #include <stdio.h>
 
