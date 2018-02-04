@@ -50,7 +50,7 @@ void dcurl_init(int max_cpu_thread, int max_gpu_thread)
     gpu_mutex_id = (int *) calloc(MAX_GPU_THREAD, sizeof(int));
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
-    pow_c_init(MAX_CPU_THREAD);
+    pow_sse_init(MAX_CPU_THREAD);
     pwork_ctx_init(MAX_GPU_THREAD);
 }
 
