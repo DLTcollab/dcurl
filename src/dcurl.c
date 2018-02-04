@@ -4,6 +4,8 @@
 #include <semaphore.h>
 #include <unistd.h>
 #include "dcurl.h"
+#include "pow_sse.h"
+#include "pow_cl.h"
 
 /* number of task that CPU can execute concurrently */
 static int MAX_CPU_THREAD = -1;
