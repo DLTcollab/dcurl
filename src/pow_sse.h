@@ -1,7 +1,7 @@
 #ifndef POW_SSE_H_
 #define POW_SSE_H_
 
-#include "trinary.h"
+#include "./trinary/trinary.h"
 
 typedef struct _pwork_struct Pwork_struct;
 

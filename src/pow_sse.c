@@ -31,7 +31,7 @@
 #include <pthread.h>
 #include <sys/sysinfo.h>
 #include "pow_sse.h"
-#include "curl.h"
+#include "./hash/curl.h"
 #include "constants.h"
 
 pthread_mutex_t *pow_sse_mutex;
@@ -232,54 +232,47 @@ static void *pworkThread(void *pitem)
     pthread_exit(NULL);
 }
 
-static char *tx_to_cstate(Trytes *tx)
+static char *tx_to_cstate(Trytes_t *tx)
 {
-    Curl *c = NewCurl();
+    Curl *c = initCurl();
     char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
 
-    for (int i = 0; i < (transactionTrinarySize - HashSize) / 3; i++) {
-        tyt[i] = tx->data[i];
-    }
+    /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
+    memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
+    
+    Trytes_t *inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    
+    Absorb(c, inn);
 
-    Trytes *inn = NULL;
-    init_Trytes(&inn);
-    inn->toTrytes(inn, tyt, (transactionTrinarySize - HashSize) / 3);
-
-    c->Absorb(c, inn);
-
-    Trits *tr = tx->toTrits(tx);
+    Trits_t *tr = trits_from_trytes(tx);
 
     char *c_state = (char *) malloc(c->state->len);
     /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
-    for (int i = 0; i < tr->len - (transactionTrinarySize - HashSize); i++) {
-        int idx = transactionTrinarySize - HashSize + i;
-        c_state[i] = tr->data[idx];
-    }
-    for (int i =  tr->len - (transactionTrinarySize - HashSize); i < c->state->len; i++) {
-        c_state[i] = c->state->data[i];
-    }
+    memcpy(c_state, tr->data + transactionTrinarySize - HashSize, tr->len - (transactionTrinarySize - HashSize));
+    memcpy(c_state + tr->len - (transactionTrinarySize - HashSize), c->state->data + tr->len - (transactionTrinarySize - HashSize), c->state->len - tr->len + (transactionTrinarySize - HashSize));
     
+    freeTrobject(inn);
+    freeTrobject(tr);
+    freeCurl(c);
+
     return c_state;
 }
 
-static Trytes *nonce_to_result(Trytes *tx, Trytes *nonce)
+static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
     char *rst = (char *) malloc(rst_len);
 
-    for (int i = 0; i < tx->len - NonceTrinarySize / 3; i++) {
-        rst[i] = tx->data[i];
-    }
-    for (int i = 0; i < rst_len - (tx->len - NonceTrinarySize / 3); i++) {
-        int idx = tx->len - NonceTrinarySize / 3 + i;
-        rst[idx] = nonce->data[i];
-    }
+    memcpy(rst, tx->data, tx->len - NonceTrinarySize / 3);
+    memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data, rst_len - (tx->len - NonceTrinarySize / 3));
+    
+    Trytes_t *final = initTrytes(rst, rst_len);
+    
+    Trytes_t *ret = hashTrytes(final);
 
-    Trytes *final = NULL;
-    init_Trytes(&final);
-    final->toTrytes(final, rst, rst_len);
+    freeTrobject(final);
 
-    return final->Hash(final);
+    return ret;
 }
 
 void pow_sse_init(int num_task)
@@ -299,10 +292,8 @@ char *PowSSE(char *trytes, int mwm, int index)
 {
     stopSSE[index] = 0;
     countSSE[index] = 0;
-
-    Trytes *trytes_t = NULL;
-    init_Trytes(&trytes_t);
-    trytes_t->toTrytes(trytes_t, trytes, 2673);
+    
+    Trytes_t *trytes_t = initTrytes(trytes, 2673);
     
     char *c_state = tx_to_cstate(trytes_t);
 
@@ -331,14 +322,12 @@ char *PowSSE(char *trytes, int mwm, int index)
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1) completedIndex = i;
     }
-
-    Trits *nonce_t = NULL;
-    init_Trits(&nonce_t);
-    nonce_t->toTrits(nonce_t, nonce_array[completedIndex], NonceTrinarySize);
     
-    Trytes *nonce = nonce_t->toTrytes(nonce_t);
+    Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize);
     
-    Trytes *last_result = nonce_to_result(trytes_t, nonce);
+    Trytes_t *nonce = trytes_from_trits(nonce_t);
+    
+    Trytes_t *last_result = nonce_to_result(trytes_t, nonce);
 
     return last_result->data;
 }
