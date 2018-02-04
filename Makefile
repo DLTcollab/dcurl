@@ -32,7 +32,7 @@ test_dcurl: $(TEST)/test_dcurl.c $(BUILD)/curl.o $(BUILD)/constants.o $(BUILD)/t
 	gcc -g -L/usr/local/lib/ -L$(OPENCL_LIB) -o $@ $^ -lpthread -lOpenCL
 	./$@
 
-./libdcurl.so: $(BUILD)/new_curl.o $(BUILD)/constants.o $(BUILD)/new_trinary.o $(BUILD)/dcurl.o \
+./libdcurl.so: $(BUILD)/curl.o $(BUILD)/constants.o $(BUILD)/trinary.o $(BUILD)/dcurl.o \
 	           $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
 	gcc -msse2 -shared -L/usr/local/lib/ -L$(OPENCL_LIB) -o libdcurl.so $^ -lpthread -lOpenCL
 
