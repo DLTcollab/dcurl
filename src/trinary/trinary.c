@@ -52,7 +52,7 @@ Trobject_t *initTrits(signed char *src, int len)
         exit(1);
     }
 
-    trits->data = (signed char *) malloc(len);
+    trits->data = (signed char *) malloc(len + 1);
     if (!trits->data) {
         printf("trinary.c: initTrits: Malloc Unavailable\n");
         exit(1);
@@ -63,6 +63,7 @@ Trobject_t *initTrits(signed char *src, int len)
 
     trits->type = TYPE_TRITS;
     trits->len = len;
+    trits->data[len] = '\0';
     
     /* Check validation */
     if (!validateTrits(trits)) {
@@ -84,7 +85,7 @@ Trobject_t *initTrytes(signed char *src, int len)
         exit(1);
     }
 
-    trytes->data = (signed char *) malloc(len);
+    trytes->data = (signed char *) malloc(len + 1);
     if (!trytes->data) {
         printf("trinary.c: initTrytes: Malloc Unavailable\n");
         exit(1);
@@ -95,6 +96,7 @@ Trobject_t *initTrytes(signed char *src, int len)
 
     trytes->type = TYPE_TRYTES;
     trytes->len = len;
+    trytes->data[len] = '\0';
 
     /* Check validation */
     if (!validateTrytes(trytes)) {
