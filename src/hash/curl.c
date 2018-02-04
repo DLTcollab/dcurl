@@ -8,15 +8,15 @@ static const int indices__[] = {0, 364, 728, 363, 727, 362, 726, 361, 725, 360, 
 static void _transform(signed char state[])
 {
 	int r = 0, i = 0;
-	char copy[STATE_LENGTH] = {0};
-	char *from = state, *to = copy;
+	signed char copy[STATE_LENGTH] = {0};
+	signed char *from = state, *to = copy;
 	for (r = 0; r < 81; r++) {
 		for (i = 0; i < STATE_LENGTH; i++) {
 			int aa = indices__[i];
 			int bb = indices__[i + 1];
 			to[i] = truthTable[from[aa] + (from[bb] << 2) + 5];
 		}
-		char *tmp = from;
+		signed char *tmp = from;
 		from = to;
 		to = tmp;
 	}
