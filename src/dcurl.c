@@ -64,7 +64,7 @@ void dcurl_destroy()
     pwork_ctx_destroy(MAX_GPU_THREAD);
 }
 
-void dcurl_entry(char *trytes, int mwm)
+char *dcurl_entry(char *trytes, int mwm)
 {
     static int num_cpu_thread = 0;
     static int num_gpu_thread = 0;
@@ -114,8 +114,6 @@ void dcurl_entry(char *trytes, int mwm)
             printf("error produced\n");
             exit(0);
     }
-    
-    free(ret);
    
     pthread_mutex_lock(&mtx);
     
@@ -134,6 +132,8 @@ void dcurl_entry(char *trytes, int mwm)
             num_gpu_thread--;
     }
     pthread_mutex_unlock(&mtx);
+
+    return ret;
 }
 
 

@@ -3,6 +3,6 @@
 
 void dcurl_init(int max_cpu_thread, int max_gpu_thread);
 void dcurl_destroy();
-void dcurl_entry(char *trytes, int mwm);
+char *dcurl_entry(char *trytes, int mwm);
 
 #endif

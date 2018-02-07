@@ -5,16 +5,16 @@ TEST ?= ./test
 BUILD ?= ./build
 
 $(BUILD)/curl.o: $(SRC)/hash/curl.c
-	gcc -fPIC -g -o $@ -c $<
+	gcc -Os -fPIC -g -o $@ -c $<
 
 $(BUILD)/constants.o: $(SRC)/constants.c
 	gcc -fPIC -g -o $@ -c $<
 
 $(BUILD)/trinary.o: $(SRC)/trinary/trinary.c
-	gcc -fPIC -g -o $@ -c $<
+	gcc -Os -fPIC -g -o $@ -c $<
 
 $(BUILD)/dcurl.o: $(SRC)/dcurl.c
-	gcc -fPIC -g -o $@ -c $<
+	gcc -Os -fPIC -g -o $@ -c $<
 
 $(BUILD)/pow_c.o: $(SRC)/pow_c.c
 	gcc -Os -fPIC -o $@ -g -c $<
@@ -55,17 +55,20 @@ test_pow_cl: $(TEST)/test_pow.c $(BUILD)/trinary.o $(BUILD)/pow_cl.o \
 	gcc -Wall -DPOW_CL -L/usr/local/lib/ -L$(OPENCL_LIB) -g -o $@ $^ -lpthread -lOpenCL
 	./$@
 
-test_jni_header: $(TEST)/test_jni_dcurl.java
+./jni/test_jni_dcurl.h: $(TEST)/test_jni_dcurl.java
 	javac -d $(BUILD)/ $<
 	javah -jni -d ./jni/ -cp $(BUILD) test_jni_dcurl
 
-$(BUILD)/libtest_dcurl.so: test_jni_header $(jni)/test_jni_dcurl.c \
-	                       $(TEST)/test_dcurl.c $(BUILD)/curl.o $(BUILD)/constants.o \
-						   $(BUILD)/trinary.o $(BUILD)/dcurl.o \
-	                       $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
+libtest_dcurl.so: ./jni/test_jni_dcurl.h ./jni/test_jni_dcurl.c \
+	              $(TEST)/test_dcurl.c $(BUILD)/curl.o $(BUILD)/constants.o \
+				  $(BUILD)/trinary.o $(BUILD)/dcurl.o \
+	              $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
 	gcc -fPIC -msse2 -shared -I$(OPENJDK_PATH)/include -I$(OPENJDK_PATH)/include/linux \
-	-I$(OPENCL_PATH)/include -L/usr/local/lib/ -L$(OPENCL_PATH)/lib64 -o $@ $^ \
+	-I$(OPENCL_PATH)/include -L/usr/local/lib/ -L$(OPENCL_LIB) -o $@ $^ \
 	-lpthread -lOpenCL
+
+test_jni: libtest_dcurl.so
+	java -Djava.library.path=./ -cp $(BUILD) test_jni_dcurl
 
 test: test_trinary \
 	  test_curl \
