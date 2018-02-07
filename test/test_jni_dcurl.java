@@ -1,6 +1,6 @@
 public class test_jni_dcurl {
     static {
-        System.loadLibrary("dcurl");
+        System.loadLibrary("test_dcurl");
     }
 
     static native void dcurl_init(int max_cpu_thread, int max_gpu_thread);

@@ -59,6 +59,14 @@ test_jni_header: $(TEST)/test_jni_dcurl.java
 	javac -d $(BUILD)/ $<
 	javah -jni -d ./jni/ -cp $(BUILD) test_jni_dcurl
 
+$(BUILD)/libtest_dcurl.so: test_jni_header $(jni)/test_jni_dcurl.c \
+	                       $(TEST)/test_dcurl.c $(BUILD)/curl.o $(BUILD)/constants.o \
+						   $(BUILD)/trinary.o $(BUILD)/dcurl.o \
+	                       $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
+	gcc -fPIC -msse2 -shared -I$(OPENJDK_PATH)/include -I$(OPENJDK_PATH)/include/linux \
+	-I$(OPENCL_PATH)/include -L/usr/local/lib/ -L$(OPENCL_PATH)/lib64 -o $@ $^ \
+	-lpthread -lOpenCL
+
 test: test_trinary \
 	  test_curl \
 	  test_pow_sse \
