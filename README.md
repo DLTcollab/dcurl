@@ -6,7 +6,7 @@ dcurl use SSE implementation for CPU and OpenCL for GPU, which are referenced fr
 
 # Warning
 * You need to configure OpenCL platform and device by yourself in ```src/clcontext.c```
-* You also need to configure OpenCL Library path in ```Makefile```
+* You also need to configure path of OpenCL Library and OpenJDK in ```Makefile```
 * dcurl is limited to use only **One** GPU currently, and multi-gpu support is in future work.
 
 # Test

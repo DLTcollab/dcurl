@@ -74,7 +74,8 @@ test: test_trinary \
 	  test_curl \
 	  test_pow_sse \
 	  test_pow_cl \
-	  test_dcurl
+	  test_dcurl \
+	  test_jni
 
 clean:
 	rm build/* jni/*.h test_trinary test_curl test_pow_sse test_pow_cl test_dcurl
