@@ -1,4 +1,5 @@
-OPENCL_LIB ?= /usr/local/cuda-9.1/lib64/
+OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
+OPENJDK_PATH ?= /usr/lib/jvm/java-1.8.0-openjdk-amd64
 SRC ?= ./src
 TEST ?= ./test
 BUILD ?= ./build
@@ -54,6 +55,10 @@ test_pow_cl: $(TEST)/test_pow.c $(BUILD)/trinary.o $(BUILD)/pow_cl.o \
 	gcc -Wall -DPOW_CL -L/usr/local/lib/ -L$(OPENCL_LIB) -g -o $@ $^ -lpthread -lOpenCL
 	./$@
 
+test_jni_header: $(TEST)/test_jni_dcurl.java
+	javac -d $(BUILD)/ $<
+	javah -jni -d ./jni/ -cp $(BUILD) test_jni_dcurl
+
 test: test_trinary \
 	  test_curl \
 	  test_pow_sse \
@@ -61,4 +66,4 @@ test: test_trinary \
 	  test_dcurl
 
 clean:
-	rm build/*.o test_trinary test_curl test_pow_sse test_pow_cl test_dcurl
+	rm build/* jni/*.h test_trinary test_curl test_pow_sse test_pow_cl test_dcurl
