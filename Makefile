@@ -77,5 +77,14 @@ test: test_trinary \
 	  test_dcurl \
 	  test_jni
 
+libdcurl.so: ./jni/com_iota_iri_hash_PearlDiver.c \
+	         $(BUILD)/curl.o $(BUILD)/constants.o \
+		     $(BUILD)/trinary.o $(BUILD)/dcurl.o \
+	         $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o \
+			 $(BUILD)/clcontext.o
+	gcc -fPIC -msse2 -shared -I$(OPENJDK_PATH)/include -I$(OPENJDK_PATH)/include/linux \
+	-I$(OPENCL_PATH)/include -L/usr/local/lib/ -L$(OPENCL_LIB) -o $@ $^ \
+	-lpthread -lOpenCL
+
 clean:
 	rm build/* jni/*.h test_trinary test_curl test_pow_sse test_pow_cl test_dcurl
