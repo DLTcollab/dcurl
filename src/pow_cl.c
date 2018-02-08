@@ -207,7 +207,6 @@ Trytes_t *PowCL(Trytes_t *trytes, int mwm, int index)
     
     Trytes_t *last = trytes_from_trits(tr);
 
-    freeTrobject(trytes_t);
     freeTrobject(tr);
     free(c_state);
     free(ret);

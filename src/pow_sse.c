@@ -267,6 +267,8 @@ static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
     memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data, rst_len - (tx->len - NonceTrinarySize / 3));
     
     Trytes_t *ret = initTrytes(rst, rst_len);
+    
+    free(rst);
 
     return ret;
 }
