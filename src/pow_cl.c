@@ -192,10 +192,11 @@ static char *tx_to_cstate(Trytes_t *tx)
     return c_state;
 }
 
-char *PowCL(char *trytes, int mwm, int index)
+Trytes_t *PowCL(Trytes_t *trytes, int mwm, int index)
 {
-    Trytes_t *trytes_t = initTrytes(trytes, 2673);
-    
+    //Trytes_t *trytes_t = initTrytes(trytes, 2673);
+    Trytes_t *trytes_t = trytes;
+
     Trits_t *tr = trits_from_trytes(trytes_t);
 
 	char *c_state = tx_to_cstate(trytes_t);   
@@ -205,13 +206,11 @@ char *PowCL(char *trytes, int mwm, int index)
     memcpy(&tr->data[TRANSACTION_LENGTH - HASH_LENGTH], ret, HASH_LENGTH * sizeof(char));
     
     Trytes_t *last = trytes_from_trits(tr);
-    Trytes_t *last_result = hashTrytes(last);
 
     freeTrobject(trytes_t);
     freeTrobject(tr);
-    freeTrobject(last);
     free(c_state);
     free(ret);
     
-	return last_result->data;
+	return last;
 }

@@ -266,11 +266,7 @@ static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
     memcpy(rst, tx->data, tx->len - NonceTrinarySize / 3);
     memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data, rst_len - (tx->len - NonceTrinarySize / 3));
     
-    Trytes_t *final = initTrytes(rst, rst_len);
-    
-    Trytes_t *ret = hashTrytes(final);
-
-    freeTrobject(final);
+    Trytes_t *ret = initTrytes(rst, rst_len);
 
     return ret;
 }
@@ -295,13 +291,14 @@ void pow_sse_destroy()
     free(countSSE);
 }
 
-char *PowSSE(char *trytes, int mwm, int index)
+Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
 {
     stopSSE[index] = 0;
     countSSE[index] = 0;
     
-    Trytes_t *trytes_t = initTrytes(trytes, 2673);
-    
+    //Trytes_t *trytes_t = initTrytes(trytes, 2673);
+    Trytes_t *trytes_t = trytes;
+
     char *c_state = tx_to_cstate(trytes_t);
 
     int num_cpu = DCURL_NUM_CPU;
@@ -344,5 +341,5 @@ char *PowSSE(char *trytes, int mwm, int index)
     freeTrobject(nonce_t);
     freeTrobject(nonce);
 
-    return last_result->data;
+    return last_result;
 }

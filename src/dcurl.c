@@ -4,8 +4,10 @@
 #include <semaphore.h>
 #include <unistd.h>
 #include "dcurl.h"
+#include "trinary/trinary.h"
 #include "pow_sse.h"
 #include "pow_cl.h"
+
 
 /* number of task that CPU can execute concurrently */
 static int MAX_CPU_THREAD = -1;
@@ -64,7 +66,7 @@ void dcurl_destroy()
     pwork_ctx_destroy(MAX_GPU_THREAD);
 }
 
-char *dcurl_entry(char *trytes, int mwm)
+Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
 {
     static int num_cpu_thread = 0;
     static int num_gpu_thread = 0;
@@ -99,16 +101,14 @@ char *dcurl_entry(char *trytes, int mwm)
         pthread_mutex_unlock(&mtx);
     }
 
-    char *ret = NULL;
-
+    Trytes_t *ret_trytes = NULL;
+        
     switch (selected_entry) {
         case 1:
-            ret = PowSSE(trytes, mwm, selected_mutex_id);
-            printf("cpu: %s\n", ret);
+            ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
             break;
         case 2:
-            ret = PowCL(trytes, mwm, selected_mutex_id);
-            printf("gpu: %s\n", ret);
+            ret_trytes = PowCL(trytes, mwm, selected_mutex_id);
             break;
         default:
             printf("error produced\n");
@@ -133,7 +133,7 @@ char *dcurl_entry(char *trytes, int mwm)
     }
     pthread_mutex_unlock(&mtx);
 
-    return ret;
+    return ret_trytes;
 }
 
 

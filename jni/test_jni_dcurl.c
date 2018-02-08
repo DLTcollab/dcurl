@@ -38,16 +38,15 @@ JNIEXPORT jintArray JNICALL Java_test_1jni_1dcurl_dcurl_1entry(JNIEnv *env, jobj
     Trytes_t *arg_trytes = trytes_from_trits(arg_trits);
     /****************************************************************/
     
-    char *result = dcurl_entry(arg_trytes->data, mwm);
+    Trytes_t *result = dcurl_entry(arg_trytes, mwm);
 
     /* Convert ***CHAR*** array(TRYTES) to ***INT*** array (TRITS) */
-    Trytes_t *ret_trytes = initTrytes(result, 81);
-    Trits_t *ret_trits = trits_from_trytes(ret_trytes);
-    jint *int_trits = char_to_int_array(ret_trits->data, 243);
+    Trits_t *ret_trits = trits_from_trytes(result);
+    jint *int_trits = char_to_int_array(ret_trits->data, 8019);
     /***************************************************************/
 
-    jintArray returnJNIArray = (*env)->NewIntArray(env, 243);
-    (*env)->SetIntArrayRegion(env, returnJNIArray, 0, 243, int_trits);
+    jintArray returnJNIArray = (*env)->NewIntArray(env, 8019);
+    (*env)->SetIntArrayRegion(env, returnJNIArray, 0, 8019, int_trits);
 
     /* Free */
     free(result);
@@ -55,7 +54,6 @@ JNIEXPORT jintArray JNICALL Java_test_1jni_1dcurl_dcurl_1entry(JNIEnv *env, jobj
     free(int_trits);
     freeTrobject(arg_trits);
     freeTrobject(arg_trytes);
-    freeTrobject(ret_trytes);
     freeTrobject(ret_trits);
     
     return returnJNIArray;
@@ -63,5 +61,5 @@ JNIEXPORT jintArray JNICALL Java_test_1jni_1dcurl_dcurl_1entry(JNIEnv *env, jobj
 
 JNIEXPORT void JNICALL Java_test_1jni_1dcurl_dcurl_1destroy(JNIEnv *env, jobject obj)
 {
-    /* Do Nothing */
+    dcurl_destroy();
 }

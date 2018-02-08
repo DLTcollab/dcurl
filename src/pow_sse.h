@@ -14,7 +14,7 @@ struct _pwork_struct {
     long long int ret;
 };
 
-char *PowSSE(char *trytes, int mwm, int index);
+Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index);
 void pow_sse_init(int num_task);
 void pow_sse_destroy();
 
