@@ -49,9 +49,9 @@ JNIEXPORT jintArray JNICALL Java_com_iota_iri_hash_PearlDiver_dcurl_1entry(JNIEn
     (*env)->SetIntArrayRegion(env, returnJNIArray, 0, 8019, int_trits);
 
     /* Free */
-    free(result);
     free(char_trits);
     free(int_trits);
+    freeTrobject(result);
     freeTrobject(arg_trits);
     freeTrobject(arg_trytes);
     freeTrobject(ret_trits);
