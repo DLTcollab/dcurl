@@ -36,24 +36,8 @@ test_curl: $(TEST)/test_curl.c $(BUILD)/curl.o $(BUILD)/trinary.o
 	gcc -Wall -g -o $@ $^
 	./$@
 
-./jni/test_jni_dcurl.h: $(TEST)/test_jni_dcurl.java
-	javac -d $(BUILD)/ $<
-	javah -jni -d ./jni/ -cp $(BUILD) test_jni_dcurl
-
-libtest_dcurl.so: ./jni/test_jni_dcurl.h ./jni/test_jni_dcurl.c \
-	              $(BUILD)/curl.o $(BUILD)/constants.o \
-				  $(BUILD)/trinary.o $(BUILD)/dcurl.o \
-	              $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o $(BUILD)/clcontext.o
-	gcc -fPIC -msse2 -shared -I$(OPENJDK_PATH)/include -I$(OPENJDK_PATH)/include/linux \
-	-I$(OPENCL_PATH)/include -L/usr/local/lib/ -L$(OPENCL_LIB) -o $@ $^ \
-	-lpthread -lOpenCL
-
-test_jni: libtest_dcurl.so
-	java -Djava.library.path=./ -cp $(BUILD) test_jni_dcurl
-
 test: test_trinary \
-	  test_curl \
-	  test_jni
+	  test_curl
 
 libdcurl.so: ./jni/iri-pearldiver-exlib.c \
 	         $(BUILD)/curl.o $(BUILD)/constants.o \
@@ -65,4 +49,4 @@ libdcurl.so: ./jni/iri-pearldiver-exlib.c \
 	-lpthread -lOpenCL
 
 clean:
-	rm build/* jni/*.h test_trinary test_curl test_pow_sse test_pow_cl test_dcurl
+	rm build/* test_trinary test_curl

@@ -25,7 +25,7 @@ static jint *char_to_int_array(char *arr, int size)
 
 JNIEXPORT jboolean JNICALL Java_com_iota_iri_hash_PearlDiver_exlib_1init(JNIEnv *env, jclass clazz)
 {
-    dcurl_init(2, 0);
+    dcurl_init(2, 1);
     return JNI_TRUE;
 }
 
