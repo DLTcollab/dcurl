@@ -29,10 +29,27 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
-#include <sys/sysinfo.h>
 #include "pow_sse.h"
 #include "./hash/curl.h"
 #include "constants.h"
+
+/* Required for get_nprocs_conf() on Linux */
+#ifdef NPROCS
+#include <sys/sysinfo.h>
+#endif
+
+/* On Mac OS X, define our own get_nprocs_conf() */
+#if defined (__APPLE__) || defined(__FreeBSD__)
+#include <sys/sysctl.h>
+unsigned int get_nprocs_conf()
+{
+	int numProcessors = 0;
+	size_t size = sizeof(numProcessors);
+	if (sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0)) return 1;
+	return (unsigned int) numProcessors;
+}
+#define NPROCS
+#endif
 
 pthread_mutex_t *pow_sse_mutex;
 int *stopSSE;
