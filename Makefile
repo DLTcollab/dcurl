@@ -55,7 +55,7 @@ test: test_trinary \
 	  test_curl \
 	  test_jni
 
-libdcurl.so: ./jni/com_iota_iri_hash_PearlDiver.c \
+libdcurl.so: ./jni/iri-pearldiver-exlib.c \
 	         $(BUILD)/curl.o $(BUILD)/constants.o \
 		     $(BUILD)/trinary.o $(BUILD)/dcurl.o \
 	         $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o \
