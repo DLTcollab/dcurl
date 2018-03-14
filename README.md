@@ -11,6 +11,7 @@ dcurl use SSE implementation for CPU and OpenCL for GPU, which are referenced fr
 
 # Build
 * Build a shared library for IRI
+
 ```$ make libdcurl.so```
 
 # Test
@@ -34,7 +35,6 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 * Each sampling is measured with 30 transaction trytes and total 200 samples are measured.
 * mwm = 14, 26 CPU threads to find nonce
 * Settings: enable 2 pow tasks in CPU, 1 pow tasks in GPU at the same time
-* [Other Report](https://hackmd.io/s/B1OGHSaDG#)
 ![](https://lh4.googleusercontent.com/2U_TpfAtEbPdHBcGKD1zl0t0bzo2Rubj0DxXxvV-Rh31Yr7oCCtptutQpLLizMgR7ousEXUtwM6RASnQLOJnGePhQ5Emh1w8l8GlKzMtZ0Yv-TySF2gh3u48BAmllAJv2VjNaxgFGCA)
 
 # About IRI
