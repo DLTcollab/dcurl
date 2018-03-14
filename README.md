@@ -1,13 +1,15 @@
-# dcurl - Multi-thread curl implementation
-Another implementation for IOTA PearlDiver, which allows to be multi-threaded executed
+# dcurl - Multi-threaded Curl implementation
+Hardware-accelerated implementation for IOTA PearlDiver, which utilizes multi-threaded SIMD and GPU.
 
 # Introduction
-dcurl use SSE implementation for CPU and OpenCL for GPU, which are referenced from [iotaledger/iota.lib.go](https://github.com/iotaledger/iota.lib.go) and [iotaledger/ccurl](https://github.com/iotaledger/ccurl), respectively.
+dcurl exploits SIMD instructions on CPU and OpenCL on GPU. Both CPU and GPU accelerations can be
+enabled in multi-threaded execuction fashion, resulting in much faster proof-of-work (PoW) for IOTA
+Reference Implementation (IRI).
 
 # Warning
 * You need to configure OpenCL platform and device by yourself in ```src/clcontext.c```
 * You also need to configure path of OpenCL Library and OpenJDK in ```Makefile```
-* dcurl is limited to use only **One** GPU currently, and multi-gpu support is in future work.
+* Only one GPU can be facilitated with dcurl at the moment.
 
 # Build
 * Build a shared library for IRI
@@ -50,5 +52,5 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 * Automatically configure dcurl after init()
 
 # Externel Source
-* ```src/pow_sse.c``` is modifed from [utamaro/curl_trials](https://github.com/utamaro/curl_trials)
-* ```src/pow_cl.c``` and ```src/pow_kernel.cl``` is modifed from [iotaledger/ccurl](https://github.com/iotaledger/ccurl)
+* ```src/pow_sse.c``` is derived from preliminary work of Shinya Yagyu.
+* ```src/pow_cl.c``` and ```src/pow_kernel.cl``` are adopted from [iotaledger/ccurl](https://github.com/iotaledger/ccurl).
