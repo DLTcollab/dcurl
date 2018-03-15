@@ -8,7 +8,9 @@ LDFLAGS = -L$(OPENCL_LIB) -lpthread -lOpenCL
 
 TESTS = \
 	trinary \
-	curl
+	curl \
+	pow_sse \
+	pow_cl
 TESTS := $(addprefix $(OUT)/test_, $(TESTS))
 
 LIBS = libdcurl.so
@@ -54,7 +56,7 @@ $(OUT)/%.o: $(SRC)/%.c
 
 $(OUT)/test_%: $(OUT)/test_%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
+	$(Q) gcc -I$(OPENCL_PATH)/include -o $@ $^ $(LDFLAGS)
 
 $(OUT)/libdcurl.so: ./jni/iri-pearldiver-exlib.c $(OBJS)
 	gcc -fPIC -msse2 -shared \
