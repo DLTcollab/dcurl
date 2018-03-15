@@ -22,6 +22,7 @@ OBJS = \
 	trinary/trinary.o \
 	dcurl.o \
 	pow_sse.o \
+	pow_cl.o \
 	clcontext.o
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 deps := $(OBJS:%.o=%.o.d)
