@@ -12,18 +12,31 @@ Reference Implementation (IRI).
 * Only one GPU can be facilitated with dcurl at the moment.
 
 # Build
-* Build a shared library for IRI
+* Build a shared library for IRI, placed in ```build```
 
-```$ make libdcurl.so```
+```$ make```
 
 # Test
-* Make a directory for build
+* Make a test
 
-```$ mkdir build ```
+```$ make check ```
 
-* Running test program
+* Expected Result
 
-```$ make test ```
+```
+Trinary Test Passed!
+*** build/test_trinary *** [ Verified ]
+Curl Test Passed!
+*** build/test_curl *** [ Verified ]
+Testing SSE Implementation with mwm = 14...
+Result: KJQEILJFZJYJZBNBTYXNBSNCCMHZDYZXTCHXADBMNPKHFOHNLWJLIGTUHPFEKRZEQ9DZHBJIUJRO99999
+Pow SSE Test Success
+*** build/test_pow_sse *** [ Verified ]
+Testing OpenCL Implementation with mwm = 14...
+Result: KJQEILJFZJYJZBNBTYXNBSNCCMHZDYZXTCHXADBMNPKHFOHNLWJLIGTUHPFEKRZEQ9DZHBJIUJRO99999
+Pow OpenCL Test Success
+*** build/test_pow_cl *** [ Verified ]
+```
 
 # Tuning
 * ```dcurl_init(2, 1)``` in ```jni/iri-pearldiver-exlib.c```
