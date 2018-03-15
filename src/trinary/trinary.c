@@ -23,22 +23,22 @@ void freeTrobject(Trobject_t *t)
 
 static int validateTrits(Trobject_t *trits)
 {
-    if (trits->type != TYPE_TRITS) return -1;
+    if (trits->type != TYPE_TRITS) return 0;
 
     for (int i = 0; i < trits->len; i++)
         if (trits->data[i] < -1 || trits->data[i] > 1)
-            return -1;
+            return 0;
     return 1;
 }
 
 static int validateTrytes(Trobject_t *trytes)
 {
-    if (trytes->type != TYPE_TRYTES) return -1;
+    if (trytes->type != TYPE_TRYTES) return 0;
 
     for (int i = 0; i < trytes->len; i++)
         if ((trytes->data[i] <= 'A' && trytes->data[i] >= 'Z') && \
             trytes->data[i] != '9')
-            return -1;
+            return 0;
     return 1;
 }
 
@@ -185,11 +185,11 @@ Trobject_t *hashTrytes(Trobject_t *t)
 
 int compareTrobject(Trobject_t *a, Trobject_t *b)
 {
-    if (a->type != b->type || a->len != b->len) return -1;
+    if (a->type != b->type || a->len != b->len) return 0;
 
     for (int i = 0; i < a->len; i++)
         if (a->data[i] != b->data[i])
-            return -1;
+            return 0;
 
     return 1;
 }

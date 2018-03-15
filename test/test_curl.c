@@ -9,21 +9,20 @@ int main()
     int length_test_case = 2673;
     
     Trytes_t *answer = initTrytes((signed char *) "WPM9JCTQH9QHBHBJCODWDNPSLFLQDZADRAEZTZDL9OEGTVRZARVLVJHZIMPBPCTAIYJKWTUSRKNNTMFOQ", 81);
-
     Trytes_t *trytes = initTrytes((signed char *) trytes_test_case, length_test_case);
-    
     Trytes_t *ret_trytes = hashTrytes(trytes);
-
-    if (!compareTrobject(ret_trytes, answer)) {
-        printf("Curl Test Failed!\n");
-        return -1;
-    }
-
-    printf("Curl Test Passed!\n");
+    
+    int ret = compareTrobject(ret_trytes, answer);
 
     freeTrobject(answer);
     freeTrobject(trytes);
     freeTrobject(ret_trytes);
 
+    if (!ret) {
+        printf("Curl Test Failed!\n");
+        return -1;
+    }
+    
+    printf("Curl Test Passed!\n");
     return 0;
 }
