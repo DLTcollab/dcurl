@@ -1,52 +1,80 @@
 OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
 OPENJDK_PATH ?= /usr/lib/jvm/java-1.8.0-openjdk-amd64
 SRC ?= ./src
-TEST ?= ./test
-BUILD ?= ./build
+OUT ?= ./build
 
-$(BUILD)/curl.o: $(SRC)/hash/curl.c
-	gcc -Os -fPIC -g -o $@ -c $<
+CFLAGS = -Os -fPIC -g
+LDFLAGS = -L$(OPENCL_LIB) -lpthread -lOpenCL
 
-$(BUILD)/constants.o: $(SRC)/constants.c
-	gcc -fPIC -g -o $@ -c $<
+TESTS = \
+	trinary \
+	curl
+TESTS := $(addprefix $(OUT)/test_, $(TESTS))
 
-$(BUILD)/trinary.o: $(SRC)/trinary/trinary.c
-	gcc -Os -fPIC -g -o $@ -c $<
+LIBS = libdcurl.so
+LIBS := $(addprefix $(OUT)/, $(LIBS))
 
-$(BUILD)/dcurl.o: $(SRC)/dcurl.c
-	gcc -Os -fPIC -g -o $@ -c $<
+all: $(TESTS) $(LIBS)
 
-$(BUILD)/pow_c.o: $(SRC)/pow_c.c
-	gcc -Os -fPIC -o $@ -g -c $<
+OBJS = \
+	hash/curl.o \
+	constants.o \
+	trinary/trinary.o \
+	dcurl.o \
+	pow_sse.o \
+	clcontext.o
+OBJS := $(addprefix $(OUT)/, $(OBJS))
+deps := $(OBJS:%.o=%.o.d)
 
-$(BUILD)/pow_sse.o: $(SRC)/pow_sse.c
-	gcc -Os -fPIC -o $@ -g -c $<
+# Control the build verbosity
+ifeq ("$(VERBOSE)","1")
+    Q :=
+    VECHO = @true
+else
+    Q := @
+    VECHO = @printf
+endif
 
-$(BUILD)/pow_cl.o: $(SRC)/pow_cl.c
-	gcc -fPIC -g -o $@ -c $<
+SUBDIRS = \
+	hash \
+	trinary
+SHELL_HACK := $(shell mkdir -p $(OUT))
+SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,$(SUBDIRS)))
 
-$(BUILD)/clcontext.o: $(SRC)/clcontext.c
-	gcc -fPIC -g -o $@ -c $<
+$(OUT)/test_%.o: test/test_%.c
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
 
-test_trinary: $(TEST)/test_trinary.c $(BUILD)/curl.o $(BUILD)/trinary.o
-	gcc -Wall -g -o $@ $^
-	./$@
+$(OUT)/trinary/%.o: $(SRC)/trinary/%.c
+$(OUT)/hash/%.o: $(SRC)/hash/%.c
+$(OUT)/%.o: $(SRC)/%.c
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
 
-test_curl: $(TEST)/test_curl.c $(BUILD)/curl.o $(BUILD)/trinary.o
-	gcc -Wall -g -o $@ $^
-	./$@
+$(OUT)/test_%: $(OUT)/test_%.o $(OBJS)
+	$(VECHO) "  LD\t$@\n"
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-test: test_trinary \
-	  test_curl
+$(OUT)/libdcurl.so: ./jni/iri-pearldiver-exlib.c $(OBJS)
+	gcc -fPIC -msse2 -shared \
+	    -I$(OPENJDK_PATH)/include -I$(OPENJDK_PATH)/include/linux \
+	    -I$(OPENCL_PATH)/include -o $@ $^ $(LDFLAGS)
 
-libdcurl.so: ./jni/iri-pearldiver-exlib.c \
-	         $(BUILD)/curl.o $(BUILD)/constants.o \
-		     $(BUILD)/trinary.o $(BUILD)/dcurl.o \
-	         $(BUILD)/pow_sse.o $(BUILD)/pow_cl.o \
-			 $(BUILD)/clcontext.o
-	gcc -fPIC -msse2 -shared -I$(OPENJDK_PATH)/include -I$(OPENJDK_PATH)/include/linux \
-	-I$(OPENCL_PATH)/include -L/usr/local/lib/ -L$(OPENCL_LIB) -o $@ $^ \
-	-lpthread -lOpenCL
+PASS_COLOR = \e[32;01m
+NO_COLOR = \e[0m
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	PRINTF = printf
+else
+	PRINTF = env printf
+endif
+
+$(OUT)/test_%.done: $(OUT)/test_%
+	$(Q)./$< && $(PRINTF) "*** $< *** $(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
+check: $(addsuffix .done, $(TESTS))
 
 clean:
-	rm build/* test_trinary test_curl
+	$(RM) -r $(OUT)
+
+-include $(deps)
