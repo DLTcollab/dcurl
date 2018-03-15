@@ -78,8 +78,6 @@ void init_cl_program(CLContext *ctx)
         printf("Failed to build program\n");
         exit(0);
     }
-
-    free(source_str);
 }
 
 void init_cl_kernel(CLContext *ctx, char **kernel_name)
