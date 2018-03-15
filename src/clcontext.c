@@ -1,4 +1,5 @@
 #include "clcontext.h"
+#include "pearl.cl.h"
 #include <stdio.h>
 
 void init_cl_devices(CLContext *ctx)
@@ -62,19 +63,9 @@ void init_cl_devices(CLContext *ctx)
 
 void init_cl_program(CLContext *ctx)
 {
-    FILE *fin = fopen(KERNEL_PATH, "r");
-    char *source_str;
-    size_t source_size;
+    char *source_str = pearl_cl;
+    size_t source_size = pearl_cl_len;
     cl_int errno;
-    
-    if (!fin) {
-        printf("OpenCL Kernel File doesn't exist\n");
-        exit(0);
-    }
-
-    source_str = (char *) malloc(MAX_SOURCE_SIZE);
-    source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fin);
-    fclose(fin);
 
     ctx->program = clCreateProgramWithSource(ctx->context, ctx->kernel_info.num_src, (const char **) &source_str, (const size_t *) &source_size, &errno);
     if (CL_SUCCESS != errno) {
@@ -90,19 +81,6 @@ void init_cl_program(CLContext *ctx)
 
     free(source_str);
 }
-
-
-/*
-void init_cl_program(CLContext *ctx)
-{
-    cl_int errno;
-    unsigned char *src[] = {pearl_cl};
-    size_t size[] = {pearl_cl_len};
-
-    ctx->program = clCreateProgramWithSource(ctx->context, ctx->kernel_info.num_src, (const char **) src, size, &errno);
-    errno = clBuildProgram(ctx->program, 1, &ctx->device, "-Werror", NULL, NULL);
-}
-*/
 
 void init_cl_kernel(CLContext *ctx, char **kernel_name)
 {

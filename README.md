@@ -41,12 +41,11 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 [Modified IRI accepting external PoW Library](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface)
 * ```$ cd ~/iri && mvn compile clean && mvn package```
 * ```$ cp ~/dcurl/libdcurl.so ~/iri```
-* ```$ cp ~/dcurl/src/pow_kernel.cl ~/iri/src/```
 * ```$ cd ~/iri && java -Djava.library.path=./ -jar target/iri.jar -p <port> --pearldiver-exlib dcurl```
 
 # TODO
 * More test program :(
-* Pre-compile OpenCL kernel functions and include it in dcurl.
+* ~~Pre-compile OpenCL kernel functions and include it in dcurl.~~
 * Automatically configure dcurl after init()
 
 # Externel Source
