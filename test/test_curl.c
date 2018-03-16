@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "../src/hash/curl.h"
-#include "../src/trinary/trinary.h"
+#include "common.h"
 
 int main()
 {
@@ -18,11 +15,7 @@ int main()
     freeTrobject(trytes);
     freeTrobject(ret_trytes);
 
-    if (!ret) {
-        printf("Curl Test Failed!\n");
-        return -1;
-    }
+    assert(ret != 0);
     
-    printf("Curl Test Passed!\n");
     return 0;
 }
