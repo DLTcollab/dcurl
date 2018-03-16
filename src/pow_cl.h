@@ -4,7 +4,7 @@
 #include "./trinary/trinary.h"
 
 Trytes_t *PowCL(Trytes_t *trytes, int mwm, int index);
-void pwork_ctx_init(int context_size);
+int pwork_ctx_init(int context_size);
 void pwork_ctx_destroy(int context_size);
 
 #endif

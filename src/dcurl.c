@@ -45,24 +45,31 @@ static int get_mutex_id(int *mutex_id, int env)
     return -1;
 }
 
-void dcurl_init(int max_cpu_thread, int max_gpu_thread)
+int dcurl_init(int max_cpu_thread, int max_gpu_thread)
 {
-    if (max_cpu_thread < 0 || max_gpu_thread < 0) {
-        printf("dcurl.c: Unavailable argument\n");
-        exit(0);
-    }
+    if (max_cpu_thread < 0 || max_gpu_thread < 0)
+        return 0; /* Unavailable argument passed */
 
+    int ret = 1;
     isInitialized = 1;
     MAX_CPU_THREAD = max_cpu_thread;
     MAX_GPU_THREAD = max_gpu_thread;
     cpu_mutex_id = (int *) calloc(MAX_CPU_THREAD, sizeof(int));
+    if (!cpu_mutex_id)
+        return 0;
+
     gpu_mutex_id = (int *) calloc(MAX_GPU_THREAD, sizeof(int));
+    if (!gpu_mutex_id)
+        return 0;
+
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
-    pow_sse_init(MAX_CPU_THREAD);
+
+    ret &= pow_sse_init(MAX_CPU_THREAD);
 #if defined(ENABLE_OPENCL)
-    pwork_ctx_init(MAX_GPU_THREAD);
+    ret &= pwork_ctx_init(MAX_GPU_THREAD);
 #endif
+    return ret;
 }
 
 void dcurl_destroy()

@@ -15,7 +15,7 @@ struct _pwork_struct {
 };
 
 Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index);
-void pow_sse_init(int num_task);
+int pow_sse_init(int num_task);
 void pow_sse_destroy();
 
 #ifdef _MSC_VER

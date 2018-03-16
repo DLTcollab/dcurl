@@ -287,18 +287,28 @@ static void *pworkThread(void *pitem)
 static char *tx_to_cstate(Trytes_t *tx)
 {
     Curl *c = initCurl();
+    if (!c)
+        return NULL;
+
+    char *c_state = (char *) malloc(c->state->len);
+    if (!c_state)
+        return NULL;
+
     char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
 
     /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
     memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
 
     Trytes_t *inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    if (!inn)
+        return NULL;
 
     Absorb(c, inn);
 
     Trits_t *tr = trits_from_trytes(tx);
+    if (!tr)
+        return NULL;
 
-    char *c_state = (char *) malloc(c->state->len);
     /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
     memcpy(c_state, tr->data + transactionTrinarySize - HashSize,
            tr->len - (transactionTrinarySize - HashSize));
@@ -317,30 +327,35 @@ static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
     char *rst = (char *) malloc(rst_len);
+    if (!rst)
+        return NULL;
 
     memcpy(rst, tx->data, tx->len - NonceTrinarySize / 3);
     memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data,
            rst_len - (tx->len - NonceTrinarySize / 3));
 
     Trytes_t *ret = initTrytes(rst, rst_len);
-
     free(rst);
 
     return ret;
 }
 
-void pow_sse_init(int num_task)
+int pow_sse_init(int num_task)
 {
     pow_sse_mutex =
         (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t) * num_task);
     stopSSE = (int *) malloc(sizeof(int) * num_task);
     countSSE = (long long int *) malloc(sizeof(long long int) * num_task);
 
+    if (!pow_sse_mutex || !stopSSE || !countSSE)
+        return 0;
+
     char *env_num_cpu = getenv("DCURL_NUM_CPU");
     DCURL_NUM_CPU = get_nprocs_conf() - 1;
     if (env_num_cpu) {
         DCURL_NUM_CPU = atoi(env_num_cpu);
     }
+    return 1;
 }
 
 void pow_sse_destroy()
@@ -355,18 +370,27 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
     stopSSE[index] = 0;
     countSSE[index] = 0;
 
-    // Trytes_t *trytes_t = initTrytes(trytes, 2673);
     Trytes_t *trytes_t = trytes;
 
     char *c_state = tx_to_cstate(trytes_t);
+    if (!c_state)
+        return NULL;
 
     int num_cpu = DCURL_NUM_CPU;
 
     pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_cpu);
+    if (!threads)
+        return NULL;
+
     Pwork_struct *pitem =
         (Pwork_struct *) malloc(sizeof(Pwork_struct) * num_cpu);
+    if (!pitem)
+        return NULL;
+
     /* Prepare nonce to each thread */
     char **nonce_array = (char **) malloc(sizeof(char *) * num_cpu);
+    if (!nonce_array)
+        return NULL;
 
     /* init pthread mutex */
     pthread_mutex_init(&pow_sse_mutex[index], NULL);
@@ -389,9 +413,16 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
     }
 
     Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize);
+    if (!nonce_t)
+        return NULL;
+
     Trytes_t *nonce = trytes_from_trits(nonce_t);
+    if (!nonce)
+        return NULL;
+
     Trytes_t *last_result = nonce_to_result(trytes_t, nonce);
 
+    /* Free memory */
     free(c_state);
     for (int i = 0; i < num_cpu; i++) {
         free(nonce_array[i]);

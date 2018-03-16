@@ -173,6 +173,8 @@ Trobject_t *hashTrytes(Trobject_t *t)
         return NULL;
 
     Curl *c = initCurl();
+    if (!c)
+        return NULL;
     Absorb(c, t);
     Trobject_t *ret = Squeeze(c);
 

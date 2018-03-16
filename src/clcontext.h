@@ -40,10 +40,9 @@ typedef struct {
 } CLContext;
 
 int init_clcontext(CLContext **ctx);
-void init_cl_kernel(CLContext *ctx, char **kernel_name);
-void init_cl_buffer(CLContext *ctx);
+int init_cl_kernel(CLContext *ctx, char **kernel_name);
+int init_cl_buffer(CLContext *ctx);
 
 #define KERNEL_PATH "./src/pow_kernel.cl"
-#define MAX_SOURCE_SIZE (0x100000)
 
 #endif

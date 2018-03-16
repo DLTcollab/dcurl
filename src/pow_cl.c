@@ -31,7 +31,7 @@
 
 CLContext **pow_ctx;
 
-static void init_BufferInfo(CLContext *ctx)
+static int init_BufferInfo(CLContext *ctx)
 {
     ctx->kernel_info.buffer_info[0] =
         (BufferInfo){sizeof(char) * HASH_LENGTH, CL_MEM_WRITE_ONLY};
@@ -52,27 +52,32 @@ static void init_BufferInfo(CLContext *ctx)
     ctx->kernel_info.buffer_info[8] =
         (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
 
-    init_cl_buffer(ctx);
+    return init_cl_buffer(ctx);
 }
 
-static void write_cl_buffer(CLContext *ctx,
-                            int64_t *mid_low,
-                            int64_t *mid_high,
-                            int mwm,
-                            int loop_count)
+static int write_cl_buffer(CLContext *ctx,
+                           int64_t *mid_low,
+                           int64_t *mid_high,
+                           int mwm,
+                           int loop_count)
 {
     cl_command_queue cmdq = ctx->cmdq;
     cl_mem *memobj = ctx->buffer;
     BufferInfo *buffer_info = ctx->kernel_info.buffer_info;
 
-    clEnqueueWriteBuffer(cmdq, memobj[1], CL_TRUE, 0, buffer_info[1].size,
-                         mid_low, 0, NULL, NULL);
-    clEnqueueWriteBuffer(cmdq, memobj[2], CL_TRUE, 0, buffer_info[2].size,
-                         mid_high, 0, NULL, NULL);
-    clEnqueueWriteBuffer(cmdq, memobj[5], CL_TRUE, 0, buffer_info[5].size, &mwm,
-                         0, NULL, NULL);
-    clEnqueueWriteBuffer(cmdq, memobj[8], CL_TRUE, 0, buffer_info[8].size,
-                         &loop_count, 0, NULL, NULL);
+    if (clEnqueueWriteBuffer(cmdq, memobj[1], CL_TRUE, 0, buffer_info[1].size,
+                             mid_low, 0, NULL, NULL) != CL_SUCCESS)
+        return 0;
+    if (clEnqueueWriteBuffer(cmdq, memobj[2], CL_TRUE, 0, buffer_info[2].size,
+                             mid_high, 0, NULL, NULL) != CL_SUCCESS)
+        return 0;
+    if (clEnqueueWriteBuffer(cmdq, memobj[5], CL_TRUE, 0, buffer_info[5].size,
+                             &mwm, 0, NULL, NULL) != CL_SUCCESS)
+        return 0;
+    if (clEnqueueWriteBuffer(cmdq, memobj[8], CL_TRUE, 0, buffer_info[8].size,
+                             &loop_count, 0, NULL, NULL) != CL_SUCCESS)
+        return 0;
+    return 1;
 }
 
 static void init_state(char *state,
@@ -105,21 +110,22 @@ static void init_state(char *state,
     mid_high[offset + 3] = HIGH_3;
 }
 
-void pwork_ctx_init(int context_size)
+int pwork_ctx_init(int context_size)
 {
     char *kernel_name[] = {"init", "search", "finalize"};
-
+    int ret = 1;
     pow_ctx = (CLContext **) malloc(sizeof(CLContext *) * context_size);
 
-    printf("Initializing OpenCL context ...\n");
+    if (!pow_ctx)
+        return 0;
 
     for (int i = 0; i < context_size; i++) {
-        init_clcontext(&pow_ctx[i]);
-        init_cl_kernel(pow_ctx[i], kernel_name);
-        init_BufferInfo(pow_ctx[i]);
+        ret &= init_clcontext(&pow_ctx[i]);
+        ret &= init_cl_kernel(pow_ctx[i], kernel_name);
+        ret &= init_BufferInfo(pow_ctx[i]);
     }
 
-    printf("Initialize End\n");
+    return ret;
 }
 
 void pwork_ctx_destroy(int context_size)
@@ -151,7 +157,8 @@ static char *pwork(char *state, int mwm, int index)
     int64_t mid_low[STATE_LENGTH] = {0}, mid_high[STATE_LENGTH] = {0};
     init_state(state, mid_low, mid_high, HASH_LENGTH - NONCE_LENGTH);
 
-    write_cl_buffer(titan, mid_low, mid_high, mwm, 32);
+    if (!write_cl_buffer(titan, mid_low, mid_high, mwm, 32))
+        return NULL;
 
     if (CL_SUCCESS == clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[0], 1,
                                              &global_offset, &global_work_size,
@@ -165,28 +172,24 @@ static char *pwork(char *state, int mwm, int index)
                                        &global_work_size, &local_work_size, 0,
                                        NULL, &ev1)) {
                 clReleaseEvent(ev1);
-                printf("running search kernel failed\n");
-                exit(0);
+                return NULL; /* Running "search" kernel function failed */
             }
             clWaitForEvents(1, &ev1);
             clReleaseEvent(ev1);
             if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[6],
                                                   CL_TRUE, 0, sizeof(char),
                                                   &found, 0, NULL, NULL)) {
-                printf("Reading finished bool failed\n");
-                exit(0);
+                return NULL; /* Read variable "found" failed */
             }
         }
     } else {
-        printf("Running init kernel failed\n");
-        exit(0);
+        return NULL; /* Running "init" kernel function failed */
     }
 
     if (CL_SUCCESS != clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[2], 1,
                                              NULL, &global_work_size,
                                              &local_work_size, 0, NULL, &ev)) {
-        printf("Running finalize kernel failed\n");
-        exit(0);
+        return NULL; /* Running "finalize" kernel function failed */
     }
 
     char *buf = malloc(HASH_LENGTH);
@@ -195,8 +198,7 @@ static char *pwork(char *state, int mwm, int index)
         if (CL_SUCCESS != clEnqueueReadBuffer(
                               titan->cmdq, titan->buffer[0], CL_TRUE, 0,
                               HASH_LENGTH * sizeof(char), buf, 1, &ev, NULL)) {
-            printf("Reading buf failed\n");
-            exit(0);
+            return NULL; /* Read buffer failed */
         }
     }
     clReleaseEvent(ev);
@@ -206,18 +208,26 @@ static char *pwork(char *state, int mwm, int index)
 static char *tx_to_cstate(Trytes_t *tx)
 {
     Curl *c = initCurl();
+    if (!c)
+        return NULL;
+
+    char *c_state = (char *) malloc(c->state->len);
+    if (!c_state)
+        return NULL;
+
     char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
 
     /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
     memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
-
     Trytes_t *inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    if (!inn)
+        return NULL;
 
     Absorb(c, inn);
 
     Trits_t *tr = trits_from_trytes(tx);
-
-    char *c_state = (char *) malloc(c->state->len);
+    if (!tr)
+        return NULL;
 
     /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
     memcpy(c_state, tr->data + transactionTrinarySize - HashSize,
@@ -239,10 +249,16 @@ Trytes_t *PowCL(Trytes_t *trytes, int mwm, int index)
     Trytes_t *trytes_t = trytes;
 
     Trits_t *tr = trits_from_trytes(trytes_t);
+    if (!tr)
+        return NULL;
 
     char *c_state = tx_to_cstate(trytes_t);
+    if (!c_state)
+        return NULL;
 
     char *ret = pwork(c_state, mwm, index);
+    if (!ret)
+        return NULL;
 
     memcpy(&tr->data[TRANSACTION_LENGTH - HASH_LENGTH], ret,
            HASH_LENGTH * sizeof(char));

@@ -6,6 +6,8 @@
 static char *int_to_char_array(jint *arr, int size)
 {
     char *ret = malloc(size);
+    if (!ret)
+        return NULL;
 
     for (int i = 0; i < size; i++)
         ret[i] = arr[i];
@@ -16,6 +18,8 @@ static char *int_to_char_array(jint *arr, int size)
 static jint *char_to_int_array(char *arr, int size)
 {
     jint *ret = malloc(sizeof(jint) * size);
+    if (!ret)
+        return NULL;
 
     for (jint i = 0; i < size; i++)
         ret[i] = arr[i];
@@ -26,7 +30,8 @@ static jint *char_to_int_array(char *arr, int size)
 JNIEXPORT jboolean JNICALL
 Java_com_iota_iri_hash_PearlDiver_exlib_1init(JNIEnv *env, jclass clazz)
 {
-    dcurl_init(2, 1);
+    if (!dcurl_init(2, 1))
+        return JNI_FALSE;
     return JNI_TRUE;
 }
 
@@ -39,22 +44,26 @@ Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
     /* Convert ***INT*** array (TRITS) to ***CHAR*** array (TRYTES) */
     jint *c_trits = (*env)->GetIntArrayElements(env, trits, NULL);
     char *char_trits = int_to_char_array(c_trits, 8019);
+    if (!char_trits)
+        return JNI_FALSE;
 
     Trits_t *arg_trits = initTrits(char_trits, 8019);
     Trytes_t *arg_trytes = trytes_from_trits(arg_trits);
+    if (!arg_trytes)
+        return JNI_FALSE;
     /****************************************************************/
 
     Trytes_t *result = dcurl_entry(arg_trytes, mwm);
 
     /* Convert ***CHAR*** array(TRYTES) to ***INT*** array (TRITS) */
     Trits_t *ret_trits = trits_from_trytes(result);
-    jint *int_trits = char_to_int_array(ret_trits->data, 8019);
-    /***************************************************************/
+    if (!ret_trits)
+        return JNI_FALSE;
 
-    /*
-    jintArray returnJNIArray = (*env)->NewIntArray(env, 8019);
-    (*env)->SetIntArrayRegion(env, returnJNIArray, 0, 8019, int_trits);
-    */
+    jint *int_trits = char_to_int_array(ret_trits->data, 8019);
+    if (!int_trits)
+        return JNI_FALSE;
+    /***************************************************************/
 
     (*env)->SetIntArrayRegion(env, trits, 0, 8019, int_trits);
 
