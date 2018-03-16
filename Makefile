@@ -7,6 +7,7 @@ DISABLE_JNI ?= 1
 
 CFLAGS = -Os -fPIC -g
 LDFLAGS = -lpthread
+PYFLAGS = --gpu_enable
 
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
 # instructions for Intel and Arm later.
@@ -17,6 +18,9 @@ CFLAGS += \
 	-DENABLE_OPENCL \
 	-I$(OPENCL_PATH)/include
 LDFLAGS += -L$(OPENCL_LIB) -lOpenCL
+PYFLAGS += 1
+else
+PYFLAGS += 0
 endif
 
 # FIXME: avoid hardcoded OS path
@@ -93,10 +97,14 @@ $(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
+test_multi_pow: test/test_multi_pow.py $(OUT)/libdcurl.so
+	$(Q)$(PRINTF) "*** Validating $< ***\n"
+	$(Q)python3 $< $(PYFLAGS) && $(PRINTF) "\t$(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
+
 $(OUT)/test_%.done: $(OUT)/test_%
 	$(Q)$(PRINTF) "*** Validating $< ***\n"
 	$(Q)./$< && $(PRINTF) "\t$(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
-check: $(addsuffix .done, $(TESTS))
+check: $(addsuffix .done, $(TESTS)) test_multi_pow
 
 clean:
 	$(RM) -r $(OUT)

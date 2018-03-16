@@ -244,7 +244,11 @@ static void incrN128(int n, __m128i *mid_low, __m128i *mid_high)
     }
 }
 
-static long long int pwork128(int8_t mid[], int mwm, int8_t nonce[], int n, int id)
+static long long int pwork128(int8_t mid[],
+                              int mwm,
+                              int8_t nonce[],
+                              int n,
+                              int id)
 {
     __m128i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     para128(mid, lmid, hmid);
@@ -324,7 +328,7 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     return c_state;
 }
 
-static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
+static int8_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
     int8_t *rst = (int8_t *) malloc(rst_len);
@@ -335,10 +339,7 @@ static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
     memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data,
            rst_len - (tx->len - NonceTrinarySize / 3));
 
-    Trytes_t *ret = initTrytes(rst, rst_len);
-    free(rst);
-
-    return ret;
+    return rst;
 }
 
 int pow_sse_init(int num_task)
@@ -366,12 +367,12 @@ void pow_sse_destroy()
     free(countSSE);
 }
 
-Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
+int8_t *PowSSE(int8_t *trytes, int mwm, int index)
 {
     stopSSE[index] = 0;
     countSSE[index] = 0;
 
-    Trytes_t *trytes_t = trytes;
+    Trytes_t *trytes_t = initTrytes(trytes, 2673);
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
@@ -421,7 +422,7 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
     if (!nonce)
         return NULL;
 
-    Trytes_t *last_result = nonce_to_result(trytes_t, nonce);
+    int8_t *last_result = nonce_to_result(trytes_t, nonce);
 
     /* Free memory */
     free(c_state);
@@ -431,6 +432,7 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
     free(nonce_array);
     free(threads);
     free(pitem);
+    freeTrobject(trytes_t);
     freeTrobject(nonce_t);
     freeTrobject(nonce);
 

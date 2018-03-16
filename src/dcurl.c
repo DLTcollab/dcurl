@@ -82,7 +82,7 @@ void dcurl_destroy()
 #endif
 }
 
-Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
+int8_t *dcurl_entry(int8_t *trytes, int mwm)
 {
     static int num_cpu_thread = 0;
     static int num_gpu_thread = 0;
@@ -118,7 +118,7 @@ Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
         pthread_mutex_unlock(&mtx);
     }
 
-    Trytes_t *ret_trytes = NULL;
+    int8_t *ret_trytes = NULL;
 
     switch (selected_entry) {
     case 1:

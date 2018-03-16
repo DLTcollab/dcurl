@@ -12,6 +12,7 @@
 #endif
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #ifdef NDEBUG
 #undef NDEBUG

@@ -2,10 +2,11 @@
 #include <jni.h>
 #include "../src/dcurl.h"
 #include "../src/trinary/trinary.h"
+#include <stdint.h>
 
-static char *int_to_char_array(jint *arr, int size)
+static int8_t *int_to_char_array(jint *arr, int size)
 {
-    char *ret = malloc(size);
+    int8_t *ret = malloc(size);
     if (!ret)
         return NULL;
 
@@ -15,7 +16,7 @@ static char *int_to_char_array(jint *arr, int size)
     return ret;
 }
 
-static jint *char_to_int_array(char *arr, int size)
+static jint *char_to_int_array(int8_t *arr, int size)
 {
     jint *ret = malloc(sizeof(jint) * size);
     if (!ret)
@@ -43,7 +44,7 @@ Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
 {
     /* Convert ***INT*** array (TRITS) to ***CHAR*** array (TRYTES) */
     jint *c_trits = (*env)->GetIntArrayElements(env, trits, NULL);
-    char *char_trits = int_to_char_array(c_trits, 8019);
+    int8_t *char_trits = int_to_char_array(c_trits, 8019);
     if (!char_trits)
         return JNI_FALSE;
 
@@ -53,10 +54,11 @@ Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
         return JNI_FALSE;
     /****************************************************************/
 
-    Trytes_t *result = dcurl_entry(arg_trytes, mwm);
+    int8_t *result = dcurl_entry(arg_trytes->data, mwm);
 
     /* Convert ***CHAR*** array(TRYTES) to ***INT*** array (TRITS) */
-    Trits_t *ret_trits = trits_from_trytes(result);
+    Trytes_t *ret_trytes = initTrytes(result, 2673);
+    Trits_t *ret_trits = trits_from_trytes(ret_trytes);
     if (!ret_trits)
         return JNI_FALSE;
 
@@ -70,7 +72,8 @@ Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
     /* Free */
     free(char_trits);
     free(int_trits);
-    freeTrobject(result);
+    free(result);
+    freeTrobject(ret_trytes);
     freeTrobject(arg_trits);
     freeTrobject(arg_trytes);
     freeTrobject(ret_trits);
