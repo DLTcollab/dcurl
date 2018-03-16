@@ -22,25 +22,23 @@ $ make DISABLE_GPU=1 DISABLE_JNI=1
 ```
 
 # Test
-* Make a test
+* Make a test with GPU
 
-```$ make check ```
+```$ make check DISABLE_GPU=0```
 
 * Expected Results
 
 ```
-*** build/test_trinary ***
-	[ Verified ]
-*** build/test_curl ***
-	[ Verified ]
-Testing SSE Implementation with mwm = 14...
-Result: KJQEILJFZJYJZBNBTYXNBSNCCMHZDYZXTCHXADBMNPKHFOHNLWJLIGTUHPFEKRZEQ9DZHBJIUJRO99999
-*** build/test_pow_sse ***
-	[ Verified ]
-Testing OpenCL Implementation with mwm = 14...
-Result: KJQEILJFZJYJZBNBTYXNBSNCCMHZDYZXTCHXADBMNPKHFOHNLWJLIGTUHPFEKRZEQ9DZHBJIUJRO99999
-*** build/test_pow_cl ***
-	[ Verified ]
+*** Validating build/test_trinary ***
+        [ Verified ]
+*** Validating build/test_curl ***
+        [ Verified ]
+*** Validating build/test_pow_sse ***
+        [ Verified ]
+*** Validating build/test_pow_cl ***
+        [ Verified ]
+*** Validating test/test_multi_pow.py ***
+        [ Verified ]
 ```
 
 # Tuning
