@@ -108,6 +108,8 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
         num_waiting_thread++;
         pthread_mutex_unlock(&mtx);
         sem_wait(&notify);
+        /* Waiting thread acquire permission */
+        num_waiting_thread--;
         selected_entry = 1;
         /* get mutex number */
         selected_mutex_id = get_mutex_id(cpu_mutex_id, 1);
@@ -148,7 +150,7 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
 #endif
 
     if (num_waiting_thread > 0) {
-        /* Don't unlock mutex, giving waiting thread priority */
+        /* Don't unlock mutex, giving waiting thread permision */
         sem_post(&notify);
     } else {
 #if defined(ENABLE_OPENCL)
