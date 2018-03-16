@@ -55,7 +55,9 @@ void dcurl_init(int max_cpu_thread, int max_gpu_thread)
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
     pow_sse_init(MAX_CPU_THREAD);
+#if defined(ENABLE_OPENCL)
     pwork_ctx_init(MAX_GPU_THREAD);
+#endif
 }
 
 void dcurl_destroy()
@@ -63,7 +65,9 @@ void dcurl_destroy()
     free(cpu_mutex_id);
     free(gpu_mutex_id);
     pow_sse_destroy();
+#if defined(ENABLE_OPENCL)
     pwork_ctx_destroy(MAX_GPU_THREAD);
+#endif
 }
 
 Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
@@ -107,9 +111,11 @@ Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
         case 1:
             ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
             break;
+#if defined(ENABLE_OPENCL)
         case 2:
             ret_trytes = PowCL(trytes, mwm, selected_mutex_id);
             break;
+#endif
         default:
             printf("error produced\n");
             exit(0);
