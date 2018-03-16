@@ -19,8 +19,9 @@ CFLAGS += \
 LDFLAGS += -L$(OPENCL_LIB) -lOpenCL
 endif
 
+# FIXME: avoid hardcoded OS path
 ifneq ("$(DISABLE_JNI)","1")
-CFLAGS += \
+CFLAGS_JNI = \
 	-I$(OPENJDK_PATH)/include \
 	-I$(OPENJDK_PATH)/include/linux
 endif
@@ -75,6 +76,9 @@ $(OUT)/test_%.o: test/test_%.c
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
 
 $(OUT)/jni/%.o: jni/%.c
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) $(CFLAGS_JNI) -c -MMD -MF $@.d $<
+
 $(OUT)/trinary/%.o: $(SRC)/trinary/%.c
 $(OUT)/hash/%.o: $(SRC)/hash/%.c
 $(OUT)/%.o: $(SRC)/%.c
