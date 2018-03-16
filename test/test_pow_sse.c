@@ -1,7 +1,5 @@
-/* Test program for pow_sse & pow_cl */
-#include <stdio.h>
-#include "../src/pow_sse.h"
-#include "../src/trinary/trinary.h"
+/* Test program for pow_sse */
+#include "common.h"
 
 int main()
 {
@@ -49,21 +47,17 @@ int main()
     Trytes_t *trytes = initTrytes((signed char *) txt, 2673);
     int mwm = 14;
 
-    printf("Testing SSE Implementation with mwm = %d...\n", mwm);
+    /* test SSE Implementation with mwm = 14 */
     pow_sse_init(1);
     Trytes_t *ret_trytes = PowSSE(trytes, mwm, 0);
     pow_sse_destroy();
 
     Trytes_t *hash_trytes = hashTrytes(ret_trytes);
-    printf("Result: %s\n", hash_trytes->data);
 
     /* Validation */
     Trits_t *ret_trits = trits_from_trytes(hash_trytes);
     for (int i = 243 - 1; i >= 243 - mwm; i--) {
-        if (ret_trits->data[i] != 0) {
-            printf("Pow SSE Test failed\n");
-            return -1;
-        }
+        assert(ret_trits->data[i] == 0);
     }
 
     freeTrobject(trytes);
@@ -71,6 +65,5 @@ int main()
     freeTrobject(hash_trytes);
     freeTrobject(ret_trits);
 
-    printf("Pow SSE Test Success\n");
     return 0;
 }
