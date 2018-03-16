@@ -88,7 +88,8 @@ $(OUT)/libdcurl.so: $(OBJS)
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 $(OUT)/test_%.done: $(OUT)/test_%
-	$(Q)./$< && $(PRINTF) "*** $< *** $(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
+	$(Q)$(PRINTF) "*** Validating $< ***\n"
+	$(Q)./$< && $(PRINTF) "\t$(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
 check: $(addsuffix .done, $(TESTS))
 
 clean:

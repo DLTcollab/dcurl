@@ -26,21 +26,21 @@ $ make DISABLE_GPU=1 DISABLE_JNI=1
 
 ```$ make check ```
 
-* Expected Result
+* Expected Results
 
 ```
-Trinary Test Passed!
-*** build/test_trinary *** [ Verified ]
-Curl Test Passed!
-*** build/test_curl *** [ Verified ]
+*** build/test_trinary ***
+	[ Verified ]
+*** build/test_curl ***
+	[ Verified ]
 Testing SSE Implementation with mwm = 14...
 Result: KJQEILJFZJYJZBNBTYXNBSNCCMHZDYZXTCHXADBMNPKHFOHNLWJLIGTUHPFEKRZEQ9DZHBJIUJRO99999
-Pow SSE Test Success
-*** build/test_pow_sse *** [ Verified ]
+*** build/test_pow_sse ***
+	[ Verified ]
 Testing OpenCL Implementation with mwm = 14...
 Result: KJQEILJFZJYJZBNBTYXNBSNCCMHZDYZXTCHXADBMNPKHFOHNLWJLIGTUHPFEKRZEQ9DZHBJIUJRO99999
-Pow OpenCL Test Success
-*** build/test_pow_cl *** [ Verified ]
+*** build/test_pow_cl ***
+	[ Verified ]
 ```
 
 # Tuning
