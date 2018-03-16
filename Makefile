@@ -23,11 +23,19 @@ else
 PYFLAGS += 0
 endif
 
-# FIXME: avoid hardcoded OS path
 ifneq ("$(DISABLE_JNI)","1")
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+JAVA_HOME := $(shell /usr/libexec/java_home)
+CFLAGS_JNI = \
+	-I$(JAVA_HOME)/include \
+	-I$(JAVA_HOME)/include/darwin
+else
+# Default to Linux
 CFLAGS_JNI = \
 	-I$(OPENJDK_PATH)/include \
 	-I$(OPENJDK_PATH)/include/linux
+endif
 endif
 
 TESTS = \
