@@ -47,15 +47,13 @@ Trobject_t *initTrits(signed char *src, int len)
     Trobject_t *trits = NULL;
 
     trits = (Trobject_t *) malloc(sizeof(Trobject_t));
-    if (!trits) {
-        printf("trinary.c: initTrits: Malloc Unavailable\n");
-        exit(1);
-    }
+    if (!trits)
+        return NULL;
 
     trits->data = (signed char *) malloc(len + 1);
     if (!trits->data) {
-        printf("trinary.c: initTrits: Malloc Unavailable\n");
-        exit(1);
+        free(trits);
+        return NULL;
     }
 
     /* Copy data from src to Trits */
@@ -68,8 +66,8 @@ Trobject_t *initTrits(signed char *src, int len)
     /* Check validation */
     if (!validateTrits(trits)) {
         freeTrobject(trits);
-        printf("trinary.c: initTrits: Not availabe src!\n");
-        exit(1);
+        /* Not availabe src */
+        return NULL;
     }
 
     return trits;
@@ -81,14 +79,13 @@ Trobject_t *initTrytes(signed char *src, int len)
 
     trytes = (Trobject_t *) malloc(sizeof(Trobject_t));
     if (!trytes) {
-        printf("trinary.c: initTrytes: Malloc Unavailable\n");
-        exit(1);
+        return NULL;
     }
 
     trytes->data = (signed char *) malloc(len + 1);
     if (!trytes->data) {
-        printf("trinary.c: initTrytes: Malloc Unavailable\n");
-        exit(1);
+        free(trytes);
+        return NULL;
     }
 
     /* Copy data from src to Trytes */
@@ -101,8 +98,8 @@ Trobject_t *initTrytes(signed char *src, int len)
     /* Check validation */
     if (!validateTrytes(trytes)) {
         freeTrobject(trytes);
-        printf("trinary.c: initTrytes: Not available src!\n");
-        exit(1);
+        /* Not available src */
+        return NULL;
     }
 
     return trytes;
@@ -111,14 +108,12 @@ Trobject_t *initTrytes(signed char *src, int len)
 Trobject_t *trytes_from_trits(Trobject_t *trits)
 {
     if (!trits) {
-        printf("trinary.c: trytes_from_trits: trits not initialized\n");
-        exit(1);
+        return NULL;
     }
 
     if (trits->len % 3 != 0 || !validateTrits(trits)) {
-        printf(
-            "trinary.c: trytes_from_trits: Not available trits to convert\n");
-        exit(1);
+        /* Not available trits to convert */
+        return NULL;
     }
 
     Trobject_t *trytes = NULL;
@@ -142,16 +137,12 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
 
 Trobject_t *trits_from_trytes(Trobject_t *trytes)
 {
-    if (!trytes) {
-        printf("trinary.c: trits_from_trytes: trytes not initialized\n");
-        exit(1);
-    }
+    if (!trytes)
+        return NULL;
 
     if (!validateTrytes(trytes)) {
-        printf(
-            "trinary.c: trits_from_trytes: trytes is not available to "
-            "convert\n");
-        exit(1);
+        /* trytes is not available to convert */
+        return NULL;
     }
 
     Trobject_t *trits = NULL;
@@ -173,10 +164,8 @@ Trobject_t *trits_from_trytes(Trobject_t *trytes)
 
 Trobject_t *hashTrytes(Trobject_t *t)
 {
-    if (t->type != TYPE_TRYTES) {
-        printf("trinary.c: hashTrytes: This is not trytes\n");
-        exit(1);
-    }
+    if (t->type != TYPE_TRYTES)
+        return NULL;
 
     Curl *c = initCurl();
     Absorb(c, t);

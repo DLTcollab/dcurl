@@ -56,6 +56,6 @@ int main()
     freeTrobject(ret_trytes);
 
     assert(ret != 0);
-    
+
     return 0;
 }

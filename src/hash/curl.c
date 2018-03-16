@@ -114,10 +114,8 @@ Trytes_t *Squeeze(Curl *c)
 Curl *initCurl()
 {
     Curl *c = (Curl *) malloc(sizeof(Curl));
-    if (!c) {
-        printf("curl.c: initCurl: Not available memory to init\n");
-        exit(1);
-    }
+    if (!c)
+	return NULL;
 
     signed char src[STATE_LENGTH] = {0};
     c->state = initTrits(src, STATE_LENGTH);
