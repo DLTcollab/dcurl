@@ -1,4 +1,5 @@
 #include "trinary.h"
+#include "../constants.h"
 #include "../hash/curl.h"
 
 static char TrytesToTritsMappings[][3] = {
@@ -7,8 +8,6 @@ static char TrytesToTritsMappings[][3] = {
     {0, 1, 1},  {1, 1, 1},  {-1, -1, -1}, {0, -1, -1}, {1, -1, -1}, {-1, 0, -1},
     {0, 0, -1}, {1, 0, -1}, {-1, 1, -1},  {0, 1, -1},  {1, 1, -1},  {-1, -1, 0},
     {0, -1, 0}, {1, -1, 0}, {-1, 0, 0}};
-
-static char TryteAlphabet[] = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 void freeTrobject(Trobject_t *t)
 {

@@ -17,18 +17,6 @@ typedef struct _trinary_object {
 typedef Trobject_t Trits_t;
 typedef Trobject_t Trytes_t;
 
-/*
-typedef struct _trits {
-    char *data;
-    int len;
-} Trits_t;
-
-typedef struct _trytes {
-    char *data;
-    int len;
-} Trytes_t;
-*/
-
 Trobject_t *initTrits(signed char *src, int len);
 Trobject_t *initTrytes(signed char *src, int len);
 

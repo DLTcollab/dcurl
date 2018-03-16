@@ -115,7 +115,7 @@ Curl *initCurl()
 {
     Curl *c = (Curl *) malloc(sizeof(Curl));
     if (!c)
-	return NULL;
+        return NULL;
 
     signed char src[STATE_LENGTH] = {0};
     c->state = initTrits(src, STATE_LENGTH);
