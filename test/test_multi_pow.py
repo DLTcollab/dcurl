@@ -9,7 +9,7 @@ from iota import TryteString
 from iota.crypto import Curl
 
 TRYTES_LIST_PATH = "./test/trytes.txt"
-DCURL_PATH = "./libdcurl.so"
+DCURL_PATH = "./build/libdcurl.so"
 NUM_TRYTES = 10
 
 join_list = []
@@ -45,7 +45,6 @@ def call_dcurl(idx, mwm, lib, trytes_list):
     trytes = TryteString(ret)
 
     hash_trytes = hash(trytes)
-    print(hash_trytes)
     if validate(hash_trytes, mwm) is not True:
         sys.exit(1)
 
