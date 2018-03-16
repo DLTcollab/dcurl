@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2018 dcurl Developers.
+ * Use of this source code is governed by MIT license that can be
+ * found in the LICENSE file.
+ */
+
 #include "trinary.h"
 #include "../hash/curl.h"
 

@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2017 IOTA AS, IOTA Foundation and Developers.
+ * Use of this source code is governed by MIT license that can be
+ * found in the LICENSE file.
+ */
+
 #define HASH_LENGTH 243
 #define OFFSET_LENGTH 4
 #define NONCE_LENGTH HASH_LENGTH / 3

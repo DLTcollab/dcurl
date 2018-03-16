@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2018 dcurl Developers.
+ * Copyright (C) 2017 IOTA AS, IOTA Foundation and Developers.
+ * Use of this source code is governed by MIT license that can be
+ * found in the LICENSE file.
+ */
+
 #include "pow_cl.h"
 #include <CL/cl.h>
 #include <stdint.h>
