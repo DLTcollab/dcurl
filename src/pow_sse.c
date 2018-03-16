@@ -294,7 +294,7 @@ static char *tx_to_cstate(Trytes_t *tx)
     if (!c_state)
         return NULL;
 
-    char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+    signed char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
 
     /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
     memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
@@ -326,7 +326,7 @@ static char *tx_to_cstate(Trytes_t *tx)
 static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
-    char *rst = (char *) malloc(rst_len);
+    signed char *rst = (signed char *) malloc(rst_len);
     if (!rst)
         return NULL;
 
@@ -388,7 +388,8 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
         return NULL;
 
     /* Prepare nonce to each thread */
-    char **nonce_array = (char **) malloc(sizeof(char *) * num_cpu);
+    signed char **nonce_array =
+        (signed char **) malloc(sizeof(char *) * num_cpu);
     if (!nonce_array)
         return NULL;
 
@@ -398,7 +399,8 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
     for (int i = 0; i < num_cpu; i++) {
         pitem[i].mid = c_state;
         pitem[i].mwm = mwm;
-        pitem[i].nonce = nonce_array[i] = (char *) malloc(NonceTrinarySize);
+        nonce_array[i] = (signed char *) malloc(NonceTrinarySize);
+        pitem[i].nonce = (char *) nonce_array[i];
         pitem[i].n = i;
         pitem[i].ret = 0;
         pitem[i].index = index;

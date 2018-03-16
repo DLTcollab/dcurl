@@ -5,7 +5,7 @@ OUT ?= ./build
 DISABLE_GPU ?= 1
 DISABLE_JNI ?= 1
 
-CFLAGS = -Os -fPIC -g
+CFLAGS = -Wall -Os -fPIC -g
 LDFLAGS = -lpthread
 
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
