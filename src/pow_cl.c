@@ -195,9 +195,10 @@ static int8_t *pwork(int8_t *state, int mwm, int index)
     int8_t *buf = malloc(HASH_LENGTH);
 
     if (found > 0) {
-        if (CL_SUCCESS != clEnqueueReadBuffer(
-                              titan->cmdq, titan->buffer[0], CL_TRUE, 0,
-                              HASH_LENGTH * sizeof(int8_t), buf, 1, &ev, NULL)) {
+        if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[0],
+                                              CL_TRUE, 0,
+                                              HASH_LENGTH * sizeof(int8_t), buf,
+                                              1, &ev, NULL)) {
             return NULL; /* Read buffer failed */
         }
     }
@@ -243,10 +244,9 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     return c_state;
 }
 
-Trytes_t *PowCL(Trytes_t *trytes, int mwm, int index)
+int8_t *PowCL(int8_t *trytes, int mwm, int index)
 {
-    // Trytes_t *trytes_t = initTrytes(trytes, 2673);
-    Trytes_t *trytes_t = trytes;
+    Trytes_t *trytes_t = initTrytes(trytes, 2673);
 
     Trits_t *tr = trits_from_trytes(trytes_t);
     if (!tr)
@@ -264,10 +264,14 @@ Trytes_t *PowCL(Trytes_t *trytes, int mwm, int index)
            HASH_LENGTH * sizeof(int8_t));
 
     Trytes_t *last = trytes_from_trits(tr);
+    int8_t *ret_data = last->data;
 
     freeTrobject(tr);
+    freeTrobject(trytes_t);
+    /* hack */
+    free(last);
     free(c_state);
     free(ret);
 
-    return last;
+    return ret_data;
 }

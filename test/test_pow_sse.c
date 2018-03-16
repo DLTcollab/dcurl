@@ -3,7 +3,7 @@
 
 int main()
 {
-    char *txt =
+    char *trytes =
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
@@ -44,15 +44,15 @@ int main()
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999";
 
-    Trytes_t *trytes = initTrytes((signed char *) txt, 2673);
     int mwm = 14;
 
     /* test SSE Implementation with mwm = 14 */
     pow_sse_init(1);
-    Trytes_t *ret_trytes = PowSSE(trytes, mwm, 0);
+    int8_t *ret_trytes = PowSSE(trytes, mwm, 0);
     pow_sse_destroy();
 
-    Trytes_t *hash_trytes = hashTrytes(ret_trytes);
+    Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
+    Trytes_t *hash_trytes = hashTrytes(trytes_t);
 
     /* Validation */
     Trits_t *ret_trits = trits_from_trytes(hash_trytes);
@@ -60,8 +60,8 @@ int main()
         assert(ret_trits->data[i] == 0);
     }
 
-    freeTrobject(trytes);
-    freeTrobject(ret_trytes);
+    free(ret_trytes);
+    freeTrobject(trytes_t);
     freeTrobject(hash_trytes);
     freeTrobject(ret_trits);
 
