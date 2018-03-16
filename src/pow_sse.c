@@ -41,7 +41,7 @@
 /* On Mac OS X, define our own get_nprocs_conf() */
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/sysctl.h>
-unsigned int get_nprocs_conf()
+static unsigned int get_nprocs_conf()
 {
     int numProcessors = 0;
     size_t size = sizeof(numProcessors);
@@ -52,12 +52,12 @@ unsigned int get_nprocs_conf()
 #define NPROCS
 #endif
 
-pthread_mutex_t *pow_sse_mutex;
-int *stopSSE;
-long long int *countSSE;
-int DCURL_NUM_CPU = 0;
+static pthread_mutex_t *pow_sse_mutex;
+static int *stopSSE;
+static long long int *countSSE;
+static int DCURL_NUM_CPU = 0;
 
-const int indices[] = {
+static const int indices[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
     357, 721, 356, 720, 355, 719, 354, 718, 353, 717, 352, 716, 351, 715, 350,
     714, 349, 713, 348, 712, 347, 711, 346, 710, 345, 709, 344, 708, 343, 707,

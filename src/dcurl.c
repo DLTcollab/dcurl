@@ -16,19 +16,19 @@ static int MAX_CPU_THREAD = -1;
 static int MAX_GPU_THREAD = -1;
 
 /* mutex protecting critical section */
-pthread_mutex_t mtx;
+static pthread_mutex_t mtx;
 
 /* Semaphore that blocks excessive task*/
-sem_t notify;
+static sem_t notify;
 
 /* check whether dcurl is initialized */
-int isInitialized = 0;
+static int isInitialized = 0;
 
 /* Respective number for Mutex */
-int *cpu_mutex_id = NULL;
-int *gpu_mutex_id = NULL;
+static int *cpu_mutex_id = NULL;
+static int *gpu_mutex_id = NULL;
 
-int get_mutex_id(int *mutex_id, int env)
+static int get_mutex_id(int *mutex_id, int env)
 {
     int MAX = (env == 1) ? MAX_CPU_THREAD : MAX_GPU_THREAD;
     for (int i = 0; i < MAX; i++) {
