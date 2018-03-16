@@ -1,12 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "dcurl.h"
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include "dcurl.h"
-#include "trinary/trinary.h"
-#include "pow_sse.h"
 #include "pow_cl.h"
+#include "pow_sse.h"
+#include "trinary/trinary.h"
 
 
 /* number of task that CPU can execute concurrently */
@@ -97,7 +97,8 @@ Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
         /* get mutex number */
         pthread_mutex_lock(&mtx);
         selected_entry = 1;
-        /* get mutex number. If return value is -1, which means cpu queue full */
+        /* get mutex number. If return value is -1, which means cpu queue full
+         */
         if ((selected_mutex_id = get_mutex_id(cpu_mutex_id, 1)) == -1) {
             selected_mutex_id = get_mutex_id(gpu_mutex_id, 2);
             selected_entry = 2;
@@ -106,28 +107,28 @@ Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
     }
 
     Trytes_t *ret_trytes = NULL;
-        
+
     switch (selected_entry) {
-        case 1:
-            ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
-            break;
+    case 1:
+        ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
+        break;
 #if defined(ENABLE_OPENCL)
-        case 2:
-            ret_trytes = PowCL(trytes, mwm, selected_mutex_id);
-            break;
+    case 2:
+        ret_trytes = PowCL(trytes, mwm, selected_mutex_id);
+        break;
 #endif
-        default:
-            printf("error produced\n");
-            exit(0);
+    default:
+        printf("error produced\n");
+        exit(0);
     }
-   
+
     pthread_mutex_lock(&mtx);
-    
+
     if (selected_entry == 1)
         cpu_mutex_id[selected_mutex_id] = 0;
     else
         gpu_mutex_id[selected_mutex_id] = 0;
-    
+
     if (num_waiting_thread > 0) {
         sem_post(&notify);
         num_waiting_thread--;
@@ -141,5 +142,3 @@ Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
 
     return ret_trytes;
 }
-
-
