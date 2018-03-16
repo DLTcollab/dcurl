@@ -13,7 +13,7 @@
 #include "constants.h"
 
 /* Required for get_nprocs_conf() on Linux */
-#ifdef NPROCS
+#if defined(__linux__)
 #include <sys/sysinfo.h>
 #endif
 
