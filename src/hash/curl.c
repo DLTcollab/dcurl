@@ -5,10 +5,11 @@
  */
 
 #include "curl.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-static const char truthTable[11] = {1, 0, -1, 2, 1, -1, 0, 2, -1, 1, 0};
+static const int8_t truthTable[11] = {1, 0, -1, 2, 1, -1, 0, 2, -1, 1, 0};
 static const int indices__[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
     357, 721, 356, 720, 355, 719, 354, 718, 353, 717, 352, 716, 351, 715, 350,
@@ -60,18 +61,18 @@ static const int indices__[] = {
     12,  376, 11,  375, 10,  374, 9,   373, 8,   372, 7,   371, 6,   370, 5,
     369, 4,   368, 3,   367, 2,   366, 1,   365, 0};
 
-static void _transform(signed char state[])
+static void _transform(int8_t state[])
 {
     int r = 0, i = 0;
-    signed char copy[STATE_LENGTH] = {0};
-    signed char *from = state, *to = copy;
+    int8_t copy[STATE_LENGTH] = {0};
+    int8_t *from = state, *to = copy;
     for (r = 0; r < 81; r++) {
         for (i = 0; i < STATE_LENGTH; i++) {
             int aa = indices__[i];
             int bb = indices__[i + 1];
             to[i] = truthTable[from[aa] + (from[bb] << 2) + 5];
         }
-        signed char *tmp = from;
+        int8_t *tmp = from;
         from = to;
         to = tmp;
     }
@@ -103,7 +104,7 @@ void Absorb(Curl *c, Trytes_t *inn)
 
 Trytes_t *Squeeze(Curl *c)
 {
-    signed char src[HASH_LENGTH] = {0};
+    int8_t src[HASH_LENGTH] = {0};
 
     /* Get trits[:HASH_LENGTH] to an array */
     memcpy(src, c->state->data, HASH_LENGTH);
@@ -123,7 +124,7 @@ Curl *initCurl()
     if (!c)
         return NULL;
 
-    signed char src[STATE_LENGTH] = {0};
+    int8_t src[STATE_LENGTH] = {0};
     c->state = initTrits(src, STATE_LENGTH);
 
     return c;

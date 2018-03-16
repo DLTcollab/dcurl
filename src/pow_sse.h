@@ -2,13 +2,14 @@
 #define POW_SSE_H_
 
 #include "./trinary/trinary.h"
+#include <stdint.h>
 
 typedef struct _pwork_struct Pwork_struct;
 
 struct _pwork_struct {
-    char *mid;
+    int8_t *mid;
     int mwm;
-    char *nonce;
+    int8_t *nonce;
     int n;
     int index;
     long long int ret;

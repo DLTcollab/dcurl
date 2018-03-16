@@ -11,6 +11,7 @@
 #include <string.h>
 #include "./hash/curl.h"
 #include "constants.h"
+#include <stdint.h>
 
 /* Required for get_nprocs_conf() on Linux */
 #if defined(__linux__)
@@ -139,7 +140,7 @@ static int incr128(__m128i *mid_low, __m128i *mid_high)
     return i == HASH_LENGTH;
 }
 
-static void seri128(__m128i *low, __m128i *high, int n, char *r)
+static void seri128(__m128i *low, __m128i *high, int n, int8_t *r)
 {
     int index = 0;
 
@@ -186,7 +187,7 @@ static int check128(__m128i *l, __m128i *h, int m)
 static long long int loop128(__m128i *lmid,
                              __m128i *hmid,
                              int m,
-                             char *nonce,
+                             int8_t *nonce,
                              int id)
 {
     int n = 0;
@@ -209,7 +210,7 @@ static long long int loop128(__m128i *lmid,
     return -i * 128 - 1;
 }
 
-static void para128(char in[], __m128i l[], __m128i h[])
+static void para128(int8_t in[], __m128i l[], __m128i h[])
 {
     for (int i = 0; i < STATE_LENGTH; i++) {
         switch (in[i]) {
@@ -243,7 +244,7 @@ static void incrN128(int n, __m128i *mid_low, __m128i *mid_high)
     }
 }
 
-static long long int pwork128(char mid[], int mwm, char nonce[], int n, int id)
+static long long int pwork128(int8_t mid[], int mwm, int8_t nonce[], int n, int id)
 {
     __m128i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     para128(mid, lmid, hmid);
@@ -284,17 +285,17 @@ static void *pworkThread(void *pitem)
     pthread_exit(NULL);
 }
 
-static char *tx_to_cstate(Trytes_t *tx)
+static int8_t *tx_to_cstate(Trytes_t *tx)
 {
     Curl *c = initCurl();
     if (!c)
         return NULL;
 
-    char *c_state = (char *) malloc(c->state->len);
+    int8_t *c_state = (int8_t *) malloc(c->state->len);
     if (!c_state)
         return NULL;
 
-    char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+    int8_t tyt[(transactionTrinarySize - HashSize) / 3] = {0};
 
     /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
     memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
@@ -326,7 +327,7 @@ static char *tx_to_cstate(Trytes_t *tx)
 static Trytes_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
-    char *rst = (char *) malloc(rst_len);
+    int8_t *rst = (int8_t *) malloc(rst_len);
     if (!rst)
         return NULL;
 
@@ -372,7 +373,7 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
 
     Trytes_t *trytes_t = trytes;
 
-    char *c_state = tx_to_cstate(trytes_t);
+    int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
         return NULL;
 
@@ -388,7 +389,7 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
         return NULL;
 
     /* Prepare nonce to each thread */
-    char **nonce_array = (char **) malloc(sizeof(char *) * num_cpu);
+    int8_t **nonce_array = (int8_t **) malloc(sizeof(int8_t *) * num_cpu);
     if (!nonce_array)
         return NULL;
 
@@ -398,7 +399,7 @@ Trytes_t *PowSSE(Trytes_t *trytes, int mwm, int index)
     for (int i = 0; i < num_cpu; i++) {
         pitem[i].mid = c_state;
         pitem[i].mwm = mwm;
-        pitem[i].nonce = nonce_array[i] = (char *) malloc(NonceTrinarySize);
+        pitem[i].nonce = nonce_array[i] = (int8_t *) malloc(NonceTrinarySize);
         pitem[i].n = i;
         pitem[i].ret = 0;
         pitem[i].index = index;

@@ -80,7 +80,7 @@ static int write_cl_buffer(CLContext *ctx,
     return 1;
 }
 
-static void init_state(char *state,
+static void init_state(int8_t *state,
                        int64_t *mid_low,
                        int64_t *mid_high,
                        size_t offset)
@@ -139,7 +139,7 @@ void pwork_ctx_destroy(int context_size)
     }
 }
 
-static char *pwork(char *state, int mwm, int index)
+static int8_t *pwork(int8_t *state, int mwm, int index)
 {
     size_t local_work_size, global_work_size, global_offset, num_groups;
     char found = 0;
@@ -192,12 +192,12 @@ static char *pwork(char *state, int mwm, int index)
         return NULL; /* Running "finalize" kernel function failed */
     }
 
-    char *buf = malloc(HASH_LENGTH);
+    int8_t *buf = malloc(HASH_LENGTH);
 
     if (found > 0) {
         if (CL_SUCCESS != clEnqueueReadBuffer(
                               titan->cmdq, titan->buffer[0], CL_TRUE, 0,
-                              HASH_LENGTH * sizeof(char), buf, 1, &ev, NULL)) {
+                              HASH_LENGTH * sizeof(int8_t), buf, 1, &ev, NULL)) {
             return NULL; /* Read buffer failed */
         }
     }
@@ -205,17 +205,17 @@ static char *pwork(char *state, int mwm, int index)
     return buf;
 }
 
-static char *tx_to_cstate(Trytes_t *tx)
+static int8_t *tx_to_cstate(Trytes_t *tx)
 {
     Curl *c = initCurl();
     if (!c)
         return NULL;
 
-    char *c_state = (char *) malloc(c->state->len);
+    int8_t *c_state = (int8_t *) malloc(c->state->len);
     if (!c_state)
         return NULL;
 
-    char tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+    int8_t tyt[(transactionTrinarySize - HashSize) / 3] = {0};
 
     /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
     memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
@@ -252,16 +252,16 @@ Trytes_t *PowCL(Trytes_t *trytes, int mwm, int index)
     if (!tr)
         return NULL;
 
-    char *c_state = tx_to_cstate(trytes_t);
+    int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
         return NULL;
 
-    char *ret = pwork(c_state, mwm, index);
+    int8_t *ret = pwork(c_state, mwm, index);
     if (!ret)
         return NULL;
 
     memcpy(&tr->data[TRANSACTION_LENGTH - HASH_LENGTH], ret,
-           HASH_LENGTH * sizeof(char));
+           HASH_LENGTH * sizeof(int8_t));
 
     Trytes_t *last = trytes_from_trits(tr);
 

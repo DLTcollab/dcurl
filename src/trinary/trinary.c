@@ -4,11 +4,12 @@
  * found in the LICENSE file.
  */
 
+#include <stdint.h>
 #include "trinary.h"
 #include "../constants.h"
 #include "../hash/curl.h"
 
-static char TrytesToTritsMappings[][3] = {
+static int8_t TrytesToTritsMappings[][3] = {
     {0, 0, 0},  {1, 0, 0},  {-1, 1, 0},   {0, 1, 0},   {1, 1, 0},   {-1, -1, 1},
     {0, -1, 1}, {1, -1, 1}, {-1, 0, 1},   {0, 0, 1},   {1, 0, 1},   {-1, 1, 1},
     {0, 1, 1},  {1, 1, 1},  {-1, -1, -1}, {0, -1, -1}, {1, -1, -1}, {-1, 0, -1},
@@ -47,7 +48,7 @@ static int validateTrytes(Trobject_t *trytes)
     return 1;
 }
 
-Trobject_t *initTrits(signed char *src, int len)
+Trobject_t *initTrits(int8_t *src, int len)
 {
     Trobject_t *trits = NULL;
 
@@ -55,7 +56,7 @@ Trobject_t *initTrits(signed char *src, int len)
     if (!trits)
         return NULL;
 
-    trits->data = (signed char *) malloc(len + 1);
+    trits->data = (int8_t *) malloc(len + 1);
     if (!trits->data) {
         free(trits);
         return NULL;
@@ -78,7 +79,7 @@ Trobject_t *initTrits(signed char *src, int len)
     return trits;
 }
 
-Trobject_t *initTrytes(signed char *src, int len)
+Trobject_t *initTrytes(int8_t *src, int len)
 {
     Trobject_t *trytes = NULL;
 
@@ -87,7 +88,7 @@ Trobject_t *initTrytes(signed char *src, int len)
         return NULL;
     }
 
-    trytes->data = (signed char *) malloc(len + 1);
+    trytes->data = (int8_t *) malloc(len + 1);
     if (!trytes->data) {
         free(trytes);
         return NULL;
@@ -122,7 +123,7 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
     }
 
     Trobject_t *trytes = NULL;
-    signed char *src = (signed char *) malloc(trits->len / 3);
+    int8_t *src = (int8_t *) malloc(trits->len / 3);
 
     /* Start converting */
     for (int i = 0; i < trits->len / 3; i++) {
@@ -151,7 +152,7 @@ Trobject_t *trits_from_trytes(Trobject_t *trytes)
     }
 
     Trobject_t *trits = NULL;
-    signed char *src = (signed char *) malloc(trytes->len * 3);
+    int8_t *src = (int8_t *) malloc(trytes->len * 3);
 
     /* Start converting */
     for (int i = 0; i < trytes->len; i++) {
