@@ -68,6 +68,12 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 * ~~Pre-compile OpenCL kernel functions and include it in dcurl.~~
 * Automatically configure dcurl after init()
 
+# Licensing
+
+`dcurl` is freely redistributable under the MIT License.
+Use of this source code is governed by a MIT-style license that can be
+found in the `LICENSE` file.
+
 # Externel Source
 * ```src/pow_sse.c``` is derived from preliminary work of Shinya Yagyu.
 * ```src/pow_cl.c``` and ```src/pow_kernel.cl``` are adopted from [iotaledger/ccurl](https://github.com/iotaledger/ccurl).

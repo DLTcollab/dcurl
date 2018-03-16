@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2018 dcurl Developers.
+ * Use of this source code is governed by MIT license that can be
+ * found in the LICENSE file.
+ */
+
 #include "dcurl.h"
 #include <pthread.h>
 #include <semaphore.h>
@@ -7,7 +13,6 @@
 #include "pow_cl.h"
 #include "pow_sse.h"
 #include "trinary/trinary.h"
-
 
 /* number of task that CPU can execute concurrently */
 static int MAX_CPU_THREAD = -1;
