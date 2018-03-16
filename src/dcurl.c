@@ -57,11 +57,11 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
     cpu_mutex_id = (int *) calloc(MAX_CPU_THREAD, sizeof(int));
     if (!cpu_mutex_id)
         return 0;
-
+#if defined(ENABLE_OPENCL)
     gpu_mutex_id = (int *) calloc(MAX_GPU_THREAD, sizeof(int));
     if (!gpu_mutex_id)
         return 0;
-
+#endif
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
 
@@ -97,24 +97,27 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
         selected_mutex_id = get_mutex_id(cpu_mutex_id, 1);
         selected_entry = 1;
         pthread_mutex_unlock(&mtx);
+#if defined(ENABLE_OPENCL)
     } else if (num_gpu_thread < MAX_GPU_THREAD) {
         num_gpu_thread++;
         selected_mutex_id = get_mutex_id(gpu_mutex_id, 2);
         selected_entry = 2;
         pthread_mutex_unlock(&mtx);
+#endif
     } else {
         num_waiting_thread++;
         pthread_mutex_unlock(&mtx);
         sem_wait(&notify);
-        /* get mutex number */
-        pthread_mutex_lock(&mtx);
         selected_entry = 1;
-        /* get mutex number. If return value is -1, which means cpu queue full
-         */
-        if ((selected_mutex_id = get_mutex_id(cpu_mutex_id, 1)) == -1) {
+        /* get mutex number */
+        selected_mutex_id = get_mutex_id(cpu_mutex_id, 1);
+#if defined(ENABLE_OPENCL)
+        /* if return value == -1, meaning cpu queue full */
+        if (selected_mutex_id == -1) {
             selected_mutex_id = get_mutex_id(gpu_mutex_id, 2);
             selected_entry = 2;
         }
+#endif
         pthread_mutex_unlock(&mtx);
     }
 
@@ -135,21 +138,29 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
 
     pthread_mutex_lock(&mtx);
 
+#if defined(ENABLE_OPENCL)
     if (selected_entry == 1)
         cpu_mutex_id[selected_mutex_id] = 0;
     else
         gpu_mutex_id[selected_mutex_id] = 0;
+#else
+    cpu_mutex_id[selected_mutex_id] = 0;
+#endif
 
     if (num_waiting_thread > 0) {
+        /* Don't unlock mutex, giving waiting thread priority */
         sem_post(&notify);
-        num_waiting_thread--;
     } else {
+#if defined(ENABLE_OPENCL)
         if (selected_entry == 1)
             num_cpu_thread--;
         else
             num_gpu_thread--;
+#else
+        num_cpu_thread--;
+#endif
+        pthread_mutex_unlock(&mtx);
     }
-    pthread_mutex_unlock(&mtx);
 
     return ret_trytes;
 }
