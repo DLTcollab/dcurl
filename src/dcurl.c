@@ -130,8 +130,7 @@ Trytes_t *dcurl_entry(Trytes_t *trytes, int mwm)
         break;
 #endif
     default:
-        printf("error produced\n");
-        exit(0);
+        return NULL;
     }
 
     pthread_mutex_lock(&mtx);

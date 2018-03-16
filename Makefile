@@ -14,7 +14,7 @@ CFLAGS += -msse2
 
 ifneq ("$(DISABLE_GPU)","1")
 CFLAGS += \
-	-DBUILD_OPENCL \
+	-DENABLE_OPENCL \
 	-I$(OPENCL_PATH)/include
 LDFLAGS += -L$(OPENCL_LIB) -lOpenCL
 endif

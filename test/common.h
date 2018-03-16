@@ -7,7 +7,7 @@
 /* FIXME: conditional inclusion of architecture-specific headers */
 #include "../src/pow_sse.h"
 
-#if defined(BUILD_OPENCL)
+#if defined(ENABLE_OPENCL)
 #include "../src/pow_cl.h"
 #endif
 
