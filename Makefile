@@ -2,6 +2,8 @@ OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
 OPENJDK_PATH ?= /usr/lib/jvm/java-1.8.0-openjdk-amd64
 SRC ?= ./src
 OUT ?= ./build
+DISABLE_GPU ?= 1
+DISABLE_JNI ?= 1
 
 CFLAGS = -Os -fPIC -g
 LDFLAGS = -lpthread
