@@ -22,32 +22,35 @@ extern "C" {
  * Method:    exlib_init
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_com_iota_iri_hash_PearlDiver_exlib_1init
-  (JNIEnv *, jclass);
+JNIEXPORT jboolean JNICALL
+Java_com_iota_iri_hash_PearlDiver_exlib_1init(JNIEnv *, jclass);
 
 /*
  * Class:     com_iota_iri_hash_PearlDiver
  * Method:    exlib_search
  * Signature: ([II)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_iota_iri_hash_PearlDiver_exlib_1search
-  (JNIEnv *, jclass, jintArray, jint);
+JNIEXPORT jboolean JNICALL
+Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *,
+                                                jclass,
+                                                jintArray,
+                                                jint);
 
 /*
  * Class:     com_iota_iri_hash_PearlDiver
  * Method:    exlib_cancel
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_iota_iri_hash_PearlDiver_exlib_1cancel
-  (JNIEnv *, jclass);
+JNIEXPORT void JNICALL Java_com_iota_iri_hash_PearlDiver_exlib_1cancel(JNIEnv *,
+                                                                       jclass);
 
 /*
  * Class:     com_iota_iri_hash_PearlDiver
  * Method:    exlib_destroy
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_iota_iri_hash_PearlDiver_exlib_1destroy
-  (JNIEnv *, jclass);
+JNIEXPORT void JNICALL
+Java_com_iota_iri_hash_PearlDiver_exlib_1destroy(JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }

@@ -2,28 +2,27 @@
 #include "../hash/curl.h"
 
 static char TrytesToTritsMappings[][3] = {
-     {0, 0, 0}, {1, 0, 0}, {-1, 1, 0}, {0, 1, 0},
-     {1, 1, 0}, {-1, -1, 1}, {0, -1, 1}, {1, -1, 1},
-     {-1, 0, 1}, {0, 0, 1}, {1, 0, 1}, {-1, 1, 1},
-     {0, 1, 1}, {1, 1, 1}, {-1, -1, -1}, {0, -1, -1},
-     {1, -1, -1}, {-1, 0, -1}, {0, 0, -1}, {1, 0, -1},
-     {-1, 1, -1}, {0, 1, -1}, {1, 1, -1}, {-1, -1, 0},
-     {0, -1, 0}, {1, -1, 0}, {-1, 0, 0}
-};
+    {0, 0, 0},  {1, 0, 0},  {-1, 1, 0},   {0, 1, 0},   {1, 1, 0},   {-1, -1, 1},
+    {0, -1, 1}, {1, -1, 1}, {-1, 0, 1},   {0, 0, 1},   {1, 0, 1},   {-1, 1, 1},
+    {0, 1, 1},  {1, 1, 1},  {-1, -1, -1}, {0, -1, -1}, {1, -1, -1}, {-1, 0, -1},
+    {0, 0, -1}, {1, 0, -1}, {-1, 1, -1},  {0, 1, -1},  {1, 1, -1},  {-1, -1, 0},
+    {0, -1, 0}, {1, -1, 0}, {-1, 0, 0}};
 
 static char TryteAlphabet[] = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 void freeTrobject(Trobject_t *t)
 {
     if (t) {
-        if (t->data) free(t->data);
+        if (t->data)
+            free(t->data);
         free(t);
     }
 }
 
 static int validateTrits(Trobject_t *trits)
 {
-    if (trits->type != TYPE_TRITS) return 0;
+    if (trits->type != TYPE_TRITS)
+        return 0;
 
     for (int i = 0; i < trits->len; i++)
         if (trits->data[i] < -1 || trits->data[i] > 1)
@@ -33,10 +32,11 @@ static int validateTrits(Trobject_t *trits)
 
 static int validateTrytes(Trobject_t *trytes)
 {
-    if (trytes->type != TYPE_TRYTES) return 0;
+    if (trytes->type != TYPE_TRYTES)
+        return 0;
 
     for (int i = 0; i < trytes->len; i++)
-        if ((trytes->data[i] <= 'A' && trytes->data[i] >= 'Z') && \
+        if ((trytes->data[i] <= 'A' && trytes->data[i] >= 'Z') &&
             trytes->data[i] != '9')
             return 0;
     return 1;
@@ -59,12 +59,12 @@ Trobject_t *initTrits(signed char *src, int len)
     }
 
     /* Copy data from src to Trits */
-    memcpy(trits->data, src, len); 
+    memcpy(trits->data, src, len);
 
     trits->type = TYPE_TRITS;
     trits->len = len;
     trits->data[len] = '\0';
-    
+
     /* Check validation */
     if (!validateTrits(trits)) {
         freeTrobject(trits);
@@ -116,7 +116,8 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
     }
 
     if (trits->len % 3 != 0 || !validateTrits(trits)) {
-        printf("trinary.c: trytes_from_trits: Not available trits to convert\n");
+        printf(
+            "trinary.c: trytes_from_trits: Not available trits to convert\n");
         exit(1);
     }
 
@@ -125,11 +126,11 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
 
     /* Start converting */
     for (int i = 0; i < trits->len / 3; i++) {
-        int j = trits->data[i * 3] + \
-                trits->data[i * 3 + 1] * 3 + \
+        int j = trits->data[i * 3] + trits->data[i * 3 + 1] * 3 +
                 trits->data[i * 3 + 2] * 9;
-        
-        if (j < 0) j += 27;
+
+        if (j < 0)
+            j += 27;
         src[i] = TryteAlphabet[j];
     }
 
@@ -147,7 +148,9 @@ Trobject_t *trits_from_trytes(Trobject_t *trytes)
     }
 
     if (!validateTrytes(trytes)) {
-        printf("trinary.c: trits_from_trytes: trytes is not available to convert\n");
+        printf(
+            "trinary.c: trits_from_trytes: trytes is not available to "
+            "convert\n");
         exit(1);
     }
 
@@ -185,7 +188,8 @@ Trobject_t *hashTrytes(Trobject_t *t)
 
 int compareTrobject(Trobject_t *a, Trobject_t *b)
 {
-    if (a->type != b->type || a->len != b->len) return 0;
+    if (a->type != b->type || a->len != b->len)
+        return 0;
 
     for (int i = 0; i < a->len; i++)
         if (a->data[i] != b->data[i])
