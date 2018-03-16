@@ -12,9 +12,14 @@ Reference Implementation (IRI).
 * Only one GPU can be facilitated with dcurl at the moment.
 
 # Build
-* Build a shared library for IRI, placed in ```build```
-
-```$ make```
+* Build a shared library for IRI, generating object files in directory `build`
+```shell
+$ make
+```
+Alternatively, you can specify conditional build as following:
+```shell
+$ make DISABLE_GPU=1 DISABLE_JNI=1
+```
 
 # Test
 * Make a test
