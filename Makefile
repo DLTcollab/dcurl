@@ -1,5 +1,5 @@
 OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
-OPENJDK_PATH ?= /usr/lib/jvm/java-1.8.0-openjdk-amd64
+OPENJDK_PATH ?= $(shell readlink -f /usr/bin/javac | sed "s:bin/javac::")
 SRC ?= ./src
 OUT ?= ./build
 DISABLE_GPU ?= 1
