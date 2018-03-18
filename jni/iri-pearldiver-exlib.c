@@ -1,7 +1,7 @@
 #include "iri-pearldiver-exlib.h"
 #include <jni.h>
 #include "../src/dcurl.h"
-#include "../src/trinary/trinary.h"
+#include "../src/trinary.h"
 #include <stdint.h>
 
 static int8_t *int_to_char_array(jint *arr, int size)

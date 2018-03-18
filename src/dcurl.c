@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include "pow_cl.h"
 #include "pow_sse.h"
-#include "trinary/trinary.h"
+#include "trinary.h"
 
 /* number of task that CPU can execute concurrently */
 static int MAX_CPU_THREAD = -1;

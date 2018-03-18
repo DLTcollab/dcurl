@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./hash/curl.h"
+#include "curl.h"
 #include "clcontext.h"
 #include "constants.h"
 

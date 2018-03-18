@@ -1,14 +1,14 @@
 #ifndef TEST_COMMON_H
 #define TEST_COMMON_H
 
-#include "../src/hash/curl.h"
-#include "../src/trinary/trinary.h"
+#include "curl.h"
+#include "trinary.h"
 
 /* FIXME: conditional inclusion of architecture-specific headers */
-#include "../src/pow_sse.h"
+#include "pow_sse.h"
 
 #if defined(ENABLE_OPENCL)
-#include "../src/pow_cl.h"
+#include "pow_cl.h"
 #endif
 
 #include <stdlib.h>
