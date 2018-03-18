@@ -1,6 +1,25 @@
-JDK_PATH ?= $(shell readlink -f /usr/bin/javac | sed "s:bin/javac::")
+UNAME_S := $(shell uname -s)
 
-JAVAH := $(shell which javah)
+# if JAVA_HOME is not set, guess it according to system configurations
+ifndef JAVA_HOME
+ifeq ($(UNAME_S),Darwin)
+    # macOS
+    JAVA_HOME := $(shell /usr/libexec/java_home)
+else
+# Default to Linux
+    JAVAC := $(shell which javac)
+    ifndef JAVAC
+    $(error "javac is not available. Please check JDK installation")
+    endif
+    JAVA_HOME := $(shell readlink -f $(JAVAC) | sed "s:bin/javac::")
+endif
+endif # JAVA_HOME
+
+JAVAH = javah
+ifdef JAVA_HOME
+JAVAH = $(JAVA_HOME)/bin/javah
+endif
+JAVAH := $(shell which $(JAVAH))
 ifndef JAVAH
 $(error "javah is not available. Please check JDK installation")
 endif
@@ -24,19 +43,15 @@ $(OUT)/jni/iri-pearldiver-exlib.h: $(OUT)/com/iota/iri/hash/PearlDiver.java
 	$(VECHO) "  JAVAH\t$@\n"
 	$(Q)$(JAVAH) -classpath $(OUT) -o $@ com.iota.iri.hash.PearlDiver
 
-UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
-JAVA_HOME := $(shell /usr/libexec/java_home)
-CFLAGS_JNI = \
-	-I$(JAVA_HOME)/include \
-	-I$(JAVA_HOME)/include/darwin
+    # macOS
+    CFLAGS_JNI := -I$(JAVA_HOME)/include/darwin
 else
-# Default to Linux
-CFLAGS_JNI = \
-	-I$(JDK_PATH)/include \
-	-I$(JDK_PATH)/include/linux
+    # Default to Linux
+    CFLAGS_JNI := -I$(JAVA_HOME)/include/linux
 endif
 
+CFLAGS_JNI += -I$(JAVA_HOME)/include
 CFLAGS_JNI += -I$(OUT)/jni
 
 jni/iri-pearldiver-exlib.c: $(OUT)/jni/iri-pearldiver-exlib.h
