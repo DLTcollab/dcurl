@@ -1,5 +1,4 @@
 OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
-OPENJDK_PATH ?= $(shell readlink -f /usr/bin/javac | sed "s:bin/javac::")
 SRC ?= ./src
 OUT ?= ./build
 DISABLE_GPU ?= 1
@@ -24,18 +23,7 @@ PYFLAGS += 0
 endif
 
 ifneq ("$(DISABLE_JNI)","1")
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-JAVA_HOME := $(shell /usr/libexec/java_home)
-CFLAGS_JNI = \
-	-I$(JAVA_HOME)/include \
-	-I$(JAVA_HOME)/include/darwin
-else
-# Default to Linux
-CFLAGS_JNI = \
-	-I$(OPENJDK_PATH)/include \
-	-I$(OPENJDK_PATH)/include/linux
-endif
+include mk/java.mk
 endif
 
 TESTS = \
