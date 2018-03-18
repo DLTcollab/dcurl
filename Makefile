@@ -42,6 +42,7 @@ LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
 all: $(TESTS) $(LIBS)
+.DEFAULT_GOAL := all
 
 OBJS = \
 	hash/curl.o \
@@ -74,10 +75,6 @@ SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,$(SUBDIRS)))
 $(OUT)/test_%.o: test/test_%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
-
-$(OUT)/jni/%.o: jni/%.c
-	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) $(CFLAGS_JNI) -c -MMD -MF $@.d $<
 
 $(OUT)/trinary/%.o: $(SRC)/trinary/%.c
 $(OUT)/hash/%.o: $(SRC)/hash/%.c
