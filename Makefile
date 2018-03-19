@@ -30,11 +30,12 @@ TESTS = \
 	trinary \
 	curl \
 	pow_sse \
-	multi_pow
+	multi_pow_cpu
 
 ifneq ("$(DISABLE_GPU)","1")
 TESTS += \
-	pow_cl
+	pow_cl \
+	multi_pow_gpu
 endif
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
@@ -88,7 +89,7 @@ $(OUT)/libdcurl.so: $(OBJS)
 # FIXME: script "tests/test-multi_pow.py" depends on PyIOTA package, and we
 # have to check in advance, otherwise python3 would complain as following:
 #     ModuleNotFoundError: No module named 'iota'
-$(OUT)/test-multi_pow: tests/test-multi_pow.py $(OUT)/libdcurl.so
+$(OUT)/test-multi_pow_%: tests/test-multi_pow_%.py $(OUT)/libdcurl.so
 	@echo "#!/usr/bin/env python3" > $@
 	@cat $< >> $@
 	@chmod +x $@

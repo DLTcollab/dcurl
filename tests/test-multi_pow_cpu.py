@@ -74,18 +74,9 @@ def testing(dcurl_parameter):
     libdcurl.dcurl_destroy()
 
 if __name__ == "__main__":
-    # Parsing arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--gpu_enable", type = int);
-    args = parser.parse_args()
-    
     # Select testing set, (x, y) which means
     # (MAX_CPU_THREAD, MAX_GPU_THREAD) in dcurl
-    test_set = (0, 0)
-    if args.gpu_enable == 0:
-        test_set = (2, 0)
-    else:
-        test_set = (2, 1)
+    test_set = (2, 0)
 
     testing(test_set)
 
