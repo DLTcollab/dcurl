@@ -8,13 +8,15 @@ Reference Implementation (IRI).
 
 # Warning
 * You need to configure OpenCL platform and device by yourself in ```src/clcontext.c```
-* You also need to configure path of OpenCL Library and OpenJDK in ```Makefile```
+* You need to configure paths and flags of OpenCL installation in ```Makefile```
+* Check JDK installation and set JAVA_HOME if you wish to specify.
 * Only one GPU can be facilitated with dcurl at the moment.
 
 # Build
 * Build a shared library for IRI, generating object files in directory `build`
+* Generate JNI header file from downloading from [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface)
 ```shell
-$ make
+$ make DISABLE_JNI=0
 ```
 Alternatively, you can specify conditional build as following:
 ```shell
@@ -71,7 +73,3 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 `dcurl` is freely redistributable under the MIT License.
 Use of this source code is governed by a MIT-style license that can be
 found in the `LICENSE` file.
-
-# Externel Source
-* ```src/pow_sse.c``` is derived from preliminary work of Shinya Yagyu.
-* ```src/pow_cl.c``` and ```src/pow_kernel.cl``` are adopted from [iotaledger/ccurl](https://github.com/iotaledger/ccurl).

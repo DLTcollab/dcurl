@@ -1,0 +1,10 @@
+dcurl is written by:
+  Chen Wei <r06922135@csie.ntu.edu.tw>
+  Shih-Chen <r06922135@csie.ntu.edu.tw>
+  Jim Huang <jserv@biilabs.io>
+
+Externel Source:
+* src/pow_sse.c is derived from preliminary work of Shinya Yagyu.
+* src/pow_cl.c and src/pow_kernel.clare adopted from ccurl [1].
+
+[1] https://github.com/iotaledger/ccurl
