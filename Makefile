@@ -29,14 +29,15 @@ endif
 TESTS = \
 	trinary \
 	curl \
-	pow_sse
+	pow_sse \
+	multi_pow
 
 ifneq ("$(DISABLE_GPU)","1")
 TESTS += \
 	pow_cl
 endif
 
-TESTS := $(addprefix $(OUT)/test_, $(TESTS))
+TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
 LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
@@ -45,9 +46,9 @@ all: $(TESTS) $(LIBS)
 .DEFAULT_GOAL := all
 
 OBJS = \
-	hash/curl.o \
+	curl.o \
 	constants.o \
-	trinary/trinary.o \
+	trinary.o \
 	dcurl.o \
 	pow_sse.o
 
@@ -65,24 +66,18 @@ endif
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 deps := $(OBJS:%.o=%.o.d)
 
-SUBDIRS = \
-	hash \
-	trinary \
-	jni
 SHELL_HACK := $(shell mkdir -p $(OUT))
-SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,$(SUBDIRS)))
+SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,jni))
 
-$(OUT)/test_%.o: test/test_%.c
+$(OUT)/test-%.o: tests/test-%.c
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) -I src -c -MMD -MF $@.d $<
 
-$(OUT)/trinary/%.o: $(SRC)/trinary/%.c
-$(OUT)/hash/%.o: $(SRC)/hash/%.c
 $(OUT)/%.o: $(SRC)/%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
 
-$(OUT)/test_%: $(OUT)/test_%.o $(OBJS)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -90,14 +85,18 @@ $(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-test_multi_pow: test/test_multi_pow.py $(OUT)/libdcurl.so
-	$(Q)$(PRINTF) "*** Validating $< ***\n"
-	$(Q)python3 $< $(PYFLAGS) && $(PRINTF) "\t$(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
+# FIXME: script "tests/test-multi_pow.py" depends on PyIOTA package, and we
+# have to check in advance, otherwise python3 would complain as following:
+#     ModuleNotFoundError: No module named 'iota'
+$(OUT)/test-multi_pow: tests/test-multi_pow.py $(OUT)/libdcurl.so
+	@echo "#!/usr/bin/env python3" > $@
+	@cat $< >> $@
+	@chmod +x $@
 
-$(OUT)/test_%.done: $(OUT)/test_%
+$(OUT)/test-%.done: $(OUT)/test-%
 	$(Q)$(PRINTF) "*** Validating $< ***\n"
 	$(Q)./$< && $(PRINTF) "\t$(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
-check: $(addsuffix .done, $(TESTS)) test_multi_pow
+check: $(addsuffix .done, $(TESTS))
 
 clean:
 	$(RM) -r $(OUT)

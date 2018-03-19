@@ -1,7 +1,7 @@
 #ifndef CURL_H_
 #define CURL_H_
 
-#include "../trinary/trinary.h"
+#include "trinary.h"
 
 #define HASH_LENGTH 243
 #define STATE_LENGTH 3 * HASH_LENGTH

@@ -8,7 +8,7 @@ import iota
 from iota import TryteString
 from iota.crypto import Curl
 
-TRYTES_LIST_PATH = "./test/trytes.txt"
+TRYTES_LIST_PATH = "./tests/trytes.txt"
 DCURL_PATH = "./build/libdcurl.so"
 NUM_TRYTES = 10
 

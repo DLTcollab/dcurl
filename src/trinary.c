@@ -6,8 +6,8 @@
 
 #include <stdint.h>
 #include "trinary.h"
-#include "../constants.h"
-#include "../hash/curl.h"
+#include "constants.h"
+#include "curl.h"
 
 static int8_t TrytesToTritsMappings[][3] = {
     {0, 0, 0},  {1, 0, 0},  {-1, 1, 0},   {0, 1, 0},   {1, 1, 0},   {-1, -1, 1},
