@@ -1,4 +1,3 @@
-OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
 SRC ?= ./src
 OUT ?= ./build
 DISABLE_GPU ?= 1
@@ -6,20 +5,13 @@ DISABLE_JNI ?= 1
 
 CFLAGS = -Os -fPIC -g
 LDFLAGS = -lpthread
-PYFLAGS = --gpu_enable
 
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
 # instructions for Intel and Arm later.
 CFLAGS += -msse2
 
 ifneq ("$(DISABLE_GPU)","1")
-CFLAGS += \
-	-DENABLE_OPENCL \
-	-I$(OPENCL_PATH)/include
-LDFLAGS += -L$(OPENCL_LIB) -lOpenCL
-PYFLAGS += 1
-else
-PYFLAGS += 0
+include mk/opencl.mk
 endif
 
 ifneq ("$(DISABLE_JNI)","1")
