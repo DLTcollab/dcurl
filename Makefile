@@ -1,5 +1,4 @@
 OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
-OPENJDK_PATH ?= $(shell readlink -f /usr/bin/javac | sed "s:bin/javac::")
 SRC ?= ./src
 OUT ?= ./build
 DISABLE_GPU ?= 1
@@ -24,18 +23,7 @@ PYFLAGS += 0
 endif
 
 ifneq ("$(DISABLE_JNI)","1")
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-JAVA_HOME := $(shell /usr/libexec/java_home)
-CFLAGS_JNI = \
-	-I$(JAVA_HOME)/include \
-	-I$(JAVA_HOME)/include/darwin
-else
-# Default to Linux
-CFLAGS_JNI = \
-	-I$(OPENJDK_PATH)/include \
-	-I$(OPENJDK_PATH)/include/linux
-endif
+include mk/java.mk
 endif
 
 TESTS = \
@@ -54,6 +42,7 @@ LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
 all: $(TESTS) $(LIBS)
+.DEFAULT_GOAL := all
 
 OBJS = \
 	hash/curl.o \
@@ -86,10 +75,6 @@ SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,$(SUBDIRS)))
 $(OUT)/test_%.o: test/test_%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
-
-$(OUT)/jni/%.o: jni/%.c
-	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) $(CFLAGS_JNI) -c -MMD -MF $@.d $<
 
 $(OUT)/trinary/%.o: $(SRC)/trinary/%.c
 $(OUT)/hash/%.o: $(SRC)/hash/%.c

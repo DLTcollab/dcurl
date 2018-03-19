@@ -8,7 +8,8 @@ Reference Implementation (IRI).
 
 # Warning
 * You need to configure OpenCL platform and device by yourself in ```src/clcontext.c```
-* You also need to configure path of OpenCL Library and OpenJDK in ```Makefile```
+* You need to configure paths and flags of OpenCL installation in ```Makefile```
+* Check JDK installation and set JAVA_HOME if you wish to specify.
 * Only one GPU can be facilitated with dcurl at the moment.
 
 # Build
