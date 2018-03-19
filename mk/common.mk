@@ -16,3 +16,10 @@ ifeq ($(UNAME_S),Darwin)
 else
 	PRINTF = env printf
 endif
+
+config: $(OUT)/config-timestamp
+
+$(OUT)/config-timestamp: $(OUT)/local.mk
+	$(Q)touch $@
+$(OUT)/local.mk:
+	$(Q)cp -f mk/defs.mk $@
