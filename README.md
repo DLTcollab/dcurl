@@ -14,8 +14,9 @@ Reference Implementation (IRI).
 
 # Build
 * Build a shared library for IRI, generating object files in directory `build`
+* Generate JNI header file from downloading from [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface)
 ```shell
-$ make
+$ make DISABLE_JNI=0
 ```
 Alternatively, you can specify conditional build as following:
 ```shell
