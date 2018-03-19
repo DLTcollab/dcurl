@@ -5,7 +5,7 @@
 #include "trinary.h"
 
 /* FIXME: conditional inclusion of architecture-specific headers */
-#include "pow_sse.h"
+#include "pow_avx.h"
 
 #if defined(ENABLE_OPENCL)
 #include "pow_cl.h"

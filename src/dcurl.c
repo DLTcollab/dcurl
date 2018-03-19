@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "pow_cl.h"
-#include "pow_sse.h"
+#include "pow_avx.h"
 #include "trinary.h"
 
 /* number of task that CPU can execute concurrently */
@@ -65,7 +65,7 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
 
-    ret &= pow_sse_init(MAX_CPU_THREAD);
+    ret &= pow_avx_init(MAX_CPU_THREAD);
 #if defined(ENABLE_OPENCL)
     ret &= pwork_ctx_init(MAX_GPU_THREAD);
 #endif
@@ -76,7 +76,7 @@ void dcurl_destroy()
 {
     free(cpu_mutex_id);
     free(gpu_mutex_id);
-    pow_sse_destroy();
+    pow_avx_destroy();
 #if defined(ENABLE_OPENCL)
     pwork_ctx_destroy(MAX_GPU_THREAD);
 #endif
@@ -127,7 +127,7 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
 
     switch (selected_entry) {
     case 1:
-        ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
+        ret_trytes = PowAVX(trytes, mwm, selected_mutex_id);
         break;
 #if defined(ENABLE_OPENCL)
     case 2:

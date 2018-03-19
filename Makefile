@@ -8,7 +8,7 @@ LDFLAGS = -lpthread
 
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
 # instructions for Intel and Arm later.
-CFLAGS += -msse2
+CFLAGS += -msse2 -mavx
 
 ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
@@ -21,7 +21,7 @@ endif
 TESTS = \
 	trinary \
 	curl \
-	pow_sse \
+	pow_avx \
 	multi_pow_cpu
 
 ifeq ("$(BUILD_GPU)","1")
@@ -43,7 +43,7 @@ OBJS = \
 	constants.o \
 	trinary.o \
 	dcurl.o \
-	pow_sse.o
+	pow_avx.o
 
 ifeq ("$(BUILD_GPU)","1")
 OBJS += \
