@@ -78,13 +78,10 @@ $(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-# FIXME: script "tests/test-multi_pow.py" depends on PyIOTA package, and we
-# have to check in advance, otherwise python3 would complain as following:
-#     ModuleNotFoundError: No module named 'iota'
 $(OUT)/test-multi_pow_%: tests/test-multi_pow_%.py $(OUT)/libdcurl.so
-	@echo "#!/usr/bin/env python3" > $@
-	@cat $< >> $@
-	@chmod +x $@
+	$(Q)echo "#!$(PYTHON)" > $@
+	$(call py_prepare_cmd)
+	$(Q)chmod +x $@
 
 $(OUT)/test-%.done: $(OUT)/test-%
 	$(Q)$(PRINTF) "*** Validating $< ***\n"
@@ -97,4 +94,5 @@ distclean: clean
 	$(RM) local.mk
 
 include mk/common.mk
+include mk/python.mk
 -include $(deps)
