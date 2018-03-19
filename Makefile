@@ -1,20 +1,20 @@
 SRC ?= ./src
 OUT ?= ./build
-DISABLE_GPU ?= 1
-DISABLE_JNI ?= 1
 
 CFLAGS = -Os -fPIC -g
 LDFLAGS = -lpthread
+
+-include $(OUT)/local.mk
 
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
 # instructions for Intel and Arm later.
 CFLAGS += -msse2
 
-ifneq ("$(DISABLE_GPU)","1")
+ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
 
-ifneq ("$(DISABLE_JNI)","1")
+ifeq ("$(BUILD_JNI)","1")
 include mk/java.mk
 endif
 
@@ -24,7 +24,7 @@ TESTS = \
 	pow_sse \
 	multi_pow_cpu
 
-ifneq ("$(DISABLE_GPU)","1")
+ifeq ("$(BUILD_GPU)","1")
 TESTS += \
 	pow_cl \
 	multi_pow_gpu
@@ -35,7 +35,7 @@ TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
-all: $(TESTS) $(LIBS)
+all: config $(TESTS) $(LIBS)
 .DEFAULT_GOAL := all
 
 OBJS = \
@@ -45,13 +45,13 @@ OBJS = \
 	dcurl.o \
 	pow_sse.o
 
-ifneq ("$(DISABLE_GPU)","1")
+ifeq ("$(BUILD_GPU)","1")
 OBJS += \
 	pow_cl.o \
 	clcontext.o
 endif
 
-ifneq ("$(DISABLE_JNI)","1")
+ifeq ("$(BUILD_JNI)","1")
 OBJS += \
 	jni/iri-pearldiver-exlib.o
 endif
@@ -93,6 +93,8 @@ check: $(addsuffix .done, $(TESTS))
 
 clean:
 	$(RM) -r $(OUT)
+distclean: clean
+	$(RM) local.mk
 
 include mk/common.mk
 -include $(deps)

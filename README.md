@@ -16,17 +16,19 @@ Reference Implementation (IRI).
 * Build a shared library for IRI, generating object files in directory `build`
 * Generate JNI header file from downloading from [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface)
 ```shell
-$ make DISABLE_JNI=0
+$ make BUILD_JNI=1
 ```
+You can modify `build/local.mk` for custom build options.
 Alternatively, you can specify conditional build as following:
 ```shell
-$ make DISABLE_GPU=1 DISABLE_JNI=1
+$ make BUILD_GPU=0 BUILD_JNI=1
 ```
 
 # Test
-* Make a test with GPU
-
-```$ make check DISABLE_GPU=0```
+* Test with GPU
+```shell
+$ make BUILD_GPU=1 check
+```
 
 * Expected Results
 
