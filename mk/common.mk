@@ -37,5 +37,3 @@ $(OUT)/local.mk:
 
 clean:
 	$(RM) -r $(OUT)
-distclean: clean                                                                                                                                              
-	$(RM) local.mk
