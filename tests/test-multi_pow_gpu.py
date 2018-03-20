@@ -11,6 +11,7 @@ from iota.crypto import Curl
 TRYTES_LIST_PATH = "./tests/trytes.txt"
 DCURL_PATH = "./build/libdcurl.so"
 NUM_TRYTES = 10
+RESULT_TX = []
 
 join_list = []
 for i in range(NUM_TRYTES):
@@ -45,8 +46,7 @@ def call_dcurl(idx, mwm, lib, trytes_list):
     trytes = TryteString(ret)
 
     hash_trytes = hash(trytes)
-    if validate(hash_trytes, mwm) is not True:
-        sys.exit(1)
+    RESULT_TX.append(hash_trytes)
 
     join_list[idx].release()
 
@@ -72,6 +72,10 @@ def testing(dcurl_parameter):
         while join_list[i].locked(): pass 
 
     libdcurl.dcurl_destroy()
+
+    for tx in RESULT_TX:
+        if validate(tx, 14) is not True:
+            sys.exit(1)
 
 if __name__ == "__main__":
     # Select testing set, (x, y) which means
