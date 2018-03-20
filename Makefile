@@ -8,7 +8,7 @@ LDFLAGS = -lpthread
 
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
 # instructions for Intel and Arm later.
-CFLAGS += -msse2 -mavx
+CFLAGS += -msse2 -mavx -mavx2
 
 ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
