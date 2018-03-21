@@ -10,9 +10,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "pow_cl.h"
-#include "pow_avx.h"
 #include "trinary.h"
+#include "pow_cl.h"
+
+#if defined(ENABLE_AVX)
+#include "pow_avx.h"
+#else
+#include "pow_sse.h"
+#endif
 
 /* number of task that CPU can execute concurrently */
 static int MAX_CPU_THREAD = -1;
@@ -64,8 +69,11 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
 #endif
     pthread_mutex_init(&mtx, NULL);
     sem_init(&notify, 0, 0);
-
+#if defined(ENABLE_AVX)
     ret &= pow_avx_init(MAX_CPU_THREAD);
+#else
+    ret &= pow_sse_init(MAX_CPU_THREAD);
+#endif
 #if defined(ENABLE_OPENCL)
     ret &= pwork_ctx_init(MAX_GPU_THREAD);
 #endif
@@ -76,7 +84,11 @@ void dcurl_destroy()
 {
     free(cpu_mutex_id);
     free(gpu_mutex_id);
+#if defined(ENABLE_AVX)
     pow_avx_destroy();
+#else
+    pow_sse_destroy();
+#endif
 #if defined(ENABLE_OPENCL)
     pwork_ctx_destroy(MAX_GPU_THREAD);
 #endif
@@ -126,8 +138,12 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
     int8_t *ret_trytes = NULL;
 
     switch (selected_entry) {
+#if defined(ENABLE_AVX)
     case 1:
         ret_trytes = PowAVX(trytes, mwm, selected_mutex_id);
+#else
+        ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
+#endif
         break;
 #if defined(ENABLE_OPENCL)
     case 2:
