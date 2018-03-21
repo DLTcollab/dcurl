@@ -1,3 +1,6 @@
+# Build AVX backend or not
+BUILD_AVX ?= 0
+
 # Build OpenCL backend or not
 BUILD_GPU ?= 0
 

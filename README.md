@@ -18,10 +18,10 @@ Reference Implementation (IRI).
 ```shell
 $ make BUILD_JNI=1
 ```
-You can modify `build/local.mk` for custom build options.
-Alternatively, you can specify conditional build as following:
+* You can modify `build/local.mk` for custom build options.
+* Alternatively, you can specify conditional build as following:
 ```shell
-$ make BUILD_GPU=0 BUILD_JNI=1
+$ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1
 ```
 
 # Test
