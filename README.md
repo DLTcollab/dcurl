@@ -31,17 +31,35 @@ $ make BUILD_GPU=1 check
 ```
 
 * Expected Results
-
 ```
-*** Validating build/test_trinary ***
+*** Validating build/test-trinary ***
         [ Verified ]
-*** Validating build/test_curl ***
+*** Validating build/test-curl ***
         [ Verified ]
-*** Validating build/test_pow_sse ***
+*** Validating build/test-multi_pow_cpu ***
         [ Verified ]
-*** Validating build/test_pow_cl ***
+*** Validating build/test-pow_sse ***
         [ Verified ]
-*** Validating test/test_multi_pow.py ***
+*** Validating build/test-pow_cl ***
+        [ Verified ]
+*** Validating build/test-multi_pow_gpu ***
+        [ Verified ]
+```
+
+* Test with AVX but no GPU
+```shell
+$ make BUILD_AVX=1 check
+```
+
+* Expected Results
+```
+*** Validating build/test-trinary ***
+        [ Verified ]
+*** Validating build/test-curl ***
+        [ Verified ]
+*** Validating build/test-multi_pow_cpu ***
+        [ Verified ]
+*** Validating build/test-pow_avx ***
         [ Verified ]
 ```
 
