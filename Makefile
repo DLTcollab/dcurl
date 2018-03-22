@@ -70,6 +70,11 @@ OBJS += \
 	jni/iri-pearldiver-exlib.o
 endif
 
+ifeq ("$(BUILD_COMPAT)", "1")
+OBJS += \
+	compat-ccurl.o
+endif
+
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 #deps := $(OBJS:%.o=%.o.d)
 
