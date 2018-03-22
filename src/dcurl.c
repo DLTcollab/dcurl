@@ -138,8 +138,8 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
     int8_t *ret_trytes = NULL;
 
     switch (selected_entry) {
-#if defined(ENABLE_AVX)
     case 1:
+#if defined(ENABLE_AVX)
         ret_trytes = PowAVX(trytes, mwm, selected_mutex_id);
 #else
         ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
