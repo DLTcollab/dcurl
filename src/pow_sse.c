@@ -12,30 +12,11 @@
 #include "curl.h"
 #include "constants.h"
 #include <stdint.h>
-
-/* Required for get_nprocs_conf() on Linux */
-#if defined(__linux__)
-#include <sys/sysinfo.h>
-#endif
-
-/* On Mac OS X, define our own get_nprocs_conf() */
-#if defined(__APPLE__) || defined(__FreeBSD__)
-#include <sys/sysctl.h>
-static unsigned int get_nprocs_conf()
-{
-    int numProcessors = 0;
-    size_t size = sizeof(numProcessors);
-    if (sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0))
-        return 1;
-    return (unsigned int) numProcessors;
-}
-#define NPROCS
-#endif
+#include "cpu-utils.h"
 
 static pthread_mutex_t *pow_sse_mutex;
 static int *stopSSE;
 static long long int *countSSE;
-static int DCURL_NUM_CPU = 0;
 
 static const int indices[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
@@ -342,6 +323,8 @@ static int8_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
     return rst;
 }
 
+static size_t nproc;
+
 int pow_sse_init(int num_task)
 {
     pow_sse_mutex =
@@ -352,11 +335,7 @@ int pow_sse_init(int num_task)
     if (!pow_sse_mutex || !stopSSE || !countSSE)
         return 0;
 
-    char *env_num_cpu = getenv("DCURL_NUM_CPU");
-    DCURL_NUM_CPU = get_nprocs_conf() - 1;
-    if (env_num_cpu) {
-        DCURL_NUM_CPU = atoi(env_num_cpu);
-    }
+    nproc = get_avail_nprocs();
     return 1;
 }
 
@@ -378,26 +357,24 @@ int8_t *PowSSE(int8_t *trytes, int mwm, int index)
     if (!c_state)
         return NULL;
 
-    int num_cpu = DCURL_NUM_CPU;
-
-    pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * num_cpu);
+    pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
     if (!threads)
         return NULL;
 
     Pwork_struct *pitem =
-        (Pwork_struct *) malloc(sizeof(Pwork_struct) * num_cpu);
+        (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
     if (!pitem)
         return NULL;
 
     /* Prepare nonce to each thread */
-    int8_t **nonce_array = (int8_t **) malloc(sizeof(int8_t *) * num_cpu);
+    int8_t **nonce_array = (int8_t **) malloc(sizeof(int8_t *) * nproc);
     if (!nonce_array)
         return NULL;
 
     /* init pthread mutex */
     pthread_mutex_init(&pow_sse_mutex[index], NULL);
 
-    for (int i = 0; i < num_cpu; i++) {
+    for (int i = 0; i < nproc; i++) {
         pitem[i].mid = c_state;
         pitem[i].mwm = mwm;
         pitem[i].nonce = nonce_array[i] = (int8_t *) malloc(NonceTrinarySize);
@@ -408,7 +385,7 @@ int8_t *PowSSE(int8_t *trytes, int mwm, int index)
     }
 
     int completedIndex = -1;
-    for (int i = 0; i < num_cpu; i++) {
+    for (int i = 0; i < nproc; i++) {
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
@@ -426,7 +403,7 @@ int8_t *PowSSE(int8_t *trytes, int mwm, int index)
 
     /* Free memory */
     free(c_state);
-    for (int i = 0; i < num_cpu; i++) {
+    for (int i = 0; i < nproc; i++) {
         free(nonce_array[i]);
     }
     free(nonce_array);
