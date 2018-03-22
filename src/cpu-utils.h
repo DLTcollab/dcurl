@@ -6,6 +6,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <limits.h>
 
 /* Required for get_nprocs_conf() on Linux */
 #if defined(__linux__)
