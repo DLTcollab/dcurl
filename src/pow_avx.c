@@ -7,12 +7,12 @@
 
 #include "pow_avx.h"
 #include <pthread.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "curl.h"
 #include "constants.h"
-#include <stdint.h>
 #include "cpu-utils.h"
+#include "curl.h"
 
 static pthread_mutex_t *pow_avx_mutex;
 static int *stopAVX;
@@ -69,7 +69,7 @@ static const int indices[] = {
     12,  376, 11,  375, 10,  374, 9,   373, 8,   372, 7,   371, 6,   370, 5,
     369, 4,   368, 3,   367, 2,   366, 1,   365, 0};
 
-void transform256(__m256i *lmid, __m256i *hmid)
+static void transform256(__m256i *lmid, __m256i *hmid)
 {
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     int t1, t2;
@@ -120,7 +120,7 @@ void transform256(__m256i *lmid, __m256i *hmid)
     }
 }
 
-int incr256(__m256i *mid_low, __m256i *mid_high)
+static int incr256(__m256i *mid_low, __m256i *mid_high)
 {
     int i;
     __m256i carry = _mm256_set_epi64x(LOW00, LOW01, LOW02, LOW03);
@@ -136,7 +136,7 @@ int incr256(__m256i *mid_low, __m256i *mid_high)
     return i == HASH_LENGTH;
 }
 
-void seri256(__m256i *low, __m256i *high, int n, char *r)
+static void seri256(__m256i *low, __m256i *high, int n, char *r)
 {
     int index = n >> 6;
     n = n % 64;
@@ -156,7 +156,7 @@ void seri256(__m256i *low, __m256i *high, int n, char *r)
     }
 }
 
-int check256(__m256i *l, __m256i *h, int m)
+static int check256(__m256i *l, __m256i *h, int m)
 {
     __m256i nonce_probe = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
@@ -181,7 +181,7 @@ int check256(__m256i *l, __m256i *h, int m)
     return -2;
 }
 
-void para256(char in[], __m256i l[], __m256i h[])
+static void para256(char in[], __m256i l[], __m256i h[])
 {
     for (int i = 0; i < STATE_LENGTH; i++) {
         switch (in[i]) {
@@ -201,7 +201,7 @@ void para256(char in[], __m256i l[], __m256i h[])
     }
 }
 
-void incrN256(int n, __m256i *mid_low, __m256i *mid_high)
+static void incrN256(int n, __m256i *mid_low, __m256i *mid_high)
 {
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     for (int j = 0; j < n; j++) {
@@ -218,7 +218,7 @@ void incrN256(int n, __m256i *mid_low, __m256i *mid_high)
 }
 
 
-int loop256(__m256i *lmid, __m256i *hmid, int m, char *nonce, int id)
+static int loop256(__m256i *lmid, __m256i *hmid, int m, char *nonce, int id)
 {
     int i = 0, n = 0;
     __m256i lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
@@ -237,7 +237,7 @@ int loop256(__m256i *lmid, __m256i *hmid, int m, char *nonce, int id)
     return -i * 256 - 1;
 }
 
-long long int pwork256(char mid[], int mwm, char nonce[], int n, int id)
+static long long int pwork256(char mid[], int mwm, char nonce[], int n, int id)
 {
     __m256i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     int offset = HASH_LENGTH - NONCE_LENGTH;
@@ -370,8 +370,7 @@ int8_t *PowAVX(int8_t *trytes, int mwm, int index)
     if (!threads)
         return NULL;
 
-    Pwork_struct *pitem =
-        (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
+    Pwork_struct *pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
     if (!pitem)
         return NULL;
 
@@ -409,11 +408,6 @@ int8_t *PowAVX(int8_t *trytes, int mwm, int index)
         return NULL;
 
     int8_t *last_result = nonce_to_result(trytes_t, nonce);
-
-    // Trytes_t *debug = initTrytes(last_result, 2673);
-    // Trytes_t *goHash = hashTrytes(debug);
-    // printf("%s\n", goHash->data);
-
 
     /* Free memory */
     free(c_state);
