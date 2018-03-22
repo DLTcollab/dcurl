@@ -79,9 +79,11 @@ void transform256(__m256i *lmid, __m256i *hmid)
 
     for (int r = 0; r < 80; r++) {
         for (int j = 0; j < STATE_LENGTH; j++) {
+            _mm_prefetch(&lfrom[indices[j + 1]], _MM_HINT_T1);
+            _mm_prefetch(&hfrom[indices[j + 1]], _MM_HINT_T1);
+            _mm_prefetch(&hfrom[indices[j + 2]], _MM_HINT_T1);
             t1 = indices[j];
             t2 = indices[j + 1];
-
             alpha = lfrom[t1];
             beta = hfrom[t1];
             gamma = hfrom[t2];
@@ -104,6 +106,9 @@ void transform256(__m256i *lmid, __m256i *hmid)
         hto = hswap;
     }
     for (int j = 0; j < HASH_LENGTH; j++) {
+        _mm_prefetch(&lfrom[indices[j + 1]], _MM_HINT_T1);
+        _mm_prefetch(&lfrom[indices[j + 1]], _MM_HINT_T1);
+        _mm_prefetch(&lfrom[indices[j + 1]], _MM_HINT_T1);
         t1 = indices[j];
         t2 = indices[j + 1];
         alpha = lfrom[t1];
