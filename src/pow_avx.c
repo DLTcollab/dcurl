@@ -16,7 +16,7 @@
 
 static pthread_mutex_t *pow_avx_mutex;
 static int *stopAVX;
-static long long int *countAVX;
+static int64_t *countAVX;
 
 static const int indices[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
@@ -142,8 +142,8 @@ static void seri256(__m256i *low, __m256i *high, int n, char *r)
     n = n % 64;
 
     for (int i = HASH_LENGTH - NONCE_LENGTH; i < HASH_LENGTH; i++) {
-        unsigned long long ll = (low[i][index] >> n) & 1;
-        unsigned long long hh = (high[i][index] >> n) & 1;
+        uint64_t ll = (low[i][index] >> n) & 1;
+        uint64_t hh = (high[i][index] >> n) & 1;
         if (hh == 0 && ll == 1) {
             r[i + NONCE_LENGTH - HASH_LENGTH] = -1;
         }
@@ -237,7 +237,7 @@ static int loop256(__m256i *lmid, __m256i *hmid, int m, char *nonce, int id)
     return -i * 256 - 1;
 }
 
-static long long int pwork256(char mid[], int mwm, char nonce[], int n, int id)
+static int64_t pwork256(char mid[], int mwm, char nonce[], int n, int id)
 {
     __m256i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     int offset = HASH_LENGTH - NONCE_LENGTH;
@@ -339,7 +339,7 @@ int pow_avx_init(int num_task)
     pow_avx_mutex =
         (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t) * num_task);
     stopAVX = (int *) malloc(sizeof(int) * num_task);
-    countAVX = (long long int *) malloc(sizeof(long long int) * num_task);
+    countAVX = (int64_t *) malloc(sizeof(int64_t) * num_task);
 
     if (!pow_avx_mutex || !stopAVX || !countAVX)
         return 0;

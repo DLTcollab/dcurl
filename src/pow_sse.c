@@ -7,16 +7,16 @@
 
 #include "pow_sse.h"
 #include <pthread.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "curl.h"
 #include "constants.h"
-#include <stdint.h>
 #include "cpu-utils.h"
+#include "curl.h"
 
 static pthread_mutex_t *pow_sse_mutex;
 static int *stopSSE;
-static long long int *countSSE;
+static int64_t *countSSE;
 
 static const int indices[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
@@ -131,8 +131,8 @@ static void seri128(__m128i *low, __m128i *high, int n, int8_t *r)
     }
 
     for (int i = HASH_LENGTH - NONCE_LENGTH; i < HASH_LENGTH; i++) {
-        unsigned long long ll = (low[i][index] >> n) & 1;
-        unsigned long long hh = (high[i][index] >> n) & 1;
+        uint64_t ll = (low[i][index] >> n) & 1;
+        uint64_t hh = (high[i][index] >> n) & 1;
         if (hh == 0 && ll == 1) {
             r[i + NONCE_LENGTH - HASH_LENGTH] = -1;
         }
@@ -165,14 +165,14 @@ static int check128(__m128i *l, __m128i *h, int m)
     return -2;
 }
 
-static long long int loop128(__m128i *lmid,
-                             __m128i *hmid,
-                             int m,
-                             int8_t *nonce,
-                             int id)
+static int64_t loop128(__m128i *lmid,
+                       __m128i *hmid,
+                       int m,
+                       int8_t *nonce,
+                       int id)
 {
     int n = 0;
-    long long int i = 0;
+    int64_t i = 0;
     __m128i lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
 
     for (i = 0; !incr128(lmid, hmid) && !stopSSE[id]; i++) {
@@ -225,11 +225,7 @@ static void incrN128(int n, __m128i *mid_low, __m128i *mid_high)
     }
 }
 
-static long long int pwork128(int8_t mid[],
-                              int mwm,
-                              int8_t nonce[],
-                              int n,
-                              int id)
+static int64_t pwork128(int8_t mid[], int mwm, int8_t nonce[], int n, int id)
 {
     __m128i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     para128(mid, lmid, hmid);
@@ -330,7 +326,7 @@ int pow_sse_init(int num_task)
     pow_sse_mutex =
         (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t) * num_task);
     stopSSE = (int *) malloc(sizeof(int) * num_task);
-    countSSE = (long long int *) malloc(sizeof(long long int) * num_task);
+    countSSE = (int64_t *) malloc(sizeof(int64_t) * num_task);
 
     if (!pow_sse_mutex || !stopSSE || !countSSE)
         return 0;
@@ -361,8 +357,7 @@ int8_t *PowSSE(int8_t *trytes, int mwm, int index)
     if (!threads)
         return NULL;
 
-    Pwork_struct *pitem =
-        (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
+    Pwork_struct *pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
     if (!pitem)
         return NULL;
 
