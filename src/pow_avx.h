@@ -12,7 +12,7 @@ struct _pwork_struct {
     int8_t *nonce;
     int n;
     int index;
-    long long int ret;
+    int64_t ret;
 };
 
 int8_t *PowAVX(int8_t *trytes, int mwm, int index);
