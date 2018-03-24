@@ -1,3 +1,6 @@
+# Debug or release build
+BUILD_DEBUG ?= 0
+
 # Build AVX backend or not
 BUILD_AVX ?= 0
 
