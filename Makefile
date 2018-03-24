@@ -1,10 +1,17 @@
 OUT ?= ./build
 SRC := src
 
-CFLAGS = -Os -fPIC -g
+CFLAGS = -Wall -fPIC
 LDFLAGS = -lpthread
 
 -include $(OUT)/local.mk
+
+ifeq ("$(BUILD_DEBUG)","1")
+CFLAGS += -Og -g
+else
+# Enable all the optimizations in release build
+CFLAGS += -Ofast
+endif
 
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
 # instructions for Intel and Arm later.
