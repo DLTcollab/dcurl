@@ -12,13 +12,15 @@ Reference Implementation (IRI).
 * Check JDK installation and set JAVA_HOME if you wish to specify.
 * Only one GPU can be facilitated with dcurl at the moment.
 
-# Build
-* Build a shared library for IRI, generating object files in directory `build`
-* Generate JNI header file from downloading from [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface)
-```shell
-$ make BUILD_JNI=1
-```
-* You can modify `build/local.mk` for custom build options.
+# Build Instructions
+* dcurl allows various combinations of build configurations to fit final use scenarios.
+* You can execute `make config` and then edit file `build/local.mk` for custom build options.
+    - ``BUILD_AVX``: build Intel AVX-accelerated Curl backend.
+    - ``BUILD_GPU``: build OpenCL-based GPU accelerations.
+    - ``BUILD_JNI``: build a shared library for IRI. The build system would generate JNI header file
+                   from downloading from
+                   [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface).
+    - ``BUILD_COMPAT``: build extra cCurl compatible interface.
 * Alternatively, you can specify conditional build as following:
 ```shell
 $ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1
@@ -63,7 +65,7 @@ $ make BUILD_AVX=1 check
         [ Verified ]
 ```
 
-# Tuning
+# Tweaks
 * ```dcurl_init(2, 1)``` in ```jni/iri-pearldiver-exlib.c```
     * ```2``` means 2 pow tasks executed in CPU,
     * ```1``` means 1 pow tasks executed in GPU at the same time.
@@ -77,10 +79,10 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 * Settings: enable 2 pow tasks in CPU, 1 pow tasks in GPU at the same time
 ![](https://lh4.googleusercontent.com/2U_TpfAtEbPdHBcGKD1zl0t0bzo2Rubj0DxXxvV-Rh31Yr7oCCtptutQpLLizMgR7ousEXUtwM6RASnQLOJnGePhQ5Emh1w8l8GlKzMtZ0Yv-TySF2gh3u48BAmllAJv2VjNaxgFGCA)
 
-# About IRI
+# IRI Adaptation
 [Modified IRI accepting external PoW Library](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface)
-* ```$ cd ~/iri && mvn compile clean && mvn package```
-* ```$ cp ~/dcurl/libdcurl.so ~/iri```
+* ```$ cd ~/iri && mvn compile && mvn package```
+* ```$ cp ~/dcurl/build/libdcurl.so ~/iri```
 * ```$ cd ~/iri && java -Djava.library.path=./ -jar target/iri.jar -p <port> --pearldiver-exlib dcurl```
 
 # TODO
