@@ -5,18 +5,23 @@
  */
 
 #include "dcurl.h"
-#include <pthread.h>
-#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "trinary.h"
 #include "pow_cl.h"
+#include "trinary.h"
 
 #if defined(ENABLE_AVX)
 #include "pow_avx.h"
 #else
 #include "pow_sse.h"
+#endif
+
+#include <pthread.h>
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#else
+#include <semaphore.h>
 #endif
 
 /* number of task that CPU can execute concurrently */
@@ -28,8 +33,12 @@ static int MAX_GPU_THREAD = -1;
 /* mutex protecting critical section */
 static pthread_mutex_t mtx;
 
-/* Semaphore that blocks excessive task*/
+/* Semaphore that blocks excessive task */
+#ifdef __APPLE__
+static dispatch_semaphore_t notify;
+#else
 static sem_t notify;
+#endif
 
 /* check whether dcurl is initialized */
 static int isInitialized = 0;
@@ -68,7 +77,13 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
         return 0;
 #endif
     pthread_mutex_init(&mtx, NULL);
+
+#ifdef __APPLE__
+    notify = dispatch_semaphore_create(0);
+#else
     sem_init(&notify, 0, 0);
+#endif
+
 #if defined(ENABLE_AVX)
     ret &= pow_avx_init(MAX_CPU_THREAD);
 #else
@@ -119,7 +134,12 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
     } else {
         num_waiting_thread++;
         pthread_mutex_unlock(&mtx);
+#ifdef __APPLE__
+        dispatch_semaphore_wait(notify, DISPATCH_TIME_FOREVER);
+#else
         sem_wait(&notify);
+#endif
+
         /* Waiting thread acquire permission */
         num_waiting_thread--;
         selected_entry = 1;
@@ -167,7 +187,11 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
 
     if (num_waiting_thread > 0) {
         /* Don't unlock mutex, giving waiting thread permision */
+#ifdef __APPLE__
+        dispatch_semaphore_signal(notify);
+#else
         sem_post(&notify);
+#endif
     } else {
 #if defined(ENABLE_OPENCL)
         if (selected_entry == 1)
