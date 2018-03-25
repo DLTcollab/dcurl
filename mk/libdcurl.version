@@ -1,0 +1,14 @@
+CODEABI_1.0 {
+    global:
+        /* core */
+        dcurl_*;
+
+        /* compat */
+        ccurl_*;
+
+        /* JNI */
+        Java_com_iota_iri_hash_PearlDiver*;
+
+    local: *;
+};
+

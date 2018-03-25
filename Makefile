@@ -2,7 +2,17 @@ OUT ?= ./build
 SRC := src
 
 CFLAGS = -Wall -fPIC
-LDFLAGS = -lpthread
+LDFLAGS = \
+	-lpthread
+
+UNAME_S := $(shell uname -s)
+ifneq ($(UNAME_S),Darwin)
+# GNU ld specific options
+LDFLAGS += \
+	-Wl,--gc-sections \
+	-Wl,--as-needed \
+	-Wl,--version-script=./mk/libdcurl.version
+endif
 
 -include $(OUT)/local.mk
 
