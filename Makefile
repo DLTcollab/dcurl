@@ -23,12 +23,16 @@ else
 CFLAGS += -Ofast
 endif
 
+SSE_S := $(shell grep -o sse /proc/cpuinfo | head -n 1)
+
 # FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
 # instructions for Intel and Arm later.
 ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -mavx2 -DENABLE_AVX
 else
+ifeq ($(SSE_S),sse)
 CFLAGS += -msse2
+endif
 endif
 
 ifeq ("$(BUILD_GPU)","1")
@@ -42,13 +46,16 @@ endif
 TESTS = \
 	trinary \
 	curl \
-	pow_c \
 	multi_pow_cpu
 
 ifeq ("$(BUILD_AVX)","1")
 TESTS += pow_avx
 else
+ifeq ($(SSE_S),sse)
 TESTS += pow_sse
+else
+TESTS += pow_c
+endif
 endif
 
 ifeq ("$(BUILD_GPU)","1")
@@ -69,13 +76,16 @@ OBJS = \
 	curl.o \
 	constants.o \
 	trinary.o \
-	dcurl.o \
-	pow_c.o
+	dcurl.o
 
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
 else
+ifeq ($(SSE_S),sse)
 OBJS += pow_sse.o
+else
+OBJS += pow_c.o
+endif
 endif
 
 ifeq ("$(BUILD_GPU)","1")
