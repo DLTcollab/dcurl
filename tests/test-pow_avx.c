@@ -48,7 +48,7 @@ int main()
 
     /* test AVX Implementation with mwm = 14 */
     pow_avx_init(1);
-    int8_t *ret_trytes = PowAVX(trytes, mwm, 0);
+    int8_t *ret_trytes = PowAVX((int8_t *) trytes, mwm, 0);
     pow_avx_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);

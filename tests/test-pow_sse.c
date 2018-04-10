@@ -48,7 +48,7 @@ int main()
 
     /* test SSE Implementation with mwm = 14 */
     pow_sse_init(1);
-    int8_t *ret_trytes = PowSSE(trytes, mwm, 0);
+    int8_t *ret_trytes = PowSSE((int8_t *) trytes, mwm, 0);
     pow_sse_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
