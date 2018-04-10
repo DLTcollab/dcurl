@@ -43,7 +43,7 @@ def validate(trytes, mwm):
 def call_dcurl(idx, mwm, lib, trytes_list):
     tmp = str(trytes_list[idx]).encode('ascii')
     ret = lib.dcurl_entry(tmp, mwm)
-    trytes = TryteString(ret)
+    trytes = TryteString(ret[:2673])
 
     hash_trytes = hash(trytes)
     RESULT_TX.append(hash_trytes)
