@@ -42,6 +42,7 @@ endif
 TESTS = \
 	trinary \
 	curl \
+	pow_c \
 	multi_pow_cpu
 
 ifeq ("$(BUILD_AVX)","1")
@@ -68,7 +69,8 @@ OBJS = \
 	curl.o \
 	constants.o \
 	trinary.o \
-	dcurl.o
+	dcurl.o \
+	pow_c.o
 
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
