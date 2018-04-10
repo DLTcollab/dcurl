@@ -41,13 +41,16 @@ endif
 
 TESTS = \
 	trinary \
-	curl \
-	multi_pow_cpu
+	curl
 
 ifeq ("$(BUILD_AVX)","1")
-TESTS += pow_avx
+TESTS += \
+	pow_avx \
+	multi_pow_cpu
 else
-TESTS += pow_sse
+TESTS += \
+	pow_sse \
+	multi_pow_cpu
 endif
 
 ifeq ("$(BUILD_GPU)","1")
