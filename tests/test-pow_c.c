@@ -53,7 +53,7 @@ int main()
 
     /* test C Implementation with mwm = 14 */
     pow_c_init(1);
-    int8_t *ret_trytes = PowC(trytes, mwm, 0);
+    int8_t *ret_trytes = PowC((int8_t *) trytes, mwm, 0);
     pow_c_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);

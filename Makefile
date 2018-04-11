@@ -31,7 +31,7 @@ ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -mavx2 -DENABLE_AVX
 else
 ifeq ($(SSE_S),sse)
-CFLAGS += -msse2
+CFLAGS += -msse2 -DENABLE_SSE
 endif
 endif
 
