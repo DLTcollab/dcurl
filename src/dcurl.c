@@ -64,6 +64,9 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
     if (max_cpu_thread < 0 || max_gpu_thread < 0)
         return 0; /* Unavailable argument passed */
 
+    if (isInitialized)
+        return 1;
+
     int ret = 1;
     isInitialized = 1;
     MAX_CPU_THREAD = max_cpu_thread;

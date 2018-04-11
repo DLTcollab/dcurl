@@ -6,14 +6,20 @@
 
 #include "dcurl.h"
 #include <stdbool.h>
+#include <pthread.h>
 
 static bool isInitialized = false;
+
+/* mutex protecting initialization section */
+static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 char *ccurl_pow(char *trytes, int mwm)
 {
     if (!isInitialized) {
-        dcurl_init(1, 0);
+        pthread_mutex_lock(&mtx);
+        dcurl_init(1, 1);
         isInitialized = true;
+        pthread_mutex_unlock(&mtx);
     }
     return (char *) dcurl_entry((int8_t *) trytes, mwm);
 }
