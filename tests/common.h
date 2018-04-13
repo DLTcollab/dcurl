@@ -7,8 +7,10 @@
 /* FIXME: conditional inclusion of architecture-specific headers */
 #if defined(ENABLE_AVX)
 #include "pow_avx.h"
-#else
+#elif defined(ENABLE_SSE)
 #include "pow_sse.h"
+#else
+#include "pow_c.h"
 #endif
 
 #if defined(ENABLE_OPENCL)

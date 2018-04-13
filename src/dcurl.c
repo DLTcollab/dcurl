@@ -13,8 +13,10 @@
 
 #if defined(ENABLE_AVX)
 #include "pow_avx.h"
-#else
+#elif defined(ENABLE_SSE)
 #include "pow_sse.h"
+#else
+#include "pow_c.h"
 #endif
 
 #include <pthread.h>
@@ -86,8 +88,10 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
 
 #if defined(ENABLE_AVX)
     ret &= pow_avx_init(MAX_CPU_THREAD);
-#else
+#elif defined(ENABLE_SSE)
     ret &= pow_sse_init(MAX_CPU_THREAD);
+#else
+    ret &= pow_c_init(MAX_CPU_THREAD);
 #endif
 #if defined(ENABLE_OPENCL)
     ret &= pwork_ctx_init(MAX_GPU_THREAD);
@@ -101,8 +105,10 @@ void dcurl_destroy()
     free(gpu_mutex_id);
 #if defined(ENABLE_AVX)
     pow_avx_destroy();
-#else
+#elif defined(ENABLE_SSE)
     pow_sse_destroy();
+#else
+    pow_c_destroy();
 #endif
 #if defined(ENABLE_OPENCL)
     pwork_ctx_destroy(MAX_GPU_THREAD);
@@ -161,8 +167,10 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
     case 1:
 #if defined(ENABLE_AVX)
         ret_trytes = PowAVX(trytes, mwm, selected_mutex_id);
-#else
+#elif defined(ENABLE_SSE)
         ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
+#else
+        ret_trytes = PowC(trytes, mwm, selected_mutex_id);
 #endif
         break;
 #if defined(ENABLE_OPENCL)
