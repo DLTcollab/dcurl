@@ -110,7 +110,6 @@ OBJS += \
 endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
-#deps := $(OBJS:%.o=%.o.d)
 
 $(OUT)/test-%.o: tests/test-%.c
 	$(VECHO) "  CC\t$@\n"
@@ -135,4 +134,5 @@ $(OUT)/test-multi_pow_%: tests/test-multi_pow_%.py $(OUT)/libdcurl.so
 
 include mk/common.mk
 include mk/python.mk
+
 -include $(deps)
