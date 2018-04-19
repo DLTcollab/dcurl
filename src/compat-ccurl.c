@@ -15,12 +15,12 @@ static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 char *ccurl_pow(char *trytes, int mwm)
 {
+    pthread_mutex_lock(&mtx);
     if (!isInitialized) {
-        pthread_mutex_lock(&mtx);
         dcurl_init(1, 1);
         isInitialized = true;
-        pthread_mutex_unlock(&mtx);
     }
+    pthread_mutex_unlock(&mtx);
     return (char *) dcurl_entry((int8_t *) trytes, mwm);
 }
 
