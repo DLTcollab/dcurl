@@ -47,7 +47,9 @@ static int isInitialized = 0;
 
 /* Respective number for Mutex */
 static int *cpu_mutex_id = NULL;
+#if defined(ENABLE_OPENCL)
 static int *gpu_mutex_id = NULL;
+#endif
 
 static int get_mutex_id(int *mutex_id, int env)
 {
@@ -63,17 +65,19 @@ static int get_mutex_id(int *mutex_id, int env)
 
 int dcurl_init(int max_cpu_thread, int max_gpu_thread)
 {
-    if (max_cpu_thread < 0 || max_gpu_thread < 0)
-        return 0; /* Unavailable argument passed */
-
     int ret = 1;
     isInitialized = 1;
+
+    if (max_cpu_thread < 0)
+        return 0; /* Unavailable argument passed */
     MAX_CPU_THREAD = max_cpu_thread;
-    MAX_GPU_THREAD = max_gpu_thread;
     cpu_mutex_id = (int *) calloc(MAX_CPU_THREAD, sizeof(int));
     if (!cpu_mutex_id)
         return 0;
 #if defined(ENABLE_OPENCL)
+    if (max_gpu_thread < 0)
+        return 0; /* Unavailable argument passed */
+    MAX_GPU_THREAD = max_gpu_thread;
     gpu_mutex_id = (int *) calloc(MAX_GPU_THREAD, sizeof(int));
     if (!gpu_mutex_id)
         return 0;
@@ -102,7 +106,6 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
 void dcurl_destroy()
 {
     free(cpu_mutex_id);
-    free(gpu_mutex_id);
 #if defined(ENABLE_AVX)
     pow_avx_destroy();
 #elif defined(ENABLE_SSE)
@@ -111,6 +114,7 @@ void dcurl_destroy()
     pow_c_destroy();
 #endif
 #if defined(ENABLE_OPENCL)
+    free(gpu_mutex_id);
     pwork_ctx_destroy(MAX_GPU_THREAD);
 #endif
 }
@@ -118,7 +122,9 @@ void dcurl_destroy()
 int8_t *dcurl_entry(int8_t *trytes, int mwm)
 {
     static int num_cpu_thread = 0;
+#if defined(ENABLE_OPENCL)
     static int num_gpu_thread = 0;
+#endif
     static int num_waiting_thread = 0;
     int selected_mutex_id = -1;
     int selected_entry = -1;
@@ -194,7 +200,7 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
 #endif
 
     if (num_waiting_thread > 0) {
-        /* Don't unlock mutex, giving waiting thread permision */
+/* Don't unlock mutex, giving waiting thread permision */
 #ifdef __APPLE__
         dispatch_semaphore_signal(notify);
 #else

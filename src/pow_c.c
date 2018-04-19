@@ -100,7 +100,7 @@ void transform64(uint64_t *lmid, uint64_t *hmid)
         beta = hfrom[t1];
         gamma = hfrom[t2];
         delta = (alpha | (~gamma)) & (lfrom[t2] ^ beta);
-        lto[j] = ~delta; //6
+        lto[j] = ~delta;  // 6
         hto[j] = (alpha ^ gamma) | delta;
     }
 }
@@ -144,17 +144,23 @@ int check(uint64_t *l, uint64_t *h, int m)
 
     for (int i = HASH_LENGTH - m; i < HASH_LENGTH; i++) {
         nonce_probe &= ~(l[i] ^ h[i]);
-        if (nonce_probe == 0) return -1;
+        if (nonce_probe == 0)
+            return -1;
     }
 
     for (int i = 0; i < 64; i++) {
-        if ((nonce_probe >> i) & 1) return i;
+        if ((nonce_probe >> i) & 1)
+            return i;
     }
 
     return -1;
 }
 
-long long int loop_cpu(uint64_t *lmid, uint64_t *hmid, int m, int8_t *nonce, int id)
+long long int loop_cpu(uint64_t *lmid,
+                       uint64_t *hmid,
+                       int m,
+                       int8_t *nonce,
+                       int id)
 {
     int n = 0;
     long long int i = 0;
@@ -176,25 +182,25 @@ void para(int8_t in[], uint64_t l[], uint64_t h[])
 {
     for (int i = 0; i < STATE_LENGTH; i++) {
         switch (in[i]) {
-            case 0:
-                l[i] = HBITS;
-                h[i] = HBITS;
-                break;
-            case 1:
-                l[i] = LBITS;
-                h[i] = HBITS;
-                break;
-            case -1:
-                l[i] = HBITS;
-                h[i] = LBITS;
-                break;
+        case 0:
+            l[i] = HBITS;
+            h[i] = HBITS;
+            break;
+        case 1:
+            l[i] = LBITS;
+            h[i] = HBITS;
+            break;
+        case -1:
+            l[i] = HBITS;
+            h[i] = LBITS;
+            break;
         }
     }
 }
 
 void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
 {
-	for (int j = 0; j < n; j++) {
+    for (int j = 0; j < n; j++) {
         uint64_t carry = 1;
         for (int i = INCR_START - 27; i < INCR_START && carry; i++) {
             uint64_t low = mid_low[i], high = mid_high[i];
@@ -207,7 +213,6 @@ void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
 
 static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n, int id)
 {
-
     uint64_t lmid[STATE_LENGTH] = {0}, hmid[STATE_LENGTH] = {0};
     para(mid, lmid, hmid);
     int offset = HASH_LENGTH - NONCE_LENGTH;
@@ -221,7 +226,7 @@ static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n, int id)
     lmid[offset + 3] = LOW3;
     hmid[offset + 3] = HIGH3;
     incrN(n, lmid, hmid);
-	
+
     return loop_cpu(lmid, hmid, mwm, nonce, id);
 }
 
@@ -230,7 +235,7 @@ static void *pworkThread(void *pitem)
     Pwork_struct *pworkInfo = (Pwork_struct *) pitem;
     int task_id = pworkInfo->index;
     pworkInfo->ret = pwork(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
-                              pworkInfo->n, task_id);
+                           pworkInfo->n, task_id);
 
     pthread_mutex_lock(&pow_c_mutex[task_id]);
     if (pworkInfo->ret >= 0) {
