@@ -69,6 +69,10 @@ TESTS += \
 	multi_pow_gpu
 endif
 
+ifeq ("$(BUILD_COMPAT)", "1")
+TESTS += ccurl-multi_pow
+endif
+
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
 LIBS = libdcurl.so
@@ -127,7 +131,7 @@ $(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-$(OUT)/test-multi_pow_%: tests/test-multi_pow_%.py $(OUT)/libdcurl.so
+$(OUT)/test-%: tests/test-%.py $(OUT)/libdcurl.so
 	$(Q)echo "#!$(PYTHON)" > $@
 	$(call py_prepare_cmd)
 	$(Q)chmod +x $@

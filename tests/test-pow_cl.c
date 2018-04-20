@@ -48,7 +48,7 @@ int main()
 
     /* test OpenCL Implementation with mwm = 14 */
     pwork_ctx_init(1);
-    int8_t *ret_trytes = PowCL(trytes, mwm, 0);
+    int8_t *ret_trytes = PowCL((int8_t *) trytes, mwm, 0);
     pwork_ctx_destroy(1);
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);

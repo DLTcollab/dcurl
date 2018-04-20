@@ -246,8 +246,9 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
 
 int8_t *PowCL(int8_t *trytes, int mwm, int index)
 {
-    Trytes_t *trytes_t = initTrytes(trytes, 2673);
+    Trytes_t *trytes_t = NULL;
 
+    trytes_t = initTrytes(trytes, 2673);
     Trits_t *tr = trits_from_trytes(trytes_t);
     if (!tr)
         return NULL;

@@ -64,7 +64,7 @@ static int init_cl_devices(CLContext *ctx)
 
 static int init_cl_program(CLContext *ctx)
 {
-    char *source_str = pearl_cl;
+    unsigned char *source_str = pearl_cl;
     size_t source_size = pearl_cl_len;
     cl_int errno;
 
