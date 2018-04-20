@@ -8,9 +8,10 @@ Reference Implementation (IRI).
 
 # Warning
 * You need to configure OpenCL platform and device by yourself in ```src/clcontext.c```
-* You need to configure paths and flags of OpenCL installation in ```Makefile```
+* You need to configure paths and flags of OpenCL installation in ```mk/opencl.mk```
 * Check JDK installation and set JAVA_HOME if you wish to specify.
 * Only one GPU can be facilitated with dcurl at the moment.
+* If your platform doesn't support Intel SSE, dcurl would be compiled with naive implementation.
 
 # Build Instructions
 * dcurl allows various combinations of build configurations to fit final use scenarios.
@@ -85,8 +86,15 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 * ```$ cp ~/dcurl/build/libdcurl.so ~/iri```
 * ```$ cd ~/iri && java -Djava.library.path=./ -jar target/iri.jar -p <port> --pearldiver-exlib dcurl```
 
+# IOTA PoW Node
+[gagathos/iota-gpu-pow](https://github.com/gagathos/iota-gpu-pow)
+* You can construct a IOTA PoW node, which uses `ccurl` by default
+* Generate a drop-in replacement for `ccurl` and acquire performance boost!
+    * ```$ make BUILD_COMPAT=1 check```
+    * ```$ cp ./build/libdcurl.so <iota-gpu-pow>/libccurl.so```
+
 # TODO
-* More test program :(
+* ~~More test program :(~~
 * ~~Pre-compile OpenCL kernel functions and include it in dcurl.~~
 * Automatically configure dcurl after init()
 
