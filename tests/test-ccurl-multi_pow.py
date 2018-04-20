@@ -50,14 +50,11 @@ def call_dcurl(idx, mwm, lib, trytes_list):
 
     join_list[idx].release()
 
-def testing(dcurl_parameter):
-    num_cpu = dcurl_parameter[0]
-    num_gpu = dcurl_parameter[1]
+def testing():
     trytes_list = read_trytes(TRYTES_LIST_PATH)
 
     # Settings of shared library
     libdcurl = ctypes.cdll.LoadLibrary(DCURL_PATH)
-    #libdcurl.dcurl_init.argtypes = [ctypes.c_int, ctypes.c_int]
     libdcurl.ccurl_pow.argtypes = [ctypes.c_char_p, ctypes.c_int]
     libdcurl.ccurl_pow.restype = ctypes.c_char_p
 
@@ -78,10 +75,5 @@ def testing(dcurl_parameter):
             sys.exit(1)
 
 if __name__ == "__main__":
-    # Select testing set, (x, y) which means
-    # (MAX_CPU_THREAD, MAX_GPU_THREAD) in dcurl
-    test_set = (2, 1)
-
-    testing(test_set)
-
+    testing()
     sys.exit(0)
