@@ -292,14 +292,14 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
 static int8_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
-    int8_t *rst = (int8_t *) malloc(rst_len);
+    int8_t *rst = (int8_t *) malloc(rst_len + 1);
     if (!rst)
         return NULL;
 
     memcpy(rst, tx->data, tx->len - NonceTrinarySize / 3);
     memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data,
            rst_len - (tx->len - NonceTrinarySize / 3));
-
+    rst[rst_len] = '\0';
     return rst;
 }
 
