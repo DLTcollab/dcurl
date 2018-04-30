@@ -35,6 +35,8 @@ CFLAGS += -msse2 -DENABLE_SSE
 endif
 endif
 
+CFLAGS += -mcpu=native -mtune=native
+
 ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
@@ -62,6 +64,9 @@ TESTS += \
 	multi_pow_cpu
 endif
 endif
+
+TESTS += \
+         pow_neon
 
 ifeq ("$(BUILD_GPU)","1")
 TESTS += \
@@ -102,6 +107,8 @@ OBJS += \
 	pow_cl.o \
 	clcontext.o
 endif
+
+OBJS += pow_neon.o
 
 ifeq ("$(BUILD_JNI)","1")
 OBJS += \
