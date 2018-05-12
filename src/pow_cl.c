@@ -6,7 +6,13 @@
  */
 
 #include "pow_cl.h"
+
+#if defined(__APPLE__) || defined(__MACOSX)
+#include <OpenCL/cl.h>
+#else
 #include <CL/cl.h>
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

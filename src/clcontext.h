@@ -7,7 +7,11 @@
 #ifndef CLCONTEXT_H_
 #define CLCONTEXT_H_
 
+#if defined(__APPLE__) || defined(__MACOSX)
+#include <OpenCL/cl.h>
+#else
 #include <CL/cl.h>
+#endif
 
 #define MAX_NUM_BUFFERS 9
 #define MAX_NUM_KERNEL 3
