@@ -42,7 +42,7 @@ static int validateTrytes(Trobject_t *trytes)
         return 0;
 
     for (int i = 0; i < trytes->len; i++)
-        if ((trytes->data[i] <= 'A' && trytes->data[i] >= 'Z') &&
+        if ((trytes->data[i] < 'A' || trytes->data[i] > 'Z') &&
             trytes->data[i] != '9')
             return 0;
     return 1;
