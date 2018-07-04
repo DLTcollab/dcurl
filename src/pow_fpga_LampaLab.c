@@ -21,15 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "pow_fpga_LampaLab.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <error.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include "converter.h"
+
 
 #define NONCE_LEN                   81
 #define TRANSACTION_LEN             2673
@@ -99,6 +91,8 @@ int pow_fpga_LampaLab_init(){
         fclose(out_fd);
         exit(EXIT_FAILURE);
     }
+
+    return 1;
 }
 
 void pow_fpga_LampaLab_destroy(){
@@ -125,8 +119,6 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index){
     uint64_t tick_cnt = 0;
     uint32_t hrate = 0;
 
-    int result;
-
     char* itrits = NULL;
 
     char  nonce_trits[NONCE_LEN];
@@ -137,10 +129,6 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index){
     size_t itritlen = 0;
 
     itrytelen = strnlen(itrytes, TRANSACTION_LEN);
-    if (TRANSACTION_LEN != itrytelen) {
-        fprintf(stderr, HINTS, TRANSACTION_LEN);
-        return 1;
-    }
     itritlen = 3*itrytelen;
 
  
@@ -182,5 +170,7 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index){
 
     if (itrits)
         free(itrits);
+
+    return otrytes;
 }
 

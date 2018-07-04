@@ -73,6 +73,10 @@ ifeq ("$(BUILD_COMPAT)", "1")
 TESTS += ccurl-multi_pow
 endif
 
+ifeq ("$(BUILD_FPGA_LAMPALAB)","1")
+TESTS += pow_fpga_LampaLab
+endif
+
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
 LIBS = libdcurl.so
@@ -111,6 +115,11 @@ endif
 ifeq ("$(BUILD_COMPAT)", "1")
 OBJS += \
 	compat-ccurl.o
+endif
+
+ifeq ("$(BUILD_FPGA_LAMPALAB)","1")
+OBJS += \
+	pow_fpga_LampaLab.o
 endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
