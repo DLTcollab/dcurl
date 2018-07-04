@@ -20,6 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
+#include "pow_fpga_LampaLab.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,50 +45,15 @@ SOFTWARE.*/
 #define HINTS                                                                  \
   "### CPOW Hardware Accelerated ###\nUsage:\n\t./curl_pow_hard MWM TRYTES(length: %d) \n"
 
-int main(int argc, char* argv[]) 
-{
-    FILE *ctrl_fd = 0;
-    FILE *in_fd = 0;
-    FILE *out_fd = 0;
 
-    uint8_t mwm = 0;
 
-    int devmem_fd = 0;
-
-    void *fpga_regs_map = 0;
-    uint32_t *cpow_map = 0;
-
-    uint32_t hash_cnt = 0;
-    uint32_t tick_cnt_l = 0;
-    uint32_t tick_cnt_h = 0;
-    uint64_t tick_cnt = 0;
-    uint32_t hrate = 0;
-
-    int result;
-
-    char* itrytes = NULL;
-    char* itrits = NULL;
-
-    char  nonce_trits[NONCE_LEN];
-    char* nonce_trytes = NULL;
-    char  otrytes[TRANSACTION_LEN];
-
-    size_t itrytelen = 0;
-    size_t itritlen = 0;
-
-    if (argc == 3) {
-        mwm = atoi(argv[1]);
-        itrytes = argv[2];
-        itrytelen = strnlen(itrytes, TRANSACTION_LEN);
-        if (TRANSACTION_LEN != itrytelen) {
-            fprintf(stderr, HINTS, TRANSACTION_LEN);
-            return 1;
-        }
-        itritlen = 3*itrytelen;
-    } else {
-        fprintf(stderr, HINTS, TRANSACTION_LEN);
-        return 1;
-    }
+int pow_fpga_LampaLab_init(){
+    
+    ctrl_fd = 0;
+    in_fd = 0;
+    out_fd = 0;
+    devmem_fd = 0;
+    fpga_regs_map = 0;
 
     ctrl_fd = fopen("/dev/cpow-ctrl", "r+");
 
@@ -108,8 +74,8 @@ int main(int argc, char* argv[])
 
     if(out_fd == NULL) {
         perror("cpow-odata open fail");
- 	    fclose(ctrl_fd);
-	    fclose(in_fd);
+ 	fclose(ctrl_fd);
+	fclose(in_fd);
         exit(EXIT_FAILURE);
     }
 
@@ -118,22 +84,66 @@ int main(int argc, char* argv[])
     if(devmem_fd < 0) {
         perror("devmem open");
         fclose(ctrl_fd);
-	    fclose(in_fd);
+	fclose(in_fd);
         fclose(out_fd);
         exit(EXIT_FAILURE);
     }
 
-    fpga_regs_map = (uint32_t*)mmap(NULL, HPS_TO_FPGA_SPAN, PROT_READ|PROT_WRITE, MAP_SHARED, devmem_fd, HPS_TO_FPGA_BASE);
+   fpga_regs_map = (uint32_t*)mmap(NULL, HPS_TO_FPGA_SPAN, PROT_READ|PROT_WRITE, MAP_SHARED, devmem_fd, HPS_TO_FPGA_BASE);
 
     if(fpga_regs_map == MAP_FAILED) {
         perror("devmem mmap");
         close(devmem_fd);
         fclose(ctrl_fd);
-	    fclose(in_fd);
+	fclose(in_fd);
         fclose(out_fd);
         exit(EXIT_FAILURE);
     }
+}
 
+void pow_fpga_LampaLab_destroy(){
+    
+    fclose(in_fd);
+    fclose(out_fd);
+    fclose(ctrl_fd);
+
+    result = munmap(fpga_regs_map, HPS_TO_FPGA_SPAN); 
+
+    close(devmem_fd);
+
+    if(result < 0) {
+        perror("devmem munmap");
+        exit(EXIT_FAILURE);
+    }
+    exit(EXIT_SUCCESS);
+}
+
+char *PowFPGALampaLab(char *itrytes, int mwm, int index){
+    uint32_t hash_cnt = 0;
+    uint32_t tick_cnt_l = 0;
+    uint32_t tick_cnt_h = 0;
+    uint64_t tick_cnt = 0;
+    uint32_t hrate = 0;
+
+    int result;
+
+    char* itrits = NULL;
+
+    char  nonce_trits[NONCE_LEN];
+    char* nonce_trytes = NULL;
+    char  otrytes[TRANSACTION_LEN];
+
+    size_t itrytelen = 0;
+    size_t itritlen = 0;
+
+    itrytelen = strnlen(itrytes, TRANSACTION_LEN);
+    if (TRANSACTION_LEN != itrytelen) {
+        fprintf(stderr, HINTS, TRANSACTION_LEN);
+        return 1;
+    }
+    itritlen = 3*itrytelen;
+
+ 
     cpow_map = (uint32_t*)(fpga_regs_map + CPOW_BASE);
 
     itrits = trits_from_trytes(itrytes, itrytelen);
@@ -172,20 +182,5 @@ int main(int argc, char* argv[])
 
     if (itrits)
         free(itrits);
-
-    fclose(in_fd);
-    fclose(out_fd);
-    fclose(ctrl_fd);
-
-    result = munmap(fpga_regs_map, HPS_TO_FPGA_SPAN); 
-
-    close(devmem_fd);
-
-    if(result < 0) {
-        perror("devmem munmap");
-        exit(EXIT_FAILURE);
-    }
-
-    exit(EXIT_SUCCESS);
 }
 
