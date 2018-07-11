@@ -17,7 +17,7 @@ FILE *in_fd;
 FILE *out_fd;
 int devmem_fd;
 void *fpga_regs_map;
-uint32_t *cpow_map = 0;
+uint32_t *cpow_map;
 int result;
 
 char *PowFPGALampaLab(char *itrytes, int mwm, int index);

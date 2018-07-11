@@ -30,13 +30,17 @@ SSE_S := $(shell grep -o sse /proc/cpuinfo | head -n 1)
 ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -mavx2 -DENABLE_AVX
 else
-ifeq ($(SSE_S),sse)
+ifeq ("$(BUILD_SSE)"_$(SSE_S),"1"_sse)
 CFLAGS += -msse2 -DENABLE_SSE
 endif
 endif
 
 ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
+endif
+
+ifeq ("$(BUILD_FPGA_LAMPALAB)","1")
+include mk/fpgaLampaLab.mk
 endif
 
 ifeq ("$(BUILD_JNI)","1")
@@ -52,7 +56,7 @@ TESTS += \
 	pow_avx \
 	multi_pow_cpu
 else
-ifeq ($(SSE_S),sse)
+ifeq ("$(BUILD_SSE)"_$(SSE_S),"1"_sse)
 TESTS += \
 	pow_sse \
 	multi_pow_cpu
@@ -94,7 +98,7 @@ OBJS = \
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
 else
-ifeq ($(SSE_S),sse)
+ifeq ("$(BUILD_SSE)"_$(SSE_S),"1"_sse)
 OBJS += pow_sse.o
 else
 OBJS += pow_c.o
@@ -130,7 +134,7 @@ $(OUT)/test-%.o: tests/test-%.c
 
 $(OUT)/%.o: $(SRC)/%.c
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
+	$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
 
 $(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"

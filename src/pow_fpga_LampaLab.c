@@ -46,6 +46,7 @@ int pow_fpga_LampaLab_init(){
     out_fd = 0;
     devmem_fd = 0;
     fpga_regs_map = 0;
+    cpow_map = 0;
 
     ctrl_fd = fopen("/dev/cpow-ctrl", "r+");
 
@@ -81,8 +82,9 @@ int pow_fpga_LampaLab_init(){
         exit(EXIT_FAILURE);
     }
 
-   fpga_regs_map = (uint32_t*)mmap(NULL, HPS_TO_FPGA_SPAN, PROT_READ|PROT_WRITE, MAP_SHARED, devmem_fd, HPS_TO_FPGA_BASE);
-
+    fpga_regs_map = (uint32_t*)mmap(NULL, HPS_TO_FPGA_SPAN, PROT_READ|PROT_WRITE, MAP_SHARED, devmem_fd, HPS_TO_FPGA_BASE);
+    cpow_map = (uint32_t*)(fpga_regs_map + CPOW_BASE);
+    
     if(fpga_regs_map == MAP_FAILED) {
         perror("devmem mmap");
         close(devmem_fd);
@@ -113,6 +115,9 @@ void pow_fpga_LampaLab_destroy(){
 }
 
 char *PowFPGALampaLab(char *itrytes, int mwm, int index){
+    
+       
+ 
     uint32_t hash_cnt = 0;
     uint32_t tick_cnt_l = 0;
     uint32_t tick_cnt_h = 0;
@@ -131,10 +136,7 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index){
     itrytelen = strnlen(itrytes, TRANSACTION_LEN);
     itritlen = 3*itrytelen;
 
- 
-    cpow_map = (uint32_t*)(fpga_regs_map + CPOW_BASE);
-
-    itrits = trits_from_trytes(itrytes, itrytelen);
+    itrits = trits_from_trytes_aj(itrytes, itrytelen);
 
     fwrite(itrits, 1, itritlen, in_fd);
     fflush(in_fd);
@@ -145,7 +147,7 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index){
 
     fread(nonce_trits, 1, NONCE_LEN, out_fd);
 
-    nonce_trytes = trytes_from_trits(nonce_trits, 0, NONCE_LEN);
+    nonce_trytes = trytes_from_trits_aj(nonce_trits, 0, NONCE_LEN);
 
     for (int i = 0; i < TRANSACTION_LEN; i=i+1)
         if (i < NONCE_OFFSET)
