@@ -93,6 +93,7 @@ OBJS = \
 	curl.o \
 	constants.o \
 	trinary.o \
+	converter.o \
 	dcurl.o
 
 ifeq ("$(BUILD_AVX)","1")
