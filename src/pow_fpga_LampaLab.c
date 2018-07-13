@@ -37,7 +37,7 @@ SOFTWARE.*/
 #define HINTS                                                                  \
   "### CPOW Hardware Accelerated ###\nUsage:\n\t./curl_pow_hard MWM TRYTES(length: %d) \n"
 
-
+static char otrytes[TRANSACTION_LEN];
 
 int pow_fpga_LampaLab_init(){
     
@@ -128,7 +128,7 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index){
 
     char  nonce_trits[NONCE_LEN];
     char* nonce_trytes = NULL;
-    char  otrytes[TRANSACTION_LEN];
+   
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
