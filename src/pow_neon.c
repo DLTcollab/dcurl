@@ -84,8 +84,9 @@ static const int indices[] = {
 
 static void transform128(__m128i *lmid, __m128i *hmid)
 {
+    __m128i one = _mm_set_epi64x(HBITS, HBITS);
     int t1, t2;
-    __m128i alpha, beta, gamma, delta;
+    __m128i alpha, beta, gamma, ngamma, delta;
     __m128i *lto = lmid + STATE_LENGTH, *hto = hmid + STATE_LENGTH;
     __m128i *lfrom = lmid, *hfrom = hmid;
 
@@ -96,9 +97,17 @@ static void transform128(__m128i *lmid, __m128i *hmid)
             alpha = lfrom[t1];
             beta = hfrom[t1];
             gamma = hfrom[t2];
-            delta = (alpha | (~gamma)) & (lfrom[t2] ^ beta);
-            lto[j] = ~delta;
-            hto[j] = (alpha ^ gamma) | delta;
+            ngamma = _mm_andnot_si128(gamma, one);
+            delta = _mm_and_si128(
+                _mm_or_si128(alpha, ngamma),
+                _mm_xor_si128(
+                    lfrom[t2],
+                    beta)); /* (alpha | (~gamma)) & (lfrom[t2] ^ beta) */
+
+
+            lto[j] = _mm_andnot_si128(delta, one); /* ~delta */
+            hto[j] = _mm_or_si128(_mm_xor_si128(alpha, gamma),
+                                     delta); /* (alpha ^ gamma) | delta */
         }
         __m128i *lswap = lfrom, *hswap = hfrom;
         lfrom = lto;
@@ -112,24 +121,30 @@ static void transform128(__m128i *lmid, __m128i *hmid)
         alpha = lfrom[t1];
         beta = hfrom[t1];
         gamma = hfrom[t2];
-        delta = (alpha | (~gamma)) & (lfrom[t2] ^ beta);
-        lto[j] = ~delta;
-        hto[j] = (alpha ^ gamma) | delta;
+        ngamma = _mm_andnot_si128(gamma, one);
+        delta = _mm_and_si128(
+            _mm_or_si128(alpha, ngamma),
+            _mm_xor_si128(
+                lfrom[t2], beta)); /* (alpha | (~gamma)) & (lfrom[t2] ^ beta) */
+        lto[j] = _mm_andnot_si128(delta, one); /* ~delta */
+        hto[j] = _mm_or_si128(_mm_xor_si128(alpha, gamma),
+                                 delta); /* (alpha ^ gamma) | delta */
     }
 }
 
 static int incr128(__m128i *mid_low, __m128i *mid_high)
 {
     int i;
-    __m128i carry;
-    carry = _mm_set_epi64x(LOW00, LOW01);
+    __m128i carry = _mm_set_epi64x(LOW00, LOW01);
+    __m128i one = _mm_set_epi64x(HBITS, HBITS);
 
     for (i = INCR_START; i < HASH_LENGTH && (i == INCR_START || carry[0]);
          i++) {
         __m128i low = mid_low[i], high = mid_high[i];
-        mid_low[i] = high ^ low;
+        __m128i nlow = _mm_andnot_si128(low, one);
+        mid_low[i] = _mm_xor_si128(high, low);
         mid_high[i] = low;
-        carry = high & (~low);
+        carry = _mm_and_si128(nlow, high);
     }
     return i == HASH_LENGTH;
 }
@@ -161,9 +176,11 @@ static void seri128(__m128i *low, __m128i *high, int n, int8_t *r)
 static int check128(__m128i *l, __m128i *h, int m)
 {
     __m128i nonce_probe = _mm_set_epi64x(HBITS, HBITS);
+    __m128i one = _mm_set_epi64x(HBITS, HBITS);
 
     for (int i = HASH_LENGTH - m; i < HASH_LENGTH; i++) {
-        nonce_probe &= ~(l[i] ^ h[i]);
+        __m128i tmp = _mm_andnot_si128(_mm_xor_si128(l[i], h[i]), one);
+        nonce_probe = _mm_and_si128(tmp, nonce_probe);
         if (nonce_probe[0] == LBITS && nonce_probe[1] == LBITS) {
             return -1;
         }
@@ -228,12 +245,14 @@ static void incrN128(int n, __m128i *mid_low, __m128i *mid_high)
 {
     for (int j = 0; j < n; j++) {
         __m128i carry = _mm_set_epi64x(HBITS, HBITS);
+        __m128i one = _mm_set_epi64x(HBITS, HBITS);
         for (int i = HASH_LENGTH * 2 / 3 + 4;
              i < HASH_LENGTH * 2 / 3 + 4 + 27 && carry[0]; i++) {
             __m128i low = mid_low[i], high = mid_high[i];
-            mid_low[i] = high ^ low;
+            __m128i nlow = _mm_andnot_si128(low, one);
+            mid_low[i] = _mm_xor_si128(high, low);
             mid_high[i] = low;
-            carry = high & (~low);
+            carry = _mm_and_si128(nlow, high);
         }
     }
 }
