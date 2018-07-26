@@ -10,7 +10,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include "converter.h"
+#include "trinary.h"
 
 FILE *ctrl_fd;
 FILE *in_fd;

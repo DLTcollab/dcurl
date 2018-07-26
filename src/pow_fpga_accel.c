@@ -119,11 +119,7 @@ void pow_fpga_accel_destroy()
 
 char *PowFPGAAccel(char *itrytes, int mwm, int index)
 {
-    char *itrits = NULL;
-
     char nonce_trits[NONCE_LEN];
-    char *nonce_trytes = NULL;
-
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
@@ -131,9 +127,11 @@ char *PowFPGAAccel(char *itrytes, int mwm, int index)
     itrytelen = strnlen(itrytes, TRANSACTION_LEN);
     itritlen = 3 * itrytelen;
 
-    itrits = string_trits_from_string_trytes(itrytes, itrytelen);
+    Trytes_t *object_trytes = initTrytes((signed char *) itrytes, itrytelen);
 
-    fwrite(itrits, 1, itritlen, in_fd);
+    Trits_t *object_trits = trits_from_trytes(object_trytes);
+
+    fwrite((char *) object_trits->data, 1, itritlen, in_fd);
     fflush(in_fd);
 
     fwrite(&mwm, 1, 1, ctrl_fd);
@@ -142,19 +140,19 @@ char *PowFPGAAccel(char *itrytes, int mwm, int index)
 
     fread(nonce_trits, 1, NONCE_LEN, out_fd);
 
-    nonce_trytes = string_trytes_from_string_trits(nonce_trits, 0, NONCE_LEN);
+    Trits_t *object_nonce_trits = initTrits((int8_t *) nonce_trits, NONCE_LEN);
+    Trytes_t *nonce_trytes = trytes_from_trits(object_nonce_trits);
 
     for (int i = 0; i < TRANSACTION_LEN; i = i + 1)
         if (i < NONCE_OFFSET)
             otrytes[i] = itrytes[i];
         else
-            otrytes[i] = nonce_trytes[i - NONCE_OFFSET];
+            otrytes[i] = nonce_trytes->data[i - NONCE_OFFSET];
 
-    if (nonce_trytes)
-        free(nonce_trytes);
-
-    if (itrits)
-        free(itrits);
+    freeTrobject(object_trytes);
+    freeTrobject(object_trits);
+    freeTrobject(object_nonce_trits);
+    freeTrobject(nonce_trytes);
 
     return otrytes;
 }
