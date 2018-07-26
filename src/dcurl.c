@@ -182,7 +182,7 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
 #elif defined(ENABLE_SSE)
         ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
 #elif defined(ENABLE_FPGA_LAMPALAB)
-	ret_trytes = PowFPGALampaLab((char *)trytes, mwm, selected_mutex_id);
+        ret_trytes = (int8_t *) PowFPGALampaLab((char *) trytes, mwm, selected_mutex_id);
 #else
         ret_trytes = PowC(trytes, mwm, selected_mutex_id);
 #endif
