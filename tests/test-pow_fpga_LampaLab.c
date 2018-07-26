@@ -46,7 +46,7 @@ int main()
 
     int mwm = 14;
 
-    /* test SSE Implementation with mwm = 14 */
+    /* test implementation of LampaLab's IOTA PoW FPGA with mwm = 14 */
     pow_fpga_LampaLab_init();
     int8_t *ret_trytes = (int8_t *) PowFPGALampaLab(trytes, mwm, 0);
     pow_fpga_LampaLab_destroy();
