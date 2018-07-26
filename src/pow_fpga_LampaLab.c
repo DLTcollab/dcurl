@@ -119,12 +119,6 @@ void pow_fpga_LampaLab_destroy()
 
 char *PowFPGALampaLab(char *itrytes, int mwm, int index)
 {
-    uint32_t hash_cnt = 0;
-    uint32_t tick_cnt_l = 0;
-    uint32_t tick_cnt_h = 0;
-    uint64_t tick_cnt = 0;
-    uint32_t hrate = 0;
-
     char *itrits = NULL;
 
     char nonce_trits[NONCE_LEN];
@@ -155,18 +149,6 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index)
             otrytes[i] = itrytes[i];
         else
             otrytes[i] = nonce_trytes[i - NONCE_OFFSET];
-
-    printf("\nTransaction with valid NONCE\n");
-    printf("\n%s\n", otrytes);
-
-    hash_cnt = *(cpow_map + HASH_CNT_REG_OFFSET);
-    tick_cnt_l = *(cpow_map + TICK_CNT_LOW_REG_OFFSET);
-    tick_cnt_h = *(cpow_map + TICK_CNT_HI_REG_OFFSET);
-    tick_cnt = tick_cnt_h;
-    tick_cnt = (tick_cnt << 32) | tick_cnt_l;
-
-    hrate = (float) hash_cnt / tick_cnt * 100000000;
-    printf("Hash rate = %d hash/sec\n", hrate);
 
     if (nonce_trytes)
         free(nonce_trytes);
