@@ -48,7 +48,7 @@ int main()
 
     /* test SSE Implementation with mwm = 14 */
     pow_fpga_LampaLab_init();
-    int8_t *ret_trytes = PowFPGALampaLab(trytes, mwm, 0);
+    int8_t *ret_trytes = (int8_t *) PowFPGALampaLab(trytes, mwm, 0);
     pow_fpga_LampaLab_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
