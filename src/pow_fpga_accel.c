@@ -20,7 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
-#include "pow_fpga_LampaLab.h"
+#include "pow_fpga_accel.h"
 
 
 #define NONCE_LEN 81
@@ -40,7 +40,7 @@ SOFTWARE.*/
 
 static char otrytes[TRANSACTION_LEN];
 
-int pow_fpga_LampaLab_init()
+int pow_fpga_accel_init()
 {
     ctrl_fd = 0;
     in_fd = 0;
@@ -100,7 +100,7 @@ int pow_fpga_LampaLab_init()
     return 1;
 }
 
-void pow_fpga_LampaLab_destroy()
+void pow_fpga_accel_destroy()
 {
     fclose(in_fd);
     fclose(out_fd);
@@ -117,7 +117,7 @@ void pow_fpga_LampaLab_destroy()
     exit(EXIT_SUCCESS);
 }
 
-char *PowFPGALampaLab(char *itrytes, int mwm, int index)
+char *PowFPGAAccel(char *itrytes, int mwm, int index)
 {
     char *itrits = NULL;
 

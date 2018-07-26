@@ -20,8 +20,8 @@ void *fpga_regs_map;
 uint32_t *cpow_map;
 int result;
 
-char *PowFPGALampaLab(char *itrytes, int mwm, int index);
-int pow_fpga_LampaLab_init();
-void pow_fpga_LampaLab_destroy();
+char *PowFPGAAccel(char *itrytes, int mwm, int index);
+int pow_fpga_accel_init();
+void pow_fpga_accel_destroy();
 
 #endif

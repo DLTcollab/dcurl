@@ -9,8 +9,8 @@
 #include "pow_avx.h"
 #elif defined(ENABLE_SSE)
 #include "pow_sse.h"
-#elif defined(ENABLE_FPGA_LAMPALAB)
-#include "pow_fpga_LampaLab.h"
+#elif defined(ENABLE_FPGA_ACCEL)
+#include "pow_fpga_accel.h"
 #else
 #include "pow_c.h"
 #endif
