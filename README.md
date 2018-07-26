@@ -12,7 +12,7 @@ Reference Implementation (IRI).
 * Check JDK installation and set JAVA_HOME if you wish to specify.
 * Only one GPU can be facilitated with dcurl at the moment.
 * If your platform doesn't support Intel SSE, dcurl would be compiled with naive implementation.
-* For the IOTA hardware accelerator, we integrate [LAMPALAB's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) into dcurl. LAMPALAB supports soc_system.rbf only for DE10-nano board. You need to synthesis to get soc_system.rbf for using Arrow SoCKit board.
+* For the IOTA hardware accelerator, we integrate [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) into dcurl. Lampa Lab supports soc_system.rbf only for DE10-nano board. You need to synthesis to get soc_system.rbf for using Arrow SoCKit board.
 
 # Build Instructions
 * dcurl allows various combinations of build configurations to fit final use scenarios.
