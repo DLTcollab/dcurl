@@ -16,9 +16,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "curl.h"
 #include "clcontext.h"
 #include "constants.h"
+#include "curl.h"
 
 #define HASH_LENGTH 243               // trits
 #define NONCE_LENGTH 81               // trits
