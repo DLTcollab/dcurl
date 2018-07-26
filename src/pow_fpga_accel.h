@@ -20,7 +20,7 @@ void *fpga_regs_map;
 uint32_t *cpow_map;
 int result;
 
-char *PowFPGAAccel(char *itrytes, int mwm, int index);
+int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index);
 int pow_fpga_accel_init();
 void pow_fpga_accel_destroy();
 
