@@ -135,7 +135,7 @@ $(OUT)/test-%.o: tests/test-%.c
 
 $(OUT)/%.o: $(SRC)/%.c
 	$(VECHO) "  CC\t$@\n"
-	$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
 
 $(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"
