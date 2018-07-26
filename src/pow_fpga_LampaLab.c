@@ -137,7 +137,7 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index)
     itrytelen = strnlen(itrytes, TRANSACTION_LEN);
     itritlen = 3 * itrytelen;
 
-    itrits = trits_from_trytes_aj(itrytes, itrytelen);
+    itrits = string_trits_from_string_trytes(itrytes, itrytelen);
 
     fwrite(itrits, 1, itritlen, in_fd);
     fflush(in_fd);
@@ -148,7 +148,7 @@ char *PowFPGALampaLab(char *itrytes, int mwm, int index)
 
     fread(nonce_trits, 1, NONCE_LEN, out_fd);
 
-    nonce_trytes = trytes_from_trits_aj(nonce_trits, 0, NONCE_LEN);
+    nonce_trytes = string_trytes_from_string_trits(nonce_trits, 0, NONCE_LEN);
 
     for (int i = 0; i < TRANSACTION_LEN; i = i + 1)
         if (i < NONCE_OFFSET)

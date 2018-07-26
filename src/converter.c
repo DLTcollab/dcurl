@@ -86,7 +86,7 @@ void getTrits(const char *bytes, int bytelength, char *const trits, int length)
     }
 }
 
-char *trits_from_trytes_aj(const char *trytes, int length)
+char *string_trits_from_string_trytes(const char *trytes, int length)
 {
     int i;
     char *trits = malloc(length * NUMBER_OF_TRITS_IN_A_TRYTE * sizeof(char));
@@ -125,7 +125,9 @@ void copyTrits(char const value,
     }
 }
 
-char *trytes_from_trits_aj(char *const trits, const int offset, const int size)
+char *string_trytes_from_string_trits(char *const trits,
+                                      const int offset,
+                                      const int size)
 {
     int i;
     const int length =
