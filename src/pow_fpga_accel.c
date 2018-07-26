@@ -38,7 +38,7 @@ SOFTWARE.*/
     "### CPOW Hardware Accelerated ###\nUsage:\n\t./curl_pow_hard MWM " \
     "TRYTES(length: %d) \n"
 
-static char otrytes[TRANSACTION_LEN];
+static int8_t otrytes[TRANSACTION_LEN];
 
 int pow_fpga_accel_init()
 {
@@ -117,17 +117,17 @@ void pow_fpga_accel_destroy()
     exit(EXIT_SUCCESS);
 }
 
-char *PowFPGAAccel(char *itrytes, int mwm, int index)
+int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
 {
     char nonce_trits[NONCE_LEN];
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
 
-    itrytelen = strnlen(itrytes, TRANSACTION_LEN);
+    itrytelen = strnlen((char *) itrytes, TRANSACTION_LEN);
     itritlen = 3 * itrytelen;
 
-    Trytes_t *object_trytes = initTrytes((signed char *) itrytes, itrytelen);
+    Trytes_t *object_trytes = initTrytes(itrytes, itrytelen);
 
     Trits_t *object_trits = trits_from_trytes(object_trytes);
 
