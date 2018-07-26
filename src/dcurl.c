@@ -97,7 +97,7 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
 #elif defined(ENABLE_SSE)
     ret &= pow_sse_init(MAX_CPU_THREAD);
 #elif defined(ENABLE_FPGA_LAMPALAB)
-    ret &= pow_fpga_LampaLab_init();
+    ret &= pow_fpga_accel_init();
 #else
     ret &= pow_c_init(MAX_CPU_THREAD);
 #endif
@@ -115,7 +115,7 @@ void dcurl_destroy()
 #elif defined(ENABLE_SSE)
     pow_sse_destroy();
 #elif defined(ENABLE_FPGA_LAMPALAB)
-    pow_fpga_LampaLab_destroy();
+    pow_fpga_accel_destroy();
 #else
     pow_c_destroy();
 #endif

@@ -47,9 +47,9 @@ int main()
     int mwm = 14;
 
     /* test implementation of LampaLab's IOTA PoW FPGA with mwm = 14 */
-    pow_fpga_LampaLab_init();
-    int8_t *ret_trytes = (int8_t *) PowFPGALampaLab(trytes, mwm, 0);
-    pow_fpga_LampaLab_destroy();
+    pow_fpga_accel_init();
+    int8_t *ret_trytes = (int8_t *) PowFPGAAccel(trytes, mwm, 0);
+    pow_fpga_accel_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
     Trytes_t *hash_trytes = hashTrytes(trytes_t);

@@ -39,8 +39,8 @@ ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
 
-ifeq ("$(BUILD_FPGA_LAMPALAB)","1")
-include mk/fpgaLampaLab.mk
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
+include mk/fpgaaccel.mk
 endif
 
 ifeq ("$(BUILD_JNI)","1")
@@ -77,8 +77,8 @@ ifeq ("$(BUILD_COMPAT)", "1")
 TESTS += ccurl-multi_pow
 endif
 
-ifeq ("$(BUILD_FPGA_LAMPALAB)","1")
-TESTS += pow_fpga_LampaLab
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
+TESTS += pow_fpga_accel
 endif
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
@@ -122,9 +122,9 @@ OBJS += \
 	compat-ccurl.o
 endif
 
-ifeq ("$(BUILD_FPGA_LAMPALAB)","1")
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
 OBJS += \
-	pow_fpga_LampaLab.o
+	pow_fpga_accel.o
 endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
