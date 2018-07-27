@@ -1,8 +1,8 @@
 #ifndef POW_C_H_
 #define POW_C_H_
 
-#include "trinary.h"
 #include <stdint.h>
+#include "trinary.h"
 
 typedef struct _pwork_struct Pwork_struct;
 

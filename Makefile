@@ -39,6 +39,10 @@ ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
 
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
+include mk/fpgaaccel.mk
+endif
+
 ifeq ("$(BUILD_JNI)","1")
 include mk/java.mk
 endif
@@ -52,7 +56,7 @@ TESTS += \
 	pow_avx \
 	multi_pow_cpu
 else
-ifeq ($(SSE_S),sse)
+ifeq ("$(SSE)"_$(SSE_S),sse)
 TESTS += \
 	pow_sse \
 	multi_pow_cpu
@@ -71,6 +75,10 @@ endif
 
 ifeq ("$(BUILD_COMPAT)", "1")
 TESTS += ccurl-multi_pow
+endif
+
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
+TESTS += pow_fpga_accel
 endif
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
@@ -111,6 +119,11 @@ endif
 ifeq ("$(BUILD_COMPAT)", "1")
 OBJS += \
 	compat-ccurl.o
+endif
+
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
+OBJS += \
+	pow_fpga_accel.o
 endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
