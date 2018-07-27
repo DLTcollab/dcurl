@@ -86,7 +86,6 @@ root@lampa:~/dcurl# make BUILD_FPGA_ACCEL=1 check
 *** Validating build/test-multi_pow_cpu ***
         [ Verified ]
 *** Validating build/test-pow_fpga_accel *** 
-[  316.936125] Get interrupt
         [ Verified ] 
 ```
 
