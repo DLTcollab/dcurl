@@ -1,7 +1,7 @@
 OUT ?= ./build
 SRC := src
 
-CFLAGS = -Wall -fPIC
+CFLAGS = -Wall -fPIC -std=c99
 LDFLAGS = \
 	-lpthread
 
