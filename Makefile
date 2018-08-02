@@ -23,14 +23,14 @@ else
 CFLAGS += -Ofast
 endif
 
-SSE_S := $(shell grep -o sse /proc/cpuinfo | head -n 1)
+# Check specific CPU features available on build host
+include mk/cpu-features.mk
 
-# FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
-# instructions for Intel and Arm later.
 ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -mavx2 -DENABLE_AVX
 else
-ifeq ("$(BUILD_SSE)"_$(SSE_S),"1"_sse)
+BUILD_SSE := $(call cpu_feature,SSE)
+ifeq ("$(BUILD_SSE)","1")
 CFLAGS += -msse2 -DENABLE_SSE
 endif
 endif
@@ -52,7 +52,7 @@ TESTS += \
 	pow_avx \
 	multi_pow_cpu
 else
-ifeq ("$(BUILD_SSE)"_$(SSE_S),"1"_sse)
+ifeq ("$(BUILD_SSE)","1")
 TESTS += \
 	pow_sse \
 	multi_pow_cpu
@@ -90,7 +90,7 @@ OBJS = \
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
 else
-ifeq ("$(BUILD_SSE)"_$(SSE_S),"1"_sse)
+ifeq ("$(BUILD_SSE)","1")
 OBJS += pow_sse.o
 else
 OBJS += pow_c.o
