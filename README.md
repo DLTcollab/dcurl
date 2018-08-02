@@ -1,4 +1,7 @@
 # dcurl - Multi-threaded Curl implementation
+
+[![Build Status](https://travis-ci.org/DLTcollab/dcurl.svg?branch=dev)](https://travis-ci.org/DLTcollab/dcurl)
+
 Hardware-accelerated implementation for IOTA PearlDiver, which utilizes multi-threaded SIMD and GPU.
 
 # Introduction
@@ -73,7 +76,7 @@ $ make BUILD_AVX=1 check
 * Number of threads to find nonce in CPU
     * ```$ export DCURL_NUM_CPU=26```
 
-# Performance 
+# Performance
 After integrating dcurl into IRI, performance of <```attachToTangle```> is measured as following.
 * Each sampling is measured with 30 transaction trytes and total 200 samples are measured.
 * mwm = 14, 26 CPU threads to find nonce
