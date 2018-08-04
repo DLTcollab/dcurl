@@ -22,8 +22,7 @@ Reference Implementation (IRI).
     - ``BUILD_AVX``: build Intel AVX-accelerated Curl backend.
     - ``BUILD_GPU``: build OpenCL-based GPU accelerations.
     - ``BUILD_JNI``: build a shared library for IRI. The build system would generate JNI header file
-                   from downloading from
-                   [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface).
+                     downloading from [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface).
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
 * Alternatively, you can specify conditional build as following:
 ```shell
