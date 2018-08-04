@@ -34,10 +34,6 @@ SOFTWARE.*/
 #define MWM_MASK_REG_OFFSET 3
 #define CPOW_BASE 0
 
-#define HINTS                                                           \
-    "### CPOW Hardware Accelerated ###\nUsage:\n\t./curl_pow_hard MWM " \
-    "TRYTES(length: %d) \n"
-
 static FILE *ctrl_fd;
 static FILE *in_fd;
 static FILE *out_fd;
