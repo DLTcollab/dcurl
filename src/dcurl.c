@@ -15,8 +15,8 @@
 #include "pow_avx.h"
 #elif defined(ENABLE_SSE)
 #include "pow_sse.h"
-#elif defined(ENABLE_FPGA_LAMPALAB)
-#include "pow_fpga_LampaLab.h"
+#elif defined(ENABLE_FPGA_ACCEL)
+#include "pow_fpga_accel.h"
 #else
 #include "pow_c.h"
 #endif
@@ -96,7 +96,7 @@ int dcurl_init(int max_cpu_thread, int max_gpu_thread)
     ret &= pow_avx_init(MAX_CPU_THREAD);
 #elif defined(ENABLE_SSE)
     ret &= pow_sse_init(MAX_CPU_THREAD);
-#elif defined(ENABLE_FPGA_LAMPALAB)
+#elif defined(ENABLE_FPGA_ACCEL)
     ret &= pow_fpga_accel_init();
 #else
     ret &= pow_c_init(MAX_CPU_THREAD);
@@ -114,7 +114,7 @@ void dcurl_destroy()
     pow_avx_destroy();
 #elif defined(ENABLE_SSE)
     pow_sse_destroy();
-#elif defined(ENABLE_FPGA_LAMPALAB)
+#elif defined(ENABLE_FPGA_ACCEL)
     pow_fpga_accel_destroy();
 #else
     pow_c_destroy();
@@ -181,8 +181,8 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
         ret_trytes = PowAVX(trytes, mwm, selected_mutex_id);
 #elif defined(ENABLE_SSE)
         ret_trytes = PowSSE(trytes, mwm, selected_mutex_id);
-#elif defined(ENABLE_FPGA_LAMPALAB)
-        ret_trytes = PowFPGALampaLab(trytes, mwm, selected_mutex_id);
+#elif defined(ENABLE_FPGA_ACCEL)
+        ret_trytes = PowFPGAAccel(trytes, mwm, selected_mutex_id);
 #else
         ret_trytes = PowC(trytes, mwm, selected_mutex_id);
 #endif
