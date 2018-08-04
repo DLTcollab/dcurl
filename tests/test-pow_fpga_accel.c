@@ -1,4 +1,4 @@
-/* Test program for pow_sse */
+/* Test program for pow_fpga_accel */
 #include "common.h"
 
 int main()
