@@ -2,14 +2,14 @@
 #define POW_FPGA_LAMPALAB_H_
 
 
+#include <error.h>
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <error.h>
-#include <stdint.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <fcntl.h>
+#include <unistd.h>
 #include "converter.h"
 
 FILE *ctrl_fd;
