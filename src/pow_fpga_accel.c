@@ -101,7 +101,6 @@ void pow_fpga_accel_destroy()
         perror("devmem munmap");
         exit(EXIT_FAILURE);
     }
-    exit(EXIT_SUCCESS);
 }
 
 int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
