@@ -56,7 +56,7 @@ int pow_fpga_accel_init()
 
     if (ctrl_fd == NULL) {
         perror("cpow-ctrl open fail");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     in_fd = fopen("/dev/cpow-idata", "wb");
@@ -64,7 +64,7 @@ int pow_fpga_accel_init()
     if (in_fd == NULL) {
         perror("cpow-idata open fail");
         fclose(ctrl_fd);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     out_fd = fopen("/dev/cpow-odata", "rb");
@@ -73,7 +73,7 @@ int pow_fpga_accel_init()
         perror("cpow-odata open fail");
         fclose(ctrl_fd);
         fclose(in_fd);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     devmem_fd = open("/dev/mem", O_RDWR | O_SYNC);
@@ -83,7 +83,7 @@ int pow_fpga_accel_init()
         fclose(ctrl_fd);
         fclose(in_fd);
         fclose(out_fd);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fpga_regs_map =
@@ -97,7 +97,7 @@ int pow_fpga_accel_init()
         fclose(ctrl_fd);
         fclose(in_fd);
         fclose(out_fd);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     return 1;
