@@ -38,6 +38,13 @@ SOFTWARE.*/
     "### CPOW Hardware Accelerated ###\nUsage:\n\t./curl_pow_hard MWM " \
     "TRYTES(length: %d) \n"
 
+static FILE *ctrl_fd;
+static FILE *in_fd;
+static FILE *out_fd;
+static int devmem_fd;
+static void *fpga_regs_map;
+static uint32_t *cpow_map;
+static int result;
 static int8_t otrytes[TRANSACTION_LEN];
 
 int pow_fpga_accel_init()

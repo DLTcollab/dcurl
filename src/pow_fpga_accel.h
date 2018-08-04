@@ -12,13 +12,6 @@
 #include <unistd.h>
 #include "trinary.h"
 
-FILE *ctrl_fd;
-FILE *in_fd;
-FILE *out_fd;
-int devmem_fd;
-void *fpga_regs_map;
-uint32_t *cpow_map;
-int result;
 
 int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index);
 int pow_fpga_accel_init();
