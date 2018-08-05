@@ -1,5 +1,5 @@
-#ifndef POW_FPGA_LAMPALAB_H_
-#define POW_FPGA_LAMPALAB_H_
+#ifndef POW_FPGA_ACCEL_H_
+#define POW_FPGA_ACCEL_H_
 
 #include <error.h>
 #include <fcntl.h>
