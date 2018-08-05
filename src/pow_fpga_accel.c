@@ -122,7 +122,7 @@ void pow_fpga_accel_destroy()
 
 int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
 {
-    char nonce_trits[NONCE_LEN];
+    int8_t fpga_out_nonce_trits[NONCE_LEN];
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
@@ -141,9 +141,9 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     fread(&result, sizeof(result), 1, ctrl_fd);
     fflush(ctrl_fd);
 
-    fread(nonce_trits, 1, NONCE_LEN, out_fd);
+    fread((char *) fpga_out_nonce_trits, 1, NONCE_LEN, out_fd);
 
-    Trits_t *object_nonce_trits = initTrits((int8_t *) nonce_trits, NONCE_LEN);
+    Trits_t *object_nonce_trits = initTrits(fpga_out_nonce_trits, NONCE_LEN);
     Trytes_t *nonce_trytes = trytes_from_trits(object_nonce_trits);
 
     for (int i = 0; i < TRANSACTION_LEN; i = i + 1)
