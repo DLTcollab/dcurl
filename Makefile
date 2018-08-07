@@ -39,6 +39,10 @@ ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
 
+ifeq ("$(BUILD_FPGA_LAMPALAB)","1")
+include mk/fpgaLampaLab.mk
+endif
+
 ifeq ("$(BUILD_JNI)","1")
 include mk/java.mk
 endif
