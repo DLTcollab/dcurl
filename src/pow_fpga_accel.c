@@ -130,7 +130,7 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     Trits_t *object_nonce_trits = initTrits(fpga_out_nonce_trits, NONCE_LEN);
     Trytes_t *nonce_trytes = trytes_from_trits(object_nonce_trits);
 
-    for (int i = 0; i < TRANSACTION_LEN; i = i + 1)
+    for (int i = 0; i < TRANSACTION_LEN; i++)
         if (i < NONCE_OFFSET)
             otrytes[i] = itrytes[i];
         else
