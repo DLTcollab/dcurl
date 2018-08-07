@@ -83,7 +83,8 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 ![](https://lh4.googleusercontent.com/2U_TpfAtEbPdHBcGKD1zl0t0bzo2Rubj0DxXxvV-Rh31Yr7oCCtptutQpLLizMgR7ousEXUtwM6RASnQLOJnGePhQ5Emh1w8l8GlKzMtZ0Yv-TySF2gh3u48BAmllAJv2VjNaxgFGCA)
 
 # IRI Adaptation
-[Modified IRI accepting external PoW Library](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface)
+[Modified IRI accepting external PoW Library](https://github.com/chenwei-tw/iri/tree/external-pow-interface)
+Supported IRI version: 1.5.3
 * ```$ cd ~/iri && mvn compile && mvn package```
 * ```$ cp ~/dcurl/build/libdcurl.so ~/iri```
 * ```$ cd ~/iri && java -Djava.library.path=./ -jar target/iri.jar -p <port> --pearldiver-exlib dcurl```
