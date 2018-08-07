@@ -30,8 +30,12 @@ SSE_S := $(shell grep -o sse /proc/cpuinfo | head -n 1)
 ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -mavx2 -DENABLE_AVX
 else
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
+CFLAGS += -DENABLE_FPGA_ACCEL
+else
 ifeq ($(SSE_S),sse)
 CFLAGS += -msse2 -DENABLE_SSE
+endif
 endif
 endif
 
@@ -40,7 +44,7 @@ include mk/opencl.mk
 endif
 
 ifeq ("$(BUILD_FPGA_ACCEL)","1")
-include mk/fpgaaccel.mk
+include mk/fpga-accel.mk
 endif
 
 ifeq ("$(BUILD_JNI)","1")
