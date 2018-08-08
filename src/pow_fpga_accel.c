@@ -24,7 +24,6 @@ static FILE *out_fd;
 static int devmem_fd;
 static void *fpga_regs_map;
 static uint32_t *cpow_map;
-static int result;
 
 int pow_fpga_accel_init()
 {
@@ -88,6 +87,8 @@ int pow_fpga_accel_init()
 
 void pow_fpga_accel_destroy()
 {
+    int result;
+    
     fclose(in_fd);
     fclose(out_fd);
     fclose(ctrl_fd);
@@ -109,6 +110,8 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
+
+    int result;
 
     itrytelen = strnlen((char *) itrytes, TRANSACTION_LEN);
     itritlen = 3 * itrytelen;
