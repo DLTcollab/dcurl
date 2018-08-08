@@ -25,7 +25,6 @@ static int devmem_fd;
 static void *fpga_regs_map;
 static uint32_t *cpow_map;
 static int result;
-static int8_t otrytes[TRANSACTION_LEN];
 
 int pow_fpga_accel_init()
 {
@@ -106,6 +105,7 @@ void pow_fpga_accel_destroy()
 int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
 {
     int8_t fpga_out_nonce_trits[NONCE_LEN];
+    int8_t *otrytes = (int8_t *)malloc(sizeof(int8_t) * TRANSACTION_LEN);
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
