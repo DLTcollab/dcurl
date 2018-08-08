@@ -117,8 +117,12 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     itritlen = 3 * itrytelen;
 
     Trytes_t *object_trytes = initTrytes(itrytes, itrytelen);
+    if (!object_trytes)
+        return NULL;
 
     Trits_t *object_trits = trits_from_trytes(object_trytes);
+    if (!object_trits)
+        return NULL;
 
     fwrite((char *) object_trits->data, 1, itritlen, in_fd);
     fflush(in_fd);
@@ -130,7 +134,12 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     fread((char *) fpga_out_nonce_trits, 1, NONCE_LEN, out_fd);
 
     Trits_t *object_nonce_trits = initTrits(fpga_out_nonce_trits, NONCE_LEN);
+    if (!object_nonce_trits)
+        return NULL;    
+
     Trytes_t *nonce_trytes = trytes_from_trits(object_nonce_trits);
+    if (!nonce_trytes)
+        return NULL; 
 
     for (int i = 0; i < TRANSACTION_LEN; i++)
         if (i < NONCE_OFFSET)
