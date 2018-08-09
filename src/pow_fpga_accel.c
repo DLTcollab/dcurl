@@ -5,6 +5,10 @@
  * found in the LICENSE file.
  */
 
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include "trinary.h"
 #include "pow_fpga_accel.h"
 
 #define NONCE_LEN 81
