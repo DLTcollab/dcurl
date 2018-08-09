@@ -99,7 +99,6 @@ void pow_fpga_accel_destroy()
 
     if (result < 0) {
         perror("devmem munmap");
-        exit(EXIT_FAILURE);
     }
 }
 
