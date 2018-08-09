@@ -22,6 +22,11 @@
 #define MWM_MASK_REG_OFFSET 3
 #define CPOW_BASE 0
 
+/* Set FPGA configuration for device files */
+#define CTRL_FPGA_POW "/dev/cpow-ctrl"
+#define IDATA_FPGA_POW "/dev/cpow-idata"
+#define ODATA_FPGA_POW "/dev/cpow-odata"
+
 static FILE *ctrl_fd;
 static FILE *in_fd;
 static FILE *out_fd;
@@ -38,14 +43,14 @@ int pow_fpga_accel_init()
     fpga_regs_map = 0;
     cpow_map = 0;
 
-    ctrl_fd = fopen("/dev/cpow-ctrl", "r+");
+    ctrl_fd = fopen(CTRL_FPGA_POW, "r+");
 
     if (ctrl_fd == NULL) {
         perror("cpow-ctrl open fail");
         return 0;
     }
 
-    in_fd = fopen("/dev/cpow-idata", "wb");
+    in_fd = fopen(IDATA_FPGA_POW, "wb");
 
     if (in_fd == NULL) {
         perror("cpow-idata open fail");
@@ -53,7 +58,7 @@ int pow_fpga_accel_init()
         return 0;
     }
 
-    out_fd = fopen("/dev/cpow-odata", "rb");
+    out_fd = fopen(ODATA_FPGA_POW, "rb");
 
     if (out_fd == NULL) {
         perror("cpow-odata open fail");
