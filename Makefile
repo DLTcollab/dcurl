@@ -45,7 +45,8 @@ endif
 
 TESTS = \
 	trinary \
-	curl
+	curl \
+	dcurl
 
 ifeq ("$(BUILD_AVX)","1")
 TESTS += \
@@ -85,7 +86,8 @@ OBJS = \
 	curl.o \
 	constants.o \
 	trinary.o \
-	dcurl.o
+	dcurl.o \
+	implcontext.o
 
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
