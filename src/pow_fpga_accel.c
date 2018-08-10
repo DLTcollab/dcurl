@@ -9,11 +9,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "trinary.h"
+#include "constants.h"
 #include "pow_fpga_accel.h"
 
-#define NONCE_LEN 81
-#define TRANSACTION_LEN 2673
-#define NONCE_OFFSET 2646
 #define HPS_TO_FPGA_BASE 0xC0000000
 #define HPS_TO_FPGA_SPAN 0x0020000
 #define HASH_CNT_REG_OFFSET 4
@@ -113,15 +111,15 @@ void pow_fpga_accel_destroy()
 
 int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
 {
-    int8_t fpga_out_nonce_trits[NONCE_LEN];
-    int8_t *otrytes = (int8_t *)malloc(sizeof(int8_t) * TRANSACTION_LEN);
+    int8_t fpga_out_nonce_trits[NonceTrinarySize];
+    int8_t *otrytes = (int8_t *)malloc(sizeof(int8_t) * (transactionTrinarySize) / 3);
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
 
     int result;
 
-    itrytelen = strnlen((char *) itrytes, TRANSACTION_LEN);
+    itrytelen = strnlen((char *) itrytes, (transactionTrinarySize) / 3);
     itritlen = 3 * itrytelen;
 
     Trytes_t *object_trytes = initTrytes(itrytes, itrytelen);
@@ -139,9 +137,9 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     fread(&result, sizeof(result), 1, ctrl_fd);
     fflush(ctrl_fd);
 
-    fread((char *) fpga_out_nonce_trits, 1, NONCE_LEN, out_fd);
+    fread((char *) fpga_out_nonce_trits, 1, NonceTrinarySize, out_fd);
 
-    Trits_t *object_nonce_trits = initTrits(fpga_out_nonce_trits, NONCE_LEN);
+    Trits_t *object_nonce_trits = initTrits(fpga_out_nonce_trits, NonceTrinarySize);
     if (!object_nonce_trits)
         return NULL;    
 
@@ -149,11 +147,11 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     if (!nonce_trytes)
         return NULL; 
 
-    for (int i = 0; i < TRANSACTION_LEN; i++)
-        if (i < NONCE_OFFSET)
+    for (int i = 0; i < (transactionTrinarySize) / 3; i++)
+        if (i < (NonceTrinaryOffset) / 3)
             otrytes[i] = itrytes[i];
         else
-            otrytes[i] = nonce_trytes->data[i - NONCE_OFFSET];
+            otrytes[i] = nonce_trytes->data[i - (NonceTrinaryOffset) / 3];
 
     freeTrobject(object_trytes);
     freeTrobject(object_trits);
