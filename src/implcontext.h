@@ -32,6 +32,7 @@ struct _impl_context {
 int registerImplContext(ImplContext *impl_ctx);
 int initializeImplContext(ImplContext *impl_ctx);
 int enterImplContext(ImplContext *impl_ctx);
+void exitImplContext(ImplContext *impl_ctx);
 void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm);
 int doThePoW(ImplContext *impl_ctx, void *pow_ctx);
 int freePoWContext(ImplContext *impl_ctx, void *pow_ctx);

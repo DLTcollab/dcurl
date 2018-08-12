@@ -6,6 +6,7 @@ int registerImplContext(ImplContext *impl_ctx)
 {
     initializeImplContext(impl_ctx);
     list_add(&impl_ctx->list, &IMPL_LIST);
+    return 1; /* Success */
 }
 
 int initializeImplContext(ImplContext *impl_ctx)
@@ -23,6 +24,13 @@ int enterImplContext(ImplContext *impl_ctx)
     impl_ctx->num_working_thread++;
     pthread_mutex_unlock(&impl_ctx->lock);
     return 1; /* Access Success */
+}
+
+void exitImplContext(ImplContext *impl_ctx)
+{
+    pthread_mutex_lock(&impl_ctx->lock);
+    impl_ctx->num_working_thread--;
+    pthread_mutex_unlock(&impl_ctx->lock);
 }
 
 void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)

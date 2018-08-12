@@ -33,6 +33,7 @@ int dcurl_init()
 #if defined(ENABLE_SSE)
     registerImplContext(&PoWSSE_Context);
 #endif
+    return 1; /* success */
 }
 
 void dcurl_destroy()
@@ -62,6 +63,7 @@ pow:
 
     int8_t *ret_trytes = getPoWResult(impl, pow_ctx);
     freePoWContext(impl, pow_ctx);
+    exitImplContext(impl);
 
     return ret_trytes;
 }
