@@ -1,5 +1,8 @@
 /* Test program for pow_sse */
 #include "common.h"
+#include "implcontext.h"
+
+extern ImplContext PoWSSE_Context;
 
 int main()
 {
@@ -47,10 +50,13 @@ int main()
     int mwm = 14;
 
     /* test SSE Implementation with mwm = 14 */
-    pow_sse_init(1);
-    int8_t *ret_trytes = PowSSE((int8_t *) trytes, mwm, 0);
+    initializeImplContext(&PoWSSE_Context);
+    void *pow_ctx = getPoWContext(&PoWSSE_Context, (int8_t *) trytes, mwm);
+    assert(pow_ctx);
+    doThePoW(&PoWSSE_Context, pow_ctx);
+    int8_t *ret_trytes = getPoWResult(&PoWSSE_Context, pow_ctx);
     assert(ret_trytes);
-    pow_sse_destroy();
+    freePoWContext(&PoWSSE_Context, pow_ctx);
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
     assert(trytes_t);
