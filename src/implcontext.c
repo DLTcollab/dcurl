@@ -1,5 +1,13 @@
 #include "implcontext.h"
 
+extern struct list_head IMPL_LIST;
+
+int registerImplContext(ImplContext *impl_ctx)
+{
+    initializeImplContext(impl_ctx);
+    list_add(&impl_ctx->list, &IMPL_LIST);
+}
+
 int initializeImplContext(ImplContext *impl_ctx)
 {
     return impl_ctx->initialize(impl_ctx);

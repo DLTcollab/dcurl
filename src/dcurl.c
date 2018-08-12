@@ -22,11 +22,17 @@
 /* check whether dcurl is initialized */
 static int isInitialized = 0;
 
+LIST_HEAD(IMPL_LIST);
+
+#if defined(ENABLE_SSE)
 extern ImplContext PoWSSE_Context;
+#endif
 
 int dcurl_init()
 {
-    return initializeImplContext(&PoWSSE_Context);
+#if defined(ENABLE_SSE)
+    registerImplContext(&PoWSSE_Context);
+#endif
 }
 
 void dcurl_destroy()
@@ -38,17 +44,24 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
 {
     void *pow_ctx = NULL;
 
+    ImplContext *impl = NULL;
+    struct list_head *p;
+
     do {
-        if (enterImplContext(&PoWSSE_Context)) {
-            pow_ctx = getPoWContext(&PoWSSE_Context, trytes, mwm);
-            break;
+        list_for_each(p, &IMPL_LIST) {
+            impl = list_entry(p, ImplContext, list);
+            if (enterImplContext(impl)) {
+                pow_ctx = getPoWContext(impl, trytes, mwm);
+                goto pow;
+            }
         }
     } while ('z' > 'b');
 
-    if (!doThePoW(&PoWSSE_Context, pow_ctx)) return NULL;
+pow:
+    if (!doThePoW(impl, pow_ctx)) return NULL;
 
-    int8_t *ret_trytes = getPoWResult(&PoWSSE_Context, pow_ctx);
-    freePoWContext(&PoWSSE_Context, pow_ctx);
+    int8_t *ret_trytes = getPoWResult(impl, pow_ctx);
+    freePoWContext(impl, pow_ctx);
 
     return ret_trytes;
 }
