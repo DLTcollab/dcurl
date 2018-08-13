@@ -13,10 +13,7 @@
 #include "constants.h"
 #include "cpu-utils.h"
 #include "curl.h"
-
-static pthread_mutex_t *pow_avx_mutex;
-static int *stopAVX;
-static int64_t *countAVX;
+#include "implcontext.h"
 
 static const int indices[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
@@ -137,7 +134,7 @@ static int incr256(__m256i *mid_low, __m256i *mid_high)
     return i == HASH_LENGTH;
 }
 
-static void seri256(__m256i *low, __m256i *high, int n, char *r)
+static void seri256(__m256i *low, __m256i *high, int n, int8_t *r)
 {
     int index = n >> 6;
     n = n % 64;
@@ -182,7 +179,7 @@ static int check256(__m256i *l, __m256i *h, int m)
     return -2;
 }
 
-static void para256(char in[], __m256i l[], __m256i h[])
+static void para256(int8_t in[], __m256i l[], __m256i h[])
 {
     for (int i = 0; i < STATE_LENGTH; i++) {
         switch (in[i]) {
@@ -219,12 +216,16 @@ static void incrN256(int n, __m256i *mid_low, __m256i *mid_high)
 }
 
 
-static int loop256(__m256i *lmid, __m256i *hmid, int m, char *nonce, int id)
+static int loop256(__m256i *lmid,
+                   __m256i *hmid,
+                   int m,
+                   int8_t *nonce,
+                   int *stopSignal)
 {
     int i = 0, n = 0;
     __m256i lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
 
-    for (i = 0; !incr256(lmid, hmid) && !stopAVX[id]; i++) {
+    for (i = 0; !incr256(lmid, hmid) && !*stopSignal; i++) {
         for (int j = 0; j < STATE_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
@@ -238,7 +239,8 @@ static int loop256(__m256i *lmid, __m256i *hmid, int m, char *nonce, int id)
     return -i * 256 - 1;
 }
 
-static int64_t pwork256(char mid[], int mwm, char nonce[], int n, int id)
+static int64_t pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
+                        int *stopSignal)
 {
     __m256i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     int offset = HASH_LENGTH - NONCE_LENGTH;
@@ -255,9 +257,9 @@ static int64_t pwork256(char mid[], int mwm, char nonce[], int n, int id)
     hmid[offset + 4] = _mm256_set_epi64x(HIGH40, HIGH41, HIGH42, HIGH43);
     lmid[offset + 5] = _mm256_set_epi64x(LOW50, LOW51, LOW52, LOW53);
     hmid[offset + 5] = _mm256_set_epi64x(HIGH50, HIGH51, HIGH52, HIGH53);
-
     incrN256(n, lmid, hmid);
-    return loop256(lmid, hmid, mwm, nonce, id);
+
+    return loop256(lmid, hmid, mwm, nonce, stopSignal);
 }
 #else
 void transform256(__m256d *lmid, __m256d *hmid)
@@ -328,7 +330,7 @@ int incr256(__m256d *mid_low, __m256d *mid_high)
     return i == HASH_LENGTH;
 }
 
-void seri256(__m256d *low, __m256d *high, int n, char *r)
+void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
 {
     int i = 0, index = 0;
     if (n > 63 && n < 128) {
@@ -384,7 +386,7 @@ int check256(__m256d *l, __m256d *h, int m)
     return -2;
 }
 
-void para256(char in[], __m256d l[], __m256d h[])
+void para256(int8_t in[], __m256d l[], __m256d h[])
 {
     int i = 0;
     for (i = 0; i < STATE_LENGTH; i++) {
@@ -421,12 +423,13 @@ void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
     }
 }
 
-int loop256(__m256d *lmid, __m256d *hmid, int m, char *nonce, int id)
+int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
+            int *stopSignal)
 {
     int i = 0, n = 0, j = 0;
 
     __m256d lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
-    for (i = 0; !incr256(lmid, hmid) && !stopAVX[id]; i++) {
+    for (i = 0; !incr256(lmid, hmid) && !*stopSignal; i++) {
         for (j = 0; j < STATE_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
@@ -440,7 +443,8 @@ int loop256(__m256d *lmid, __m256d *hmid, int m, char *nonce, int id)
     return -i * 256 - 1;
 }
 
-long long int pwork256(char mid[], int mwm, char nonce[], int n, int id)
+long long int pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
+                       int *stopSignal)
 {
     __m256d lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     int offset = HASH_LENGTH - NONCE_LENGTH;
@@ -457,29 +461,26 @@ long long int pwork256(char mid[], int mwm, char nonce[], int n, int id)
     hmid[offset + 4] = _mm256_set_pd(HIGH40, HIGH41, HIGH42, HIGH43);
     lmid[offset + 5] = _mm256_set_pd(LOW50, LOW51, LOW52, LOW53);
     hmid[offset + 5] = _mm256_set_pd(HIGH50, HIGH51, HIGH52, HIGH53);
-
     incrN256(n, lmid, hmid);
-    return loop256(lmid, hmid, mwm, nonce, id);
+
+    return loop256(lmid, hmid, mwm, nonce, stopSignal);
 }
 #endif
 
 static void *pworkThread(void *pitem)
 {
     Pwork_struct *pworkInfo = (Pwork_struct *) pitem;
-    int task_id = pworkInfo->index;
-    pworkInfo->ret = pwork256(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
-                              pworkInfo->n, task_id);
+    pworkInfo->ret = pwork256(pworkInfo->mid, pworkInfo->mwm,
+                              pworkInfo->nonce, pworkInfo->n,
+                              pworkInfo->stopSignal);
 
-    pthread_mutex_lock(&pow_avx_mutex[task_id]);
+    pthread_mutex_lock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
-        stopAVX[task_id] = 1;
-        countAVX[task_id] += pworkInfo->ret;
+        *pworkInfo->stopSignal = 1;
         /* This means this thread got the result */
         pworkInfo->n = -1;
-    } else {
-        countAVX[task_id] += 1 - pworkInfo->ret;
     }
-    pthread_mutex_unlock(&pow_avx_mutex[task_id]);
+    pthread_mutex_unlock(pworkInfo->lock);
     pthread_exit(NULL);
 }
 
@@ -522,82 +523,47 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     return c_state;
 }
 
-static int8_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
+static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
-    int8_t *rst = (int8_t *) malloc(rst_len + 1);
-    if (!rst)
-        return NULL;
 
-    memcpy(rst, tx->data, tx->len - NonceTrinarySize / 3);
-    memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data,
+    memcpy(ret, tx->data, tx->len - NonceTrinarySize / 3);
+    memcpy(ret + tx->len - NonceTrinarySize / 3, nonce->data,
            rst_len - (tx->len - NonceTrinarySize / 3));
-    rst[rst_len] = '\0';
-    return rst;
 }
 
-static size_t nproc;
-
-int pow_avx_init(int num_task)
+int PowAVX(void *pow_ctx)
 {
-    pow_avx_mutex =
-        (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t) * num_task);
-    stopAVX = (int *) malloc(sizeof(int) * num_task);
-    countAVX = (int64_t *) malloc(sizeof(int64_t) * num_task);
+    PoW_AVX_Context *ctx = (PoW_AVX_Context *) pow_ctx;
 
-    if (!pow_avx_mutex || !stopAVX || !countAVX)
-        return 0;
+    /* Initialize the context */
+    ctx->stopSignal = 0;
+    pthread_mutex_init(&ctx->lock, NULL);
+    pthread_t *threads = ctx->threads;
+    Pwork_struct *pitem = ctx->pitem;
+    int8_t **nonce_array = ctx->nonce_array;
 
-    nproc = get_avail_nprocs();
-    return 1;
-}
-
-void pow_avx_destroy()
-{
-    free(pow_avx_mutex);
-    free(stopAVX);
-    free(countAVX);
-}
-
-int8_t *PowAVX(int8_t *trytes, int mwm, int index)
-{
-    stopAVX[index] = 0;
-    countAVX[index] = 0;
-
-    Trytes_t *trytes_t = initTrytes(trytes, 2673);
+    /* Prepare the input trytes for algorithm */
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, 2673);
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
-        return NULL;
+        return 0;
 
-    pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
-    if (!threads)
-        return NULL;
-
-    Pwork_struct *pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
-    if (!pitem)
-        return NULL;
-
-    /* Prepare nonce to each thread */
-    int8_t **nonce_array = (int8_t **) malloc(sizeof(int8_t *) * nproc);
-    if (!nonce_array)
-        return NULL;
-
-    /* init pthread mutex */
-    pthread_mutex_init(&pow_avx_mutex[index], NULL);
-
-    for (int i = 0; i < nproc; i++) {
+    /* Prepare arguments for pthread */
+    for (int i = 0; i < ctx->num_threads; i++) {
         pitem[i].mid = c_state;
-        pitem[i].mwm = mwm;
-        pitem[i].nonce = nonce_array[i] = (int8_t *) malloc(NonceTrinarySize);
+        pitem[i].mwm = ctx->mwm;
+        pitem[i].nonce = nonce_array[i];
         pitem[i].n = i;
+        pitem[i].lock = &ctx->lock;
+        pitem[i].stopSignal = &ctx->stopSignal;
         pitem[i].ret = 0;
-        pitem[i].index = index;
         pthread_create(&threads[i], NULL, pworkThread, (void *) &pitem[i]);
     }
 
     int completedIndex = -1;
-    for (int i = 0; i < nproc; i++) {
+    for (int i = 0; i < ctx->num_threads; i++) {
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
@@ -605,25 +571,83 @@ int8_t *PowAVX(int8_t *trytes, int mwm, int index)
 
     Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize);
     if (!nonce_t)
-        return NULL;
+        return 0;
 
     Trytes_t *nonce = trytes_from_trits(nonce_t);
     if (!nonce)
-        return NULL;
+        return 0;
 
-    int8_t *last_result = nonce_to_result(trytes_t, nonce);
+    nonce_to_result(trytes_t, nonce, ctx->output_trytes);
 
     /* Free memory */
     free(c_state);
-    for (int i = 0; i < nproc; i++) {
-        free(nonce_array[i]);
-    }
-    free(nonce_array);
-    free(threads);
-    free(pitem);
     freeTrobject(trytes_t);
     freeTrobject(nonce_t);
     freeTrobject(nonce);
 
-    return last_result;
+    return 1;
 }
+
+static int PoWAVX_Context_Initialize(ImplContext *impl_ctx)
+{
+    int nproc = get_avail_nprocs();
+    PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) * impl_ctx->num_max_thread);
+
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        ctx[i].threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
+        ctx[i].pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
+        ctx[i].nonce_array = (int8_t **) malloc(sizeof(int *) * nproc);
+        for (int j = 0; j < nproc; j++)
+            ctx[i].nonce_array[j] = (int8_t *) malloc(NonceTrinarySize);
+        ctx[i].num_threads = nproc;
+        impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
+    }
+    impl_ctx->context = ctx;
+    pthread_mutex_init(&impl_ctx->lock, NULL);
+    return 1;
+}
+
+static void *PoWAVX_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
+{
+    pthread_mutex_lock(&impl_ctx->lock);
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        if (impl_ctx->bitmap & (0x1 << i)) {
+            impl_ctx->bitmap &= ~(0x1 << i);
+            pthread_mutex_unlock(&impl_ctx->lock);
+            PoW_AVX_Context *ctx = impl_ctx->context + sizeof(PoW_AVX_Context) * i;
+            memcpy(ctx->input_trytes, trytes, 2673);
+            ctx->mwm = mwm;
+            ctx->indexOfContext = i;
+            return ctx;
+        }
+    }
+    pthread_mutex_unlock(&impl_ctx->lock);
+    return NULL; /* It should not happen */
+}
+
+static int PoWAVX_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+{
+    pthread_mutex_lock(&impl_ctx->lock);
+    impl_ctx->bitmap |= 0x1 << ((PoW_AVX_Context *) pow_ctx)->indexOfContext;
+    pthread_mutex_unlock(&impl_ctx->lock);
+    return 1;
+}
+
+static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
+{
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * 2673);
+    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes, 2673);
+    return ret;
+}
+
+ImplContext PoWAVX_Context = {
+    .context = NULL,
+    .bitmap = 0,
+    .num_max_thread = 2,
+    .num_working_thread = 0,
+    .initialize = PoWAVX_Context_Initialize,
+    .getPoWContext = PoWAVX_getPoWContext,
+    .freePoWContext = PoWAVX_freePoWContext,
+    .doThePoW = PowAVX,
+    .getPoWResult = PoWAVX_getPoWResult,
+};

@@ -1,5 +1,8 @@
-/* Test program for pow_sse */
+/* Test program for pow_avx */
 #include "common.h"
+#include "implcontext.h"
+
+extern ImplContext PoWAVX_Context;
 
 int main()
 {
@@ -47,10 +50,13 @@ int main()
     int mwm = 14;
 
     /* test AVX Implementation with mwm = 14 */
-    pow_avx_init(1);
-    int8_t *ret_trytes = PowAVX((int8_t *) trytes, mwm, 0);
+    initializeImplContext(&PoWAVX_Context);
+    void *pow_ctx = getPoWContext(&PoWAVX_Context, (int8_t *) trytes, mwm);
+    assert(pow_ctx);
+    doThePoW(&PoWAVX_Context, pow_ctx);
+    int8_t *ret_trytes = getPoWResult(&PoWAVX_Context, pow_ctx);
     assert(ret_trytes);
-    pow_avx_destroy();
+    freePoWContext(&PoWAVX_Context, pow_ctx);
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
     assert(trytes_t);

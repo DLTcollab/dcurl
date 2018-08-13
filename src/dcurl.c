@@ -32,7 +32,9 @@ static sem_t notify;
 
 LIST_HEAD(IMPL_LIST);
 
-#if defined(ENABLE_SSE)
+#if defined(ENABLE_AVX)
+extern ImplContext PoWAVX_Context;
+#elif defined(ENABLE_SSE)
 extern ImplContext PoWSSE_Context;
 #else
 extern ImplContext PoWC_Context;
@@ -40,7 +42,9 @@ extern ImplContext PoWC_Context;
 
 int dcurl_init()
 {
-#if defined(ENABLE_SSE)
+#if defined(ENABLE_AVX)
+    registerImplContext(&PoWAVX_Context);
+#elif defined(ENABLE_SSE)
     registerImplContext(&PoWSSE_Context);
 #else
     registerImplContext(&PoWC_Context);
