@@ -113,7 +113,7 @@ void pow_fpga_accel_destroy()
 int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
 {
     int8_t fpga_out_nonce_trits[NonceTrinarySize];
-    int8_t *otrytes = (int8_t *)malloc(sizeof(int8_t) * (transactionTrinarySize) / 3);
+    int8_t *otrytes = (int8_t *) malloc(sizeof(int8_t) * (transactionTrinarySize) / 3);
 
     size_t itrytelen = 0;
     size_t itritlen = 0;
