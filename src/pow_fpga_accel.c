@@ -45,34 +45,28 @@ int pow_fpga_accel_init()
 
     if (ctrl_fd == NULL) {
         perror("cpow-ctrl open fail");
-        return 0;
+        goto fail_dev_open_ctrl;
     }
 
     in_fd = fopen(IDATA_FPGA_POW, "wb");
 
     if (in_fd == NULL) {
         perror("cpow-idata open fail");
-        fclose(ctrl_fd);
-        return 0;
+        goto fail_dev_open_idata;
     }
 
     out_fd = fopen(ODATA_FPGA_POW, "rb");
 
     if (out_fd == NULL) {
         perror("cpow-odata open fail");
-        fclose(ctrl_fd);
-        fclose(in_fd);
-        return 0;
+        goto fail_dev_open_odata;
     }
 
     devmem_fd = open("/dev/mem", O_RDWR | O_SYNC);
 
     if (devmem_fd < 0) {
         perror("devmem open");
-        fclose(ctrl_fd);
-        fclose(in_fd);
-        fclose(out_fd);
-        return 0;
+        goto fail_dev_open_mem_open;
     }
 
     fpga_regs_map =
@@ -82,14 +76,21 @@ int pow_fpga_accel_init()
 
     if (fpga_regs_map == MAP_FAILED) {
         perror("devmem mmap");
-        close(devmem_fd);
-        fclose(ctrl_fd);
-        fclose(in_fd);
-        fclose(out_fd);
-        return 0;
+        goto fail_dev_open_mem_map;
     }
 
     return 1;
+
+fail_dev_open_mem_map:
+   close(devmem_fd);
+fail_dev_open_mem_open:
+   fclose(out_fd);
+fail_dev_open_odata:
+   fclose(in_fd);
+fail_dev_open_idata:
+   fclose(ctrl_fd);
+fail_dev_open_ctrl:
+   return 0;
 }
 
 void pow_fpga_accel_destroy()
