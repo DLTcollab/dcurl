@@ -420,7 +420,7 @@ static int8_t *PoWSSE_getPoWResult(void *pow_ctx)
 ImplContext PoWSSE_Context = {
     .context = NULL,
     .bitmap = 0,
-    .num_max_thread = 1,
+    .num_max_thread = 2,
     .num_working_thread = 0,
     .initialize = PoWSSE_Context_Initialize,
     .getPoWContext = PoWSSE_getPoWContext,
