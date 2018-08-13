@@ -371,12 +371,12 @@ static int PoWSSE_Context_Initialize(ImplContext *impl_ctx)
     PoW_SSE_Context *ctx = (PoW_SSE_Context *) malloc(sizeof(PoW_SSE_Context) * impl_ctx->num_max_thread);
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx->threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
-        ctx->pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
-        ctx->nonce_array = (int8_t **) malloc(sizeof(int *) * nproc);
+        ctx[i].threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
+        ctx[i].pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
+        ctx[i].nonce_array = (int8_t **) malloc(sizeof(int *) * nproc);
         for (int j = 0; j < nproc; j++)
-            ctx->nonce_array[j] = (int8_t *) malloc(NonceTrinarySize);
-        ctx->num_threads = nproc;
+            ctx[i].nonce_array[j] = (int8_t *) malloc(NonceTrinarySize);
+        ctx[i].num_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
     impl_ctx->context = ctx;
