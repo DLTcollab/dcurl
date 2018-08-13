@@ -34,12 +34,16 @@ LIST_HEAD(IMPL_LIST);
 
 #if defined(ENABLE_SSE)
 extern ImplContext PoWSSE_Context;
+#else
+extern ImplContext PoWC_Context;
 #endif
 
 int dcurl_init()
 {
 #if defined(ENABLE_SSE)
     registerImplContext(&PoWSSE_Context);
+#else
+    registerImplContext(&PoWC_Context);
 #endif
 
 #ifdef __APPLE__

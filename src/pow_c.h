@@ -3,6 +3,7 @@
 
 #include "trinary.h"
 #include <stdint.h>
+#include <pthread.h>
 
 typedef struct _pwork_struct Pwork_struct;
 
@@ -11,13 +12,30 @@ struct _pwork_struct {
     int mwm;
     int8_t *nonce;
     int n;
+    pthread_mutex_t *lock;
+    int *stopSignal;
     int index;
     int64_t ret;
 };
 
-int8_t *PowC(int8_t *trytes, int mwm, int index);
-int pow_c_init(int num_task);
-void pow_c_destroy();
+typedef struct _pow_c_context PoW_C_Context;
+
+struct _pow_c_context {
+    /* Resource of computing */
+    pthread_mutex_t lock;
+    pthread_t *threads;
+    Pwork_struct *pitem;
+    int8_t **nonce_array;
+    int stopSignal;
+    int num_threads;
+    int indexOfContext;
+    /* Arguments of PoW */
+    int8_t input_trytes[2673]; /* 2673 */
+    int8_t output_trytes[2673]; /* 2673 */
+    int mwm;
+};
+
+int PowC(void *pow_ctx);
 
 #define HBITS 0xFFFFFFFFFFFFFFFFuLL
 #define LBITS 0x0000000000000000uLL

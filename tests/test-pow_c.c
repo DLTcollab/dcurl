@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
+#include "implcontext.h"
+
+extern ImplContext PoWC_Context;
 
 int main()
 {
@@ -52,10 +55,13 @@ int main()
     int mwm = 14;
 
     /* test C Implementation with mwm = 14 */
-    pow_c_init(1);
-    int8_t *ret_trytes = PowC((int8_t *) trytes, mwm, 0);
+    initializeImplContext(&PoWC_Context);
+    void *pow_ctx = getPoWContext(&PoWC_Context, (int8_t *) trytes, mwm);
+    assert(pow_ctx);
+    doThePoW(&PoWC_Context, pow_ctx);
+    int8_t *ret_trytes = getPoWResult(&PoWC_Context, pow_ctx);
     assert(ret_trytes);
-    pow_c_destroy();
+    freePoWContext(&PoWC_Context, pow_ctx);
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
     assert(trytes_t);
