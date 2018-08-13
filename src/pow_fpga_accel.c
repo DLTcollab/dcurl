@@ -21,9 +21,9 @@
 #define CPOW_BASE 0
 
 /* Set FPGA configuration for device files */
-#define CTRL_FPGA_POW "/dev/cpow-ctrl"
-#define IDATA_FPGA_POW "/dev/cpow-idata"
-#define ODATA_FPGA_POW "/dev/cpow-odata"
+#define DEV_CTRL_FPGA "/dev/cpow-ctrl"
+#define DEV_IDATA_FPGA "/dev/cpow-idata"
+#define DEV_ODATA_FPGA "/dev/cpow-odata"
 
 static FILE *ctrl_fd;
 static FILE *in_fd;
@@ -41,21 +41,21 @@ int pow_fpga_accel_init()
     fpga_regs_map = 0;
     cpow_map = 0;
 
-    ctrl_fd = fopen(CTRL_FPGA_POW, "r+");
+    ctrl_fd = fopen(DEV_CTRL_FPGA, "r+");
 
     if (ctrl_fd == NULL) {
         perror("cpow-ctrl open fail");
         goto fail_dev_open_ctrl;
     }
 
-    in_fd = fopen(IDATA_FPGA_POW, "wb");
+    in_fd = fopen(DEV_IDATA_FPGA, "wb");
 
     if (in_fd == NULL) {
         perror("cpow-idata open fail");
         goto fail_dev_open_idata;
     }
 
-    out_fd = fopen(ODATA_FPGA_POW, "rb");
+    out_fd = fopen(DEV_ODATA_FPGA, "rb");
 
     if (out_fd == NULL) {
         perror("cpow-odata open fail");
