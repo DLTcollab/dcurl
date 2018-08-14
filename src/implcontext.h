@@ -18,7 +18,7 @@ struct _impl_context {
 
     /* Functions of Implementation Context */
     int (*initialize)(ImplContext *impl_ctx);
-
+    void (*destroy)(ImplContext *impl_ctx);
     /* Private PoW Context for each thread */
     void *(*getPoWContext)(ImplContext *impl_ctx, int8_t *trytes, int mwm);
     int (*doThePoW)(void *pow_ctx);
@@ -31,6 +31,7 @@ struct _impl_context {
 
 int registerImplContext(ImplContext *impl_ctx);
 int initializeImplContext(ImplContext *impl_ctx);
+void destroyImplContext(ImplContext *impl_ctx);
 int enterImplContext(ImplContext *impl_ctx);
 void exitImplContext(ImplContext *impl_ctx);
 void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm);

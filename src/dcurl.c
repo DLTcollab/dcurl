@@ -70,6 +70,13 @@ int dcurl_init()
 
 void dcurl_destroy()
 {
+    ImplContext *impl = NULL;
+    struct list_head *p;
+
+    list_for_each(p, &IMPL_LIST) {
+        impl = list_entry(p, ImplContext, list);
+        destroyImplContext(impl);
+    }
 }
 
 

@@ -592,19 +592,33 @@ static int PoWAVX_Context_Initialize(ImplContext *impl_ctx)
 {
     int nproc = get_avail_nprocs();
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) * impl_ctx->num_max_thread);
-
+    if (!ctx) return 0;
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
         ctx[i].pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
         ctx[i].nonce_array = (int8_t **) malloc(sizeof(int *) * nproc);
+        void *chunk = malloc(NonceTrinarySize * nproc);
+        if (!ctx[i].threads || !ctx[i].pitem || !ctx[i].nonce_array || !chunk) return 0;
         for (int j = 0; j < nproc; j++)
-            ctx[i].nonce_array[j] = (int8_t *) malloc(NonceTrinarySize);
+            ctx[i].nonce_array[j] = (int8_t *) (chunk + j * NonceTrinarySize);
         ctx[i].num_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
     return 1;
+}
+
+static void PoWAVX_Context_Destroy(ImplContext *impl_ctx)
+{
+    PoW_AVX_Context *ctx = (PoW_AVX_Context *) impl_ctx->context;
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        free(ctx[i].threads);
+        free(ctx[i].pitem);
+        free(ctx[i].nonce_array[0]);
+        free(ctx[i].nonce_array);
+    }
+    free(ctx);
 }
 
 static void *PoWAVX_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
@@ -636,6 +650,7 @@ static int PoWAVX_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
 {
     int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * 2673);
+    if (!ret) return NULL;
     memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes, 2673);
     return ret;
 }
@@ -646,6 +661,7 @@ ImplContext PoWAVX_Context = {
     .num_max_thread = 2,
     .num_working_thread = 0,
     .initialize = PoWAVX_Context_Initialize,
+    .destroy = PoWAVX_Context_Destroy,
     .getPoWContext = PoWAVX_getPoWContext,
     .freePoWContext = PoWAVX_freePoWContext,
     .doThePoW = PowAVX,

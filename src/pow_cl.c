@@ -148,6 +148,7 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
     }
 
     int8_t *buf = malloc(HASH_LENGTH);
+    if (!buf) return NULL;
 
     if (found > 0) {
         if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[0],
@@ -236,6 +237,7 @@ static int PoWCL_Context_Initialize(ImplContext *impl_ctx)
 {
     impl_ctx->num_max_thread = init_clcontext(_opencl_ctx);
     PoW_CL_Context *ctx = (PoW_CL_Context *) malloc(sizeof(PoW_CL_Context) * impl_ctx->num_max_thread);
+    if (!ctx) return 0;
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].clctx = &_opencl_ctx[i];
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
@@ -243,6 +245,11 @@ static int PoWCL_Context_Initialize(ImplContext *impl_ctx)
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
     return 1;
+}
+
+static void PoWCL_Context_Destroy(ImplContext *impl_ctx)
+{
+    free(impl_ctx->context);
 }
 
 static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
@@ -274,6 +281,7 @@ static int PoWCL_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 static int8_t *PoWCL_getPoWResult(void *pow_ctx)
 {
     int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * 2673);
+    if (!ret) return NULL;
     memcpy(ret, ((PoW_CL_Context *) pow_ctx)->output_trytes, 2673);
     return ret;
 }
@@ -284,6 +292,7 @@ ImplContext PoWCL_Context = {
     .num_max_thread = 0,
     .num_working_thread = 0,
     .initialize = PoWCL_Context_Initialize,
+    .destroy = PoWCL_Context_Destroy,
     .getPoWContext = PoWCL_getPoWContext,
     .freePoWContext = PoWCL_freePoWContext,
     .doThePoW = PowCL,

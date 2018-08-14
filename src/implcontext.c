@@ -14,6 +14,11 @@ int initializeImplContext(ImplContext *impl_ctx)
     return impl_ctx->initialize(impl_ctx);
 }
 
+void destroyImplContext(ImplContext *impl_ctx)
+{
+    return impl_ctx->destroy(impl_ctx);
+}
+
 int enterImplContext(ImplContext *impl_ctx)
 {
     pthread_mutex_lock(&impl_ctx->lock);

@@ -161,26 +161,32 @@ int init_clcontext(CLContext *ctx)
     cl_uint num_platform = 0;
     cl_platform_id *platform = NULL;
 
+    /* Get the platform */
     clGetPlatformIDs(0, NULL, &num_platform);
     platform = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platform);
+    if (!platform) return 0;
     clGetPlatformIDs(num_platform, platform, NULL);
 
     cl_uint num_devices = 0;
     cl_device_id *devices = NULL;
 
+    /* Iterate the platform list and get its devices */
     for (int i = 0; i < num_platform; i++) {
         clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
         devices = (cl_device_id *) malloc(sizeof(cl_device_id) * num_devices);
+        if (!devices) goto exit;
         clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, num_devices, devices, NULL);
         for (int j = 0; j < num_devices; j++) {
             int ret = 1;
             ret &= set_clcontext(&ctx[ctx_idx], devices[j]);
             ret &= init_cl_kernel(&ctx[ctx_idx]);
             ret &= init_BufferInfo(&ctx[ctx_idx]);
-            if (!ret) return 0;
+            if (!ret) goto exit;
             ctx_idx++;
         }
+        free(devices);
     }
-
+    free(platform);
+exit:
     return ctx_idx;
 }
