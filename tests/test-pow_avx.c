@@ -49,13 +49,17 @@ int main()
     /* test AVX Implementation with mwm = 14 */
     pow_avx_init(1);
     int8_t *ret_trytes = PowAVX((int8_t *) trytes, mwm, 0);
+    assert(ret_trytes);
     pow_avx_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
+    assert(trytes_t);
     Trytes_t *hash_trytes = hashTrytes(trytes_t);
+    assert(hash_trytes);
+    Trits_t *ret_trits = trits_from_trytes(hash_trytes);
+    assert(ret_trits);
 
     /* Validation */
-    Trits_t *ret_trits = trits_from_trytes(hash_trytes);
     for (int i = 243 - 1; i >= 243 - mwm; i--) {
         assert(ret_trits->data[i] == 0);
     }
