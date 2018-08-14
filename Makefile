@@ -46,28 +46,25 @@ endif
 TESTS = \
 	trinary \
 	curl \
-	dcurl
+	dcurl \
+	multi-pow
 
 ifeq ("$(BUILD_AVX)","1")
 TESTS += \
-	pow_avx \
-	multi_pow_cpu
+	pow_avx
 else
 ifeq ("$(BUILD_SSE)","1")
 TESTS += \
-	pow_sse \
-	multi_pow_cpu
+	pow_sse
 else
 TESTS += \
-	pow_c \
-	multi_pow_cpu
+	pow_c
 endif
 endif
 
 ifeq ("$(BUILD_GPU)","1")
 TESTS += \
-	pow_cl \
-	multi_pow_gpu
+	pow_cl
 endif
 
 ifeq ("$(BUILD_COMPAT)", "1")
