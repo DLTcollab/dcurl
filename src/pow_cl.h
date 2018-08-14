@@ -8,6 +8,7 @@ typedef struct _pow_cl_context PoW_CL_Context;
 
 struct _pow_cl_context {
     CLContext *clctx;
+    /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
     int8_t input_trytes[2673]; /* 2673 */

@@ -27,6 +27,7 @@ struct _pow_avx_context {
     int8_t **nonce_array;
     int stopSignal;
     int num_threads;
+    /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
     int8_t input_trytes[2673]; /* 2673 */
