@@ -19,6 +19,7 @@
 #include "curl.h"
 #include "clcontext.h"
 #include "constants.h"
+#include "implcontext.h"
 
 #define HASH_LENGTH 243               // trits
 #define NONCE_LENGTH 81               // trits
@@ -36,7 +37,7 @@
 #define HIGH_3 0x003FFFFFFFFFFFFF
 
 #define MAX_NUM_DEVICES 8
-CLContext pow_ctx[MAX_NUM_DEVICES];
+static CLContext _opencl_ctx[MAX_NUM_DEVICES];
 
 static int write_cl_buffer(CLContext *ctx,
                            int64_t *mid_low,
@@ -93,21 +94,12 @@ static void init_state(int8_t *state,
     mid_high[offset + 3] = HIGH_3;
 }
 
-int pwork_ctx_init()
-{
-    return init_clcontext(pow_ctx);
-}
-
-void pwork_ctx_destroy(int context_size)
-{
-}
-
-static int8_t *pwork(int8_t *state, int mwm, int index)
+static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
 {
     size_t local_work_size, global_work_size, global_offset, num_groups;
     char found = 0;
     cl_event ev, ev1;
-    CLContext *titan = &pow_ctx[index];
+    CLContext *titan = ctx;
     global_offset = 0;
     num_groups = titan->num_cores;
     local_work_size = STATE_LENGTH;
@@ -207,37 +199,93 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     return c_state;
 }
 
-int8_t *PowCL(int8_t *trytes, int mwm, int index)
+int PowCL(void *pow_ctx)
 {
-    Trytes_t *trytes_t = NULL;
+    PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
-    trytes_t = initTrytes(trytes, 2673);
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, 2673);
     Trits_t *tr = trits_from_trytes(trytes_t);
     if (!tr)
-        return NULL;
+        return 0;
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
-        return NULL;
+        return 0;
 
-    int8_t *ret = pwork(c_state, mwm, index);
+    int8_t *ret = pwork(c_state, ctx->mwm, ctx->clctx);
     if (!ret)
-        return NULL;
+        return 0;
 
     memcpy(&tr->data[TRANSACTION_LENGTH - HASH_LENGTH], ret,
            HASH_LENGTH * sizeof(int8_t));
 
     Trytes_t *last = trytes_from_trits(tr);
-    int8_t *ret_data = last->data;
+    memcpy(ctx->output_trytes, last->data, 2673);
 
     freeTrobject(tr);
     freeTrobject(trytes_t);
+    freeTrobject(last);
     /* hack */
-    free(last);
     free(c_state);
     free(ret);
 
-    return ret_data;
+    return 1;
 }
 
+static int PoWCL_Context_Initialize(ImplContext *impl_ctx)
+{
+    impl_ctx->num_max_thread = init_clcontext(_opencl_ctx);
+    PoW_CL_Context *ctx = (PoW_CL_Context *) malloc(sizeof(PoW_CL_Context) * impl_ctx->num_max_thread);
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        ctx[i].clctx = &_opencl_ctx[i];
+        impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
+    }
+    impl_ctx->context = ctx;
+    pthread_mutex_init(&impl_ctx->lock, NULL);
+    return 1;
+}
 
+static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
+{
+    pthread_mutex_lock(&impl_ctx->lock);
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        if (impl_ctx->bitmap & (0x1 << i)) {
+            impl_ctx->bitmap &= ~(0x1 << i);
+            pthread_mutex_unlock(&impl_ctx->lock);
+            PoW_CL_Context *ctx = impl_ctx->context + sizeof(PoW_CL_Context) * i;
+            memcpy(ctx->input_trytes, trytes, 2673);
+            ctx->mwm = mwm;
+            ctx->indexOfContext = i;
+            return ctx;
+        }
+    }
+    pthread_mutex_unlock(&impl_ctx->lock);
+    return NULL; /* It should not happen */
+}
+
+static int PoWCL_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+{
+    pthread_mutex_lock(&impl_ctx->lock);
+    impl_ctx->bitmap |= 0x1 << ((PoW_CL_Context *) pow_ctx)->indexOfContext;
+    pthread_mutex_unlock(&impl_ctx->lock);
+    return 1;
+}
+
+static int8_t *PoWCL_getPoWResult(void *pow_ctx)
+{
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * 2673);
+    memcpy(ret, ((PoW_CL_Context *) pow_ctx)->output_trytes, 2673);
+    return ret;
+}
+
+ImplContext PoWCL_Context = {
+    .context = NULL,
+    .bitmap = 0,
+    .num_max_thread = 0,
+    .num_working_thread = 0,
+    .initialize = PoWCL_Context_Initialize,
+    .getPoWContext = PoWCL_getPoWContext,
+    .freePoWContext = PoWCL_freePoWContext,
+    .doThePoW = PowCL,
+    .getPoWResult = PoWCL_getPoWResult,
+};

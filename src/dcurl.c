@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#if defined(ENABLE_OPENCL)
 #include "pow_cl.h"
+#endif
 #include "trinary.h"
 #include "implcontext.h"
 #if defined(ENABLE_AVX)
@@ -40,6 +42,10 @@ extern ImplContext PoWSSE_Context;
 extern ImplContext PoWC_Context;
 #endif
 
+#if defined(ENABLE_OPENCL)
+extern ImplContext PoWCL_Context;
+#endif
+
 int dcurl_init()
 {
 #if defined(ENABLE_AVX)
@@ -48,6 +54,10 @@ int dcurl_init()
     registerImplContext(&PoWSSE_Context);
 #else
     registerImplContext(&PoWC_Context);
+#endif
+
+#if defined(ENABLE_OPENCL)
+    registerImplContext(&PoWCL_Context);
 #endif
 
 #ifdef __APPLE__

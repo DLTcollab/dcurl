@@ -175,8 +175,8 @@ int init_clcontext(CLContext *ctx)
         for (int j = 0; j < num_devices; j++) {
             int ret = 1;
             ret &= set_clcontext(&ctx[ctx_idx], devices[j]);
-            ret &= init_cl_kernel(&ctx[i]);
-            ret &= init_BufferInfo(&ctx[i]);
+            ret &= init_cl_kernel(&ctx[ctx_idx]);
+            ret &= init_BufferInfo(&ctx[ctx_idx]);
             if (!ret) return 0;
             ctx_idx++;
         }
