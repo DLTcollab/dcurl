@@ -47,7 +47,8 @@ int main()
     int mwm = 14;
 
     /* test OpenCL Implementation with mwm = 14 */
-    pwork_ctx_init(1);
+    pwork_ctx_init();
+
     int8_t *ret_trytes = PowCL((int8_t *) trytes, mwm, 0);
     assert(ret_trytes);
     pwork_ctx_destroy(1);
@@ -68,6 +69,5 @@ int main()
     freeTrobject(trytes_t);
     freeTrobject(hash_trytes);
     freeTrobject(ret_trits);
-
     return 0;
 }

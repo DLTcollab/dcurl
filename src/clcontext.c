@@ -9,26 +9,14 @@
 #include <stdio.h>
 #include "pearl.cl.h"
 
+#define HASH_LENGTH 243               // trits
+#define NONCE_LENGTH 81               // trits
+#define STATE_LENGTH 3 * HASH_LENGTH  // trits
+#define TRANSACTION_LENGTH 2673 * 3
+
 static int init_cl_devices(CLContext *ctx)
 {
-    cl_uint num_platform = 0;
     cl_int errno;
-    cl_platform_id *platform;
-
-    errno = clGetPlatformIDs(0, NULL, &num_platform);
-
-    if (errno != CL_SUCCESS)
-        return 0; /* Cannot get # of OpenCL platform */
-
-    /* We only need one Platform */
-    platform = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platform);
-    clGetPlatformIDs(num_platform, platform, NULL);
-
-    /* Get Device IDs */
-    cl_uint platform_num_device;
-    if (clGetDeviceIDs(platform[0], CL_DEVICE_TYPE_GPU, 1, &ctx->device,
-                       &platform_num_device) != CL_SUCCESS)
-        return 0; /* Failed to get OpenCL Device IDs in platform */
 
     /* Create OpenCL context */
     ctx->context =
@@ -57,7 +45,6 @@ static int init_cl_devices(CLContext *ctx)
     if (errno != CL_SUCCESS)
         return 0; /* Failed to create command queue */
 
-    free(platform);
     return 1;
 }
 
@@ -82,8 +69,9 @@ static int init_cl_program(CLContext *ctx)
     return 1;
 }
 
-int init_cl_kernel(CLContext *ctx, char **kernel_name)
+static int init_cl_kernel(CLContext *ctx)
 {
+    char *kernel_name[] = {"init", "search", "finalize"};
     cl_int errno;
 
     for (int i = 0; i < ctx->kernel_info.num_kernels; i++) {
@@ -94,7 +82,7 @@ int init_cl_kernel(CLContext *ctx, char **kernel_name)
     return 1;
 }
 
-int init_cl_buffer(CLContext *ctx)
+static int init_cl_buffer(CLContext *ctx)
 {
     cl_ulong mem = 0, max_mem = 0;
     cl_int errno;
@@ -132,16 +120,67 @@ int init_cl_buffer(CLContext *ctx)
     return 1;
 }
 
-int init_clcontext(CLContext **ctx)
+static int init_BufferInfo(CLContext *ctx)
 {
-    *ctx = (CLContext *) malloc(sizeof(CLContext));
+    ctx->kernel_info.buffer_info[0] =
+        (BufferInfo){sizeof(char) * HASH_LENGTH, CL_MEM_WRITE_ONLY};
+    ctx->kernel_info.buffer_info[1] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[2] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[3] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[4] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[5] =
+        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
+    ctx->kernel_info.buffer_info[6] =
+        (BufferInfo){sizeof(char), CL_MEM_READ_WRITE};
+    ctx->kernel_info.buffer_info[7] =
+        (BufferInfo){sizeof(int64_t), CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[8] =
+        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
 
-    if (!(*ctx))
-        return 0;
+    return init_cl_buffer(ctx);
+}
 
-    (*ctx)->kernel_info.num_buffers = 9;
-    (*ctx)->kernel_info.num_kernels = 3;
-    (*ctx)->kernel_info.num_src = 1;
+static int set_clcontext(CLContext *ctx, cl_device_id device)
+{
+    ctx->device = device;
+    ctx->kernel_info.num_buffers = 9;
+    ctx->kernel_info.num_kernels = 3;
+    ctx->kernel_info.num_src = 1;
 
-    return init_cl_devices(*ctx) && init_cl_program(*ctx);
+    return init_cl_devices(ctx) && init_cl_program(ctx);
+}
+
+int init_clcontext(CLContext *ctx)
+{
+    int ctx_idx = 0;
+
+    cl_uint num_platform = 0;
+    cl_platform_id *platform = NULL;
+
+    clGetPlatformIDs(0, NULL, &num_platform);
+    platform = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platform);
+    clGetPlatformIDs(num_platform, platform, NULL);
+
+    cl_uint num_devices = 0;
+    cl_device_id *devices = NULL;
+
+    for (int i = 0; i < num_platform; i++) {
+        clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
+        devices = (cl_device_id *) malloc(sizeof(cl_device_id) * num_devices);
+        clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, num_devices, devices, NULL);
+        for (int j = 0; j < num_devices; j++) {
+            int ret = 1;
+            ret &= set_clcontext(&ctx[ctx_idx], devices[j]);
+            ret &= init_cl_kernel(&ctx[i]);
+            ret &= init_BufferInfo(&ctx[i]);
+            if (!ret) return 0;
+            ctx_idx++;
+        }
+    }
+
+    return ctx_idx;
 }

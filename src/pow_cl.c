@@ -35,31 +35,8 @@
 #define LOW_3 0xFFC0000007FFFFFF
 #define HIGH_3 0x003FFFFFFFFFFFFF
 
-CLContext **pow_ctx;
-
-static int init_BufferInfo(CLContext *ctx)
-{
-    ctx->kernel_info.buffer_info[0] =
-        (BufferInfo){sizeof(char) * HASH_LENGTH, CL_MEM_WRITE_ONLY};
-    ctx->kernel_info.buffer_info[1] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[2] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[3] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[4] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[5] =
-        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
-    ctx->kernel_info.buffer_info[6] =
-        (BufferInfo){sizeof(char), CL_MEM_READ_WRITE};
-    ctx->kernel_info.buffer_info[7] =
-        (BufferInfo){sizeof(int64_t), CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[8] =
-        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
-
-    return init_cl_buffer(ctx);
-}
+#define MAX_NUM_DEVICES 8
+CLContext pow_ctx[MAX_NUM_DEVICES];
 
 static int write_cl_buffer(CLContext *ctx,
                            int64_t *mid_low,
@@ -116,33 +93,13 @@ static void init_state(int8_t *state,
     mid_high[offset + 3] = HIGH_3;
 }
 
-int pwork_ctx_init(int context_size)
+int pwork_ctx_init()
 {
-    char *kernel_name[] = {"init", "search", "finalize"};
-    int ret = 1;
-    pow_ctx = (CLContext **) malloc(sizeof(CLContext *) * context_size);
-
-    if (!pow_ctx)
-        return 0;
-
-    for (int i = 0; i < context_size; i++) {
-        ret &= init_clcontext(&pow_ctx[i]);
-        ret &= init_cl_kernel(pow_ctx[i], kernel_name);
-        ret &= init_BufferInfo(pow_ctx[i]);
-    }
-
-    return ret;
+    return init_clcontext(pow_ctx);
 }
 
 void pwork_ctx_destroy(int context_size)
 {
-    if (pow_ctx) {
-        for (int i = 0; i < context_size; i++) {
-            if (pow_ctx[i])
-                free(pow_ctx[i]);
-        }
-        free(pow_ctx);
-    }
 }
 
 static int8_t *pwork(int8_t *state, int mwm, int index)
@@ -150,7 +107,7 @@ static int8_t *pwork(int8_t *state, int mwm, int index)
     size_t local_work_size, global_work_size, global_offset, num_groups;
     char found = 0;
     cl_event ev, ev1;
-    CLContext *titan = pow_ctx[index];
+    CLContext *titan = &pow_ctx[index];
     global_offset = 0;
     num_groups = titan->num_cores;
     local_work_size = STATE_LENGTH;
@@ -282,3 +239,5 @@ int8_t *PowCL(int8_t *trytes, int mwm, int index)
 
     return ret_data;
 }
+
+

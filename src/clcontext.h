@@ -29,8 +29,8 @@ typedef struct {
     size_t num_src;
 } KernelInfo;
 
+/* Every GPU device has own CLContext */
 typedef struct {
-    cl_uint num_devices;
     cl_device_id device;
     cl_command_queue cmdq;
     cl_mem buffer[MAX_NUM_BUFFERS];
@@ -43,9 +43,8 @@ typedef struct {
     KernelInfo kernel_info;
 } CLContext;
 
-int init_clcontext(CLContext **ctx);
-int init_cl_kernel(CLContext *ctx, char **kernel_name);
-int init_cl_buffer(CLContext *ctx);
+/* return the number of available device */
+int init_clcontext(CLContext *ctx);
 
 #define KERNEL_PATH "./src/pow_kernel.cl"
 
