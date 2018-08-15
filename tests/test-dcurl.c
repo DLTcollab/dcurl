@@ -50,10 +50,13 @@ int main()
     /* test dcurl Implementation with mwm = 9 */
     dcurl_init();
     int8_t *ret_trytes = dcurl_entry((int8_t *) trytes, mwm);
+    assert(ret_trytes);
     dcurl_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
+    assert(trytes_t);
     Trytes_t *hash_trytes = hashTrytes(trytes_t);
+    assert(hash_trytes);
 
     /* Validation */
     Trits_t *ret_trits = trits_from_trytes(hash_trytes);
