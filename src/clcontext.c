@@ -8,11 +8,7 @@
 #include "clcontext.h"
 #include <stdio.h>
 #include "pearl.cl.h"
-
-#define HASH_LENGTH 243               // trits
-#define NONCE_LENGTH 81               // trits
-#define STATE_LENGTH 3 * HASH_LENGTH  // trits
-#define TRANSACTION_LENGTH 2673 * 3
+#include "constants.h"
 
 static int init_cl_devices(CLContext *ctx)
 {
@@ -47,7 +43,6 @@ static int init_cl_devices(CLContext *ctx)
 
     return 1;
 }
-
 
 static int init_cl_program(CLContext *ctx)
 {

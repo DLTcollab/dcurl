@@ -31,8 +31,8 @@ struct _pow_sse_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
-    int8_t input_trytes[2673]; /* 2673 */
-    int8_t output_trytes[2673]; /* 2673 */
+    int8_t input_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
+    int8_t output_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
     int mwm;
 };
 

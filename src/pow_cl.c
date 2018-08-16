@@ -21,22 +21,6 @@
 #include "constants.h"
 #include "implcontext.h"
 
-#define HASH_LENGTH 243               // trits
-#define NONCE_LENGTH 81               // trits
-#define STATE_LENGTH 3 * HASH_LENGTH  // trits
-#define TRANSACTION_LENGTH 2673 * 3
-#define HIGH_BITS 0xFFFFFFFFFFFFFFFF
-#define LOW_BITS 0x0000000000000000
-#define LOW_0 0xDB6DB6DB6DB6DB6D
-#define HIGH_0 0xB6DB6DB6DB6DB6DB
-#define LOW_1 0xF1F8FC7E3F1F8FC7
-#define HIGH_1 0x8FC7E3F1F8FC7E3F
-#define LOW_2 0x7FFFE00FFFFC01FF
-#define HIGH_2 0xFFC01FFFF803FFFF
-#define LOW_3 0xFFC0000007FFFFFF
-#define HIGH_3 0x003FFFFFFFFFFFFF
-
-#define MAX_NUM_DEVICES 8
 static CLContext _opencl_ctx[MAX_NUM_DEVICES];
 
 static int write_cl_buffer(CLContext *ctx,
@@ -204,7 +188,7 @@ int PowCL(void *pow_ctx)
 {
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
-    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, 2673);
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_LENGTH / 3);
     Trits_t *tr = trits_from_trytes(trytes_t);
     if (!tr)
         return 0;
@@ -221,7 +205,7 @@ int PowCL(void *pow_ctx)
            HASH_LENGTH * sizeof(int8_t));
 
     Trytes_t *last = trytes_from_trits(tr);
-    memcpy(ctx->output_trytes, last->data, 2673);
+    memcpy(ctx->output_trytes, last->data, TRANSACTION_LENGTH / 3);
 
     freeTrobject(tr);
     freeTrobject(trytes_t);
@@ -260,7 +244,7 @@ static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
             impl_ctx->bitmap &= ~(0x1 << i);
             pthread_mutex_unlock(&impl_ctx->lock);
             PoW_CL_Context *ctx = impl_ctx->context + sizeof(PoW_CL_Context) * i;
-            memcpy(ctx->input_trytes, trytes, 2673);
+            memcpy(ctx->input_trytes, trytes, TRANSACTION_LENGTH / 3);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;
             return ctx;
@@ -280,9 +264,9 @@ static int PoWCL_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWCL_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * 2673);
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_LENGTH / 3));
     if (!ret) return NULL;
-    memcpy(ret, ((PoW_CL_Context *) pow_ctx)->output_trytes, 2673);
+    memcpy(ret, ((PoW_CL_Context *) pow_ctx)->output_trytes, TRANSACTION_LENGTH / 3);
     return ret;
 }
 

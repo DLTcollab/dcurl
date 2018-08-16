@@ -4,6 +4,7 @@
 #include "trinary.h"
 #include <stdint.h>
 #include <pthread.h>
+#include "constants.h"
 
 typedef struct _pwork_struct Pwork_struct;
 
@@ -31,8 +32,8 @@ struct _pow_c_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
-    int8_t input_trytes[2673]; /* 2673 */
-    int8_t output_trytes[2673]; /* 2673 */
+    int8_t input_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
+    int8_t output_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
     int mwm;
 };
 

@@ -544,7 +544,7 @@ int PowAVX(void *pow_ctx)
     int8_t **nonce_array = ctx->nonce_array;
 
     /* Prepare the input trytes for algorithm */
-    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, 2673);
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_LENGTH / 3);
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
@@ -629,7 +629,7 @@ static void *PoWAVX_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm
             impl_ctx->bitmap &= ~(0x1 << i);
             pthread_mutex_unlock(&impl_ctx->lock);
             PoW_AVX_Context *ctx = impl_ctx->context + sizeof(PoW_AVX_Context) * i;
-            memcpy(ctx->input_trytes, trytes, 2673);
+            memcpy(ctx->input_trytes, trytes, TRANSACTION_LENGTH / 3);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;
             return ctx;
@@ -649,9 +649,9 @@ static int PoWAVX_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * 2673);
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_LENGTH / 3));
     if (!ret) return NULL;
-    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes, 2673);
+    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes, TRANSACTION_LENGTH / 3);
     return ret;
 }
 
