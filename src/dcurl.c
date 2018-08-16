@@ -90,6 +90,8 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
     ImplContext *impl = NULL;
     struct list_head *p;
 
+    if (!isInitialized) return NULL;
+
     do {
         list_for_each(p, &IMPL_LIST) {
             impl = list_entry(p, ImplContext, list);
