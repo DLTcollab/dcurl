@@ -1,5 +1,8 @@
 /* Test program for pow_cl */
 #include "common.h"
+#include "implcontext.h"
+
+extern ImplContext PoWCL_Context;
 
 int main()
 {
@@ -47,10 +50,13 @@ int main()
     int mwm = 14;
 
     /* test OpenCL Implementation with mwm = 14 */
-    pwork_ctx_init(1);
-    int8_t *ret_trytes = PowCL((int8_t *) trytes, mwm, 0);
+    initializeImplContext(&PoWCL_Context);
+    void *pow_ctx = getPoWContext(&PoWCL_Context, (int8_t *) trytes, mwm);
+    assert(pow_ctx);
+    doThePoW(&PoWCL_Context, pow_ctx);
+    int8_t *ret_trytes = getPoWResult(&PoWCL_Context, pow_ctx);
     assert(ret_trytes);
-    pwork_ctx_destroy(1);
+    freePoWContext(&PoWCL_Context, pow_ctx);
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
     assert(trytes_t);
@@ -68,6 +74,5 @@ int main()
     freeTrobject(trytes_t);
     freeTrobject(hash_trytes);
     freeTrobject(ret_trits);
-
     return 0;
 }

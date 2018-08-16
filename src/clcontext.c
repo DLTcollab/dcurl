@@ -7,44 +7,29 @@
 
 #include "clcontext.h"
 #include <stdio.h>
+#include <stdbool.h>
 #include "pearl.cl.h"
+#include "constants.h"
 
-static int init_cl_devices(CLContext *ctx)
+static bool init_cl_devices(CLContext *ctx)
 {
-    cl_uint num_platform = 0;
     cl_int errno;
-    cl_platform_id *platform;
-
-    errno = clGetPlatformIDs(0, NULL, &num_platform);
-
-    if (errno != CL_SUCCESS)
-        return 0; /* Cannot get # of OpenCL platform */
-
-    /* We only need one Platform */
-    platform = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platform);
-    clGetPlatformIDs(num_platform, platform, NULL);
-
-    /* Get Device IDs */
-    cl_uint platform_num_device;
-    if (clGetDeviceIDs(platform[0], CL_DEVICE_TYPE_GPU, 1, &ctx->device,
-                       &platform_num_device) != CL_SUCCESS)
-        return 0; /* Failed to get OpenCL Device IDs in platform */
 
     /* Create OpenCL context */
     ctx->context =
         (cl_context) clCreateContext(NULL, 1, &ctx->device, NULL, NULL, &errno);
     if (errno != CL_SUCCESS)
-        return 0; /* Failed to create OpenCL Context */
+        return false; /* Failed to create OpenCL Context */
 
     /* Get Device Info (num_cores) */
     if (CL_SUCCESS != clGetDeviceInfo(ctx->device, CL_DEVICE_MAX_COMPUTE_UNITS,
                                       sizeof(cl_uint), &ctx->num_cores, NULL))
-        return 0; /* Failed to get num_cores of GPU */
+        return false; /* Failed to get num_cores of GPU */
 
     /* Get Device Info (max_memory) */
     if (CL_SUCCESS != clGetDeviceInfo(ctx->device, CL_DEVICE_MAX_MEM_ALLOC_SIZE,
                                       sizeof(cl_ulong), &ctx->max_memory, NULL))
-        return 0; /* Failed to get Max memory of GPU */
+        return false; /* Failed to get Max memory of GPU */
 
     /* Get Device Info (num work group) */
     if (CL_SUCCESS !=
@@ -55,14 +40,12 @@ static int init_cl_devices(CLContext *ctx)
     /* Create Command Queue */
     ctx->cmdq = clCreateCommandQueue(ctx->context, ctx->device, 0, &errno);
     if (errno != CL_SUCCESS)
-        return 0; /* Failed to create command queue */
+        return false; /* Failed to create command queue */
 
-    free(platform);
-    return 1;
+    return true;
 }
 
-
-static int init_cl_program(CLContext *ctx)
+static bool init_cl_program(CLContext *ctx)
 {
     unsigned char *source_str = pearl_cl;
     size_t source_size = pearl_cl_len;
@@ -72,29 +55,30 @@ static int init_cl_program(CLContext *ctx)
         ctx->context, ctx->kernel_info.num_src, (const char **) &source_str,
         (const size_t *) &source_size, &errno);
     if (CL_SUCCESS != errno)
-        return 0; /* Failed to create OpenCL program */
+        return false; /* Failed to create OpenCL program */
 
     errno =
         clBuildProgram(ctx->program, 1, &ctx->device, "-Werror", NULL, NULL);
     if (CL_SUCCESS != errno)
-        return 0; /* Failed to build OpenCL program */
+        return false; /* Failed to build OpenCL program */
 
-    return 1;
+    return true;
 }
 
-int init_cl_kernel(CLContext *ctx, char **kernel_name)
+static bool init_cl_kernel(CLContext *ctx)
 {
+    char *kernel_name[] = {"init", "search", "finalize"};
     cl_int errno;
 
     for (int i = 0; i < ctx->kernel_info.num_kernels; i++) {
         ctx->kernel[i] = clCreateKernel(ctx->program, kernel_name[i], &errno);
         if (CL_SUCCESS != errno)
-            return 0; /* Failed to create OpenCL kernel */
+            return false; /* Failed to create OpenCL kernel */
     }
-    return 1;
+    return true;
 }
 
-int init_cl_buffer(CLContext *ctx)
+static bool init_cl_buffer(CLContext *ctx)
 {
     cl_ulong mem = 0, max_mem = 0;
     cl_int errno;
@@ -113,35 +97,94 @@ int init_cl_buffer(CLContext *ctx)
         /* Check Memory bound */
         max_mem += mem;
         if (max_mem >= ctx->max_memory)
-            return 0; /* GPU Memory is not enough */
+            return false; /* GPU Memory is not enough */
 
         /* Create OpenCL Buffer */
         ctx->buffer[i] =
             clCreateBuffer(ctx->context, ctx->kernel_info.buffer_info[i].flags,
                            mem, NULL, &errno);
         if (CL_SUCCESS != errno)
-            return 0; /* Failed to create OpenCL Memory Buffer */
+            return false; /* Failed to create OpenCL Memory Buffer */
 
         /* Set Kernel Arguments */
         for (int j = 0; j < ctx->kernel_info.num_kernels; j++) {
             if (CL_SUCCESS != clSetKernelArg(ctx->kernel[j], i, sizeof(cl_mem),
                                              (void *) &ctx->buffer[i]))
-                return 0; /* Failed to set OpenCL kernel arguments */
+                return false; /* Failed to set OpenCL kernel arguments */
         }
     }
-    return 1;
+    return true;
 }
 
-int init_clcontext(CLContext **ctx)
+static bool init_BufferInfo(CLContext *ctx)
 {
-    *ctx = (CLContext *) malloc(sizeof(CLContext));
+    ctx->kernel_info.buffer_info[INDEX_OF_TRIT_HASH] =
+        (BufferInfo){sizeof(char) * HASH_LENGTH, CL_MEM_WRITE_ONLY};
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_LOW] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_HIGH] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_LOW] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_HIGH] =
+        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_MWM] =
+        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
+    ctx->kernel_info.buffer_info[INDEX_OF_FOUND] =
+        (BufferInfo){sizeof(char), CL_MEM_READ_WRITE};
+    ctx->kernel_info.buffer_info[INDEX_OF_NONCE_PROBE] =
+        (BufferInfo){sizeof(int64_t), CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_LOOP_COUNT] =
+        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
 
-    if (!(*ctx))
-        return 0;
+    return init_cl_buffer(ctx);
+}
 
-    (*ctx)->kernel_info.num_buffers = 9;
-    (*ctx)->kernel_info.num_kernels = 3;
-    (*ctx)->kernel_info.num_src = 1;
+static bool set_clcontext(CLContext *ctx, cl_device_id device)
+{
+    ctx->device = device;
+    ctx->kernel_info.num_buffers = 9;
+    ctx->kernel_info.num_kernels = 3;
+    ctx->kernel_info.num_src = 1;
 
-    return init_cl_devices(*ctx) && init_cl_program(*ctx);
+    return init_cl_devices(ctx) && init_cl_program(ctx);
+}
+
+int init_clcontext(CLContext *ctx)
+{
+    int ctx_idx = 0;
+
+    cl_uint num_platform = 0;
+    cl_platform_id *platform = NULL;
+
+    /* Get the platform */
+    clGetPlatformIDs(0, NULL, &num_platform);
+    platform = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platform);
+    if (!platform) return 0;
+    clGetPlatformIDs(num_platform, platform, NULL);
+
+    cl_uint num_devices = 0;
+    cl_device_id *devices = NULL;
+
+    /* Iterate the platform list and get its devices */
+    for (int i = 0; i < num_platform; i++) {
+        clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
+        devices = (cl_device_id *) malloc(sizeof(cl_device_id) * num_devices);
+        if (!devices) goto leave;
+        clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, num_devices, devices, NULL);
+        for (int j = 0; j < num_devices; j++, ctx_idx++) {
+            int ret = 1;
+            ret &= set_clcontext(&ctx[ctx_idx], devices[j]);
+            ret &= init_cl_kernel(&ctx[ctx_idx]);
+            ret &= init_BufferInfo(&ctx[ctx_idx]);
+            if (!ret) {
+                free(devices);
+                goto leave;
+            }
+        }
+        free(devices);
+    }
+leave:
+    free(platform);
+    return ctx_idx;
 }

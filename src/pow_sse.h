@@ -2,7 +2,10 @@
 #define POW_SSE_H_
 
 #include "trinary.h"
+#include "constants.h"
 #include <stdint.h>
+#include <pthread.h>
+#include <stdbool.h>
 
 typedef struct _pwork_struct Pwork_struct;
 
@@ -11,13 +14,30 @@ struct _pwork_struct {
     int mwm;
     int8_t *nonce;
     int n;
-    int index;
+    pthread_mutex_t *lock;
+    int *stopPoW;
     int64_t ret;
 };
 
-int8_t *PowSSE(int8_t *trytes, int mwm, int index);
-int pow_sse_init(int num_task);
-void pow_sse_destroy();
+typedef struct _pow_sse_context PoW_SSE_Context;
+
+struct _pow_sse_context {
+    /* Resource of computing */
+    pthread_mutex_t lock;
+    pthread_t *threads;
+    Pwork_struct *pitem;
+    int8_t **nonce_array;
+    int stopPoW;
+    int num_threads;
+    /* Management of Multi-thread */
+    int indexOfContext;
+    /* Arguments of PoW */
+    int8_t input_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
+    int8_t output_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
+    int mwm;
+};
+
+bool PowSSE(void *pow_ctx);
 
 #ifdef _MSC_VER
 #include <intrin.h>
