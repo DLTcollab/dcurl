@@ -15,7 +15,7 @@ struct _pwork_struct {
     int8_t *nonce;
     int n;
     pthread_mutex_t *lock;
-    int *stopSignal;
+    int *stopPoW;
     int index;
     int64_t ret;
 };
@@ -28,7 +28,7 @@ struct _pow_c_context {
     pthread_t *threads;
     Pwork_struct *pitem;
     int8_t **nonce_array;
-    int stopSignal;
+    int stopPoW;
     int num_threads;
     /* Management of Multi-thread */
     int indexOfContext;

@@ -220,12 +220,12 @@ static int loop256(__m256i *lmid,
                    __m256i *hmid,
                    int m,
                    int8_t *nonce,
-                   int *stopSignal)
+                   int *stopPoW)
 {
     int i = 0, n = 0;
     __m256i lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
 
-    for (i = 0; !incr256(lmid, hmid) && !*stopSignal; i++) {
+    for (i = 0; !incr256(lmid, hmid) && !*stopPoW; i++) {
         for (int j = 0; j < STATE_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
@@ -240,7 +240,7 @@ static int loop256(__m256i *lmid,
 }
 
 static int64_t pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
-                        int *stopSignal)
+                        int *stopPoW)
 {
     __m256i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     int offset = HASH_LENGTH - NONCE_LENGTH;
@@ -259,7 +259,7 @@ static int64_t pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
     hmid[offset + 5] = _mm256_set_epi64x(HIGH50, HIGH51, HIGH52, HIGH53);
     incrN256(n, lmid, hmid);
 
-    return loop256(lmid, hmid, mwm, nonce, stopSignal);
+    return loop256(lmid, hmid, mwm, nonce, stopPoW);
 }
 #else
 void transform256(__m256d *lmid, __m256d *hmid)
@@ -424,12 +424,12 @@ void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
 }
 
 int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
-            int *stopSignal)
+            int *stopPoW)
 {
     int i = 0, n = 0, j = 0;
 
     __m256d lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
-    for (i = 0; !incr256(lmid, hmid) && !*stopSignal; i++) {
+    for (i = 0; !incr256(lmid, hmid) && !*stopPoW; i++) {
         for (j = 0; j < STATE_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
@@ -444,7 +444,7 @@ int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
 }
 
 long long int pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
-                       int *stopSignal)
+                       int *stopPoW)
 {
     __m256d lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     int offset = HASH_LENGTH - NONCE_LENGTH;
@@ -463,7 +463,7 @@ long long int pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
     hmid[offset + 5] = _mm256_set_pd(HIGH50, HIGH51, HIGH52, HIGH53);
     incrN256(n, lmid, hmid);
 
-    return loop256(lmid, hmid, mwm, nonce, stopSignal);
+    return loop256(lmid, hmid, mwm, nonce, stopPoW);
 }
 #endif
 
@@ -472,11 +472,11 @@ static void *pworkThread(void *pitem)
     Pwork_struct *pworkInfo = (Pwork_struct *) pitem;
     pworkInfo->ret = pwork256(pworkInfo->mid, pworkInfo->mwm,
                               pworkInfo->nonce, pworkInfo->n,
-                              pworkInfo->stopSignal);
+                              pworkInfo->stopPoW);
 
     pthread_mutex_lock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
-        *pworkInfo->stopSignal = 1;
+        *pworkInfo->stopPoW = 1;
         /* This means this thread got the result */
         pworkInfo->n = -1;
     }
@@ -537,7 +537,7 @@ bool PowAVX(void *pow_ctx)
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) pow_ctx;
 
     /* Initialize the context */
-    ctx->stopSignal = 0;
+    ctx->stopPoW = 0;
     pthread_mutex_init(&ctx->lock, NULL);
     pthread_t *threads = ctx->threads;
     Pwork_struct *pitem = ctx->pitem;
@@ -557,7 +557,7 @@ bool PowAVX(void *pow_ctx)
         pitem[i].nonce = nonce_array[i];
         pitem[i].n = i;
         pitem[i].lock = &ctx->lock;
-        pitem[i].stopSignal = &ctx->stopSignal;
+        pitem[i].stopPoW = &ctx->stopPoW;
         pitem[i].ret = 0;
         pthread_create(&threads[i], NULL, pworkThread, (void *) &pitem[i]);
     }

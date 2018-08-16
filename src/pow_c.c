@@ -157,13 +157,13 @@ long long int loop_cpu(uint64_t *lmid,
                        uint64_t *hmid,
                        int m,
                        int8_t *nonce,
-                       int *stopSignal)
+                       int *stopPoW)
 {
     int n = 0;
     long long int i = 0;
     uint64_t lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
 
-    for (i = 0; !incr(lmid, hmid) && !*stopSignal; i++) {
+    for (i = 0; !incr(lmid, hmid) && !*stopPoW; i++) {
         memcpy(lcpy, lmid, STATE_LENGTH * sizeof(uint64_t));
         memcpy(hcpy, hmid, STATE_LENGTH * sizeof(uint64_t));
         transform64(lcpy, hcpy);
@@ -209,7 +209,7 @@ void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
 }
 
 static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n,
-                     int *stopSignal)
+                     int *stopPoW)
 {
     uint64_t lmid[STATE_LENGTH] = {0}, hmid[STATE_LENGTH] = {0};
     para(mid, lmid, hmid);
@@ -225,7 +225,7 @@ static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n,
     hmid[offset + 3] = HIGH3;
     incrN(n, lmid, hmid);
 
-    return loop_cpu(lmid, hmid, mwm, nonce, stopSignal);
+    return loop_cpu(lmid, hmid, mwm, nonce, stopPoW);
 }
 
 static void *pworkThread(void *pitem)
@@ -233,11 +233,11 @@ static void *pworkThread(void *pitem)
     Pwork_struct *pworkInfo = (Pwork_struct *) pitem;
     pworkInfo->ret = pwork(pworkInfo->mid, pworkInfo->mwm,
                               pworkInfo->nonce, pworkInfo->n,
-                              pworkInfo->stopSignal);
+                              pworkInfo->stopPoW);
 
     pthread_mutex_lock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
-        *pworkInfo->stopSignal = 1;
+        *pworkInfo->stopPoW = 1;
         /* This means this thread got the result */
         pworkInfo->n = -1;
     }
@@ -298,7 +298,7 @@ bool PowC(void *pow_ctx)
     PoW_C_Context *ctx = (PoW_C_Context *) pow_ctx;
 
     /* Initialize the context */
-    ctx->stopSignal = 0;
+    ctx->stopPoW = 0;
     pthread_mutex_init(&ctx->lock, NULL);
     pthread_t *threads = ctx->threads;
     Pwork_struct *pitem = ctx->pitem;
@@ -318,7 +318,7 @@ bool PowC(void *pow_ctx)
         pitem[i].nonce = nonce_array[i];
         pitem[i].n = i;
         pitem[i].lock = &ctx->lock;
-        pitem[i].stopSignal = &ctx->stopSignal;
+        pitem[i].stopPoW = &ctx->stopPoW;
         pitem[i].ret = 0;
         pthread_create(&threads[i], NULL, pworkThread, (void *) &pitem[i]);
     }
