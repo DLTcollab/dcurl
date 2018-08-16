@@ -33,16 +33,20 @@ static int write_cl_buffer(CLContext *ctx,
     cl_mem *memobj = ctx->buffer;
     BufferInfo *buffer_info = ctx->kernel_info.buffer_info;
 
-    if (clEnqueueWriteBuffer(cmdq, memobj[1], CL_TRUE, 0, buffer_info[1].size,
+    if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_MID_LOW], CL_TRUE, 0,
+                             buffer_info[INDEX_OF_MID_LOW].size,
                              mid_low, 0, NULL, NULL) != CL_SUCCESS)
         return 0;
-    if (clEnqueueWriteBuffer(cmdq, memobj[2], CL_TRUE, 0, buffer_info[2].size,
+    if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_MID_HIGH], CL_TRUE, 0,
+                             buffer_info[INDEX_OF_MID_HIGH].size,
                              mid_high, 0, NULL, NULL) != CL_SUCCESS)
         return 0;
-    if (clEnqueueWriteBuffer(cmdq, memobj[5], CL_TRUE, 0, buffer_info[5].size,
+    if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_MWM], CL_TRUE, 0,
+                             buffer_info[INDEX_OF_MWM].size,
                              &mwm, 0, NULL, NULL) != CL_SUCCESS)
         return 0;
-    if (clEnqueueWriteBuffer(cmdq, memobj[8], CL_TRUE, 0, buffer_info[8].size,
+    if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_LOOP_COUNT], CL_TRUE, 0,
+                             buffer_info[INDEX_OF_LOOP_COUNT].size,
                              &loop_count, 0, NULL, NULL) != CL_SUCCESS)
         return 0;
     return 1;
@@ -99,23 +103,23 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
     if (!write_cl_buffer(titan, mid_low, mid_high, mwm, 32))
         return NULL;
 
-    if (CL_SUCCESS == clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[0], 1,
-                                             &global_offset, &global_work_size,
+    if (CL_SUCCESS == clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[INDEX_OF_KERNEL_INIT],
+                                             1, &global_offset, &global_work_size,
                                              &local_work_size, 0, NULL, &ev)) {
         clWaitForEvents(1, &ev);
         clReleaseEvent(ev);
 
         while (found == 0) {
             if (CL_SUCCESS !=
-                clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[1], 1, NULL,
-                                       &global_work_size, &local_work_size, 0,
+                clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[INDEX_OF_KERNEL_SEARCH],
+                                       1, NULL, &global_work_size, &local_work_size, 0,
                                        NULL, &ev1)) {
                 clReleaseEvent(ev1);
                 return NULL; /* Running "search" kernel function failed */
             }
             clWaitForEvents(1, &ev1);
             clReleaseEvent(ev1);
-            if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[6],
+            if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[INDEX_OF_FOUND],
                                                   CL_TRUE, 0, sizeof(char),
                                                   &found, 0, NULL, NULL)) {
                 return NULL; /* Read variable "found" failed */
@@ -125,7 +129,8 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
         return NULL; /* Running "init" kernel function failed */
     }
 
-    if (CL_SUCCESS != clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[2], 1,
+    if (CL_SUCCESS != clEnqueueNDRangeKernel(titan->cmdq,
+                                             titan->kernel[INDEX_OF_KERNEL_FINALIZE], 1,
                                              NULL, &global_work_size,
                                              &local_work_size, 0, NULL, &ev)) {
         return NULL; /* Running "finalize" kernel function failed */
@@ -135,9 +140,8 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
     if (!buf) return NULL;
 
     if (found > 0) {
-        if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[0],
-                                              CL_TRUE, 0,
-                                              HASH_LENGTH * sizeof(int8_t), buf,
+        if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[INDEX_OF_TRIT_HASH],
+                                              CL_TRUE, 0, HASH_LENGTH * sizeof(int8_t), buf,
                                               1, &ev, NULL)) {
             return NULL; /* Read buffer failed */
         }

@@ -117,23 +117,23 @@ static int init_cl_buffer(CLContext *ctx)
 
 static int init_BufferInfo(CLContext *ctx)
 {
-    ctx->kernel_info.buffer_info[0] =
+    ctx->kernel_info.buffer_info[INDEX_OF_TRIT_HASH] =
         (BufferInfo){sizeof(char) * HASH_LENGTH, CL_MEM_WRITE_ONLY};
-    ctx->kernel_info.buffer_info[1] =
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_LOW] =
         (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[2] =
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_HIGH] =
         (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[3] =
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_LOW] =
         (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[4] =
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_HIGH] =
         (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[5] =
+    ctx->kernel_info.buffer_info[INDEX_OF_MWM] =
         (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
-    ctx->kernel_info.buffer_info[6] =
+    ctx->kernel_info.buffer_info[INDEX_OF_FOUND] =
         (BufferInfo){sizeof(char), CL_MEM_READ_WRITE};
-    ctx->kernel_info.buffer_info[7] =
+    ctx->kernel_info.buffer_info[INDEX_OF_NONCE_PROBE] =
         (BufferInfo){sizeof(int64_t), CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[8] =
+    ctx->kernel_info.buffer_info[INDEX_OF_LOOP_COUNT] =
         (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
 
     return init_cl_buffer(ctx);
