@@ -293,7 +293,7 @@ static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
            rst_len - (tx->len - NonceTrinarySize / 3));
 }
 
-int PowC(void *pow_ctx)
+bool PowC(void *pow_ctx)
 {
     PoW_C_Context *ctx = (PoW_C_Context *) pow_ctx;
 
@@ -309,7 +309,7 @@ int PowC(void *pow_ctx)
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
-        return 0;
+        return false;
 
     /* Prepare arguments for pthread */
     for (int i = 0; i < ctx->num_threads; i++) {
@@ -332,11 +332,11 @@ int PowC(void *pow_ctx)
 
     Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize);
     if (!nonce_t)
-        return 0;
+        return false;
 
     Trytes_t *nonce = trytes_from_trits(nonce_t);
     if (!nonce)
-        return 0;
+        return false;
 
     nonce_to_result(trytes_t, nonce, ctx->output_trytes);
 
@@ -346,20 +346,20 @@ int PowC(void *pow_ctx)
     freeTrobject(nonce_t);
     freeTrobject(nonce);
 
-    return 1;
+    return true;
 }
 
-static int PoWC_Context_Initialize(ImplContext *impl_ctx)
+static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
 {
     int nproc = get_avail_nprocs();
     PoW_C_Context *ctx = (PoW_C_Context *) malloc(sizeof(PoW_C_Context) * impl_ctx->num_max_thread);
-    if (!ctx) return 0;
+    if (!ctx) return false;
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
         ctx[i].pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
         ctx[i].nonce_array = (int8_t **) malloc(sizeof(int *) * nproc);
         void *chunk = malloc(NonceTrinarySize * nproc);
-        if (!ctx[i].threads || !ctx[i].pitem || !ctx[i].nonce_array || !chunk) return 0;
+        if (!ctx[i].threads || !ctx[i].pitem || !ctx[i].nonce_array || !chunk) return false;
         for (int j = 0; j < nproc; j++)
             ctx[i].nonce_array[j] = (int8_t *) (chunk + j * NonceTrinarySize);
         ctx[i].num_threads = nproc;
@@ -367,7 +367,7 @@ static int PoWC_Context_Initialize(ImplContext *impl_ctx)
     }
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
-    return 1;
+    return true;
 }
 
 static void PoWC_Context_Destroy(ImplContext *impl_ctx)
@@ -400,12 +400,12 @@ static void *PoWC_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
     return NULL; /* It should not happen */
 }
 
-static int PoWC_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+static bool PoWC_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 {
     pthread_mutex_lock(&impl_ctx->lock);
     impl_ctx->bitmap |= 0x1 << ((PoW_C_Context *) pow_ctx)->indexOfContext;
     pthread_mutex_unlock(&impl_ctx->lock);
-    return 1;
+    return true;
 }
 
 static int8_t *PoWC_getPoWResult(void *pow_ctx)

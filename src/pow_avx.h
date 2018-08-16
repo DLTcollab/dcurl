@@ -2,6 +2,7 @@
 #define POW_AVX_H_
 
 #include "trinary.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <pthread.h>
 #include <constants.h>
@@ -36,7 +37,7 @@ struct _pow_avx_context {
     int mwm;
 };
 
-int PowAVX(void *pow_ctx);
+bool PowAVX(void *pow_ctx);
 
 #ifdef _MSC_VER
 #include <intrin.h>

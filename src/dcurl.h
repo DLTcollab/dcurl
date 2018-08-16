@@ -2,8 +2,9 @@
 #define DCURL_H_
 
 #include "trinary.h"
+#include <stdbool.h>
 
-int dcurl_init();
+bool dcurl_init();
 void dcurl_destroy();
 int8_t *dcurl_entry(int8_t *trytes, int mwm);
 

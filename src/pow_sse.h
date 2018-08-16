@@ -5,6 +5,7 @@
 #include "constants.h"
 #include <stdint.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 typedef struct _pwork_struct Pwork_struct;
 
@@ -36,7 +37,7 @@ struct _pow_sse_context {
     int mwm;
 };
 
-int PowSSE(void *pow_ctx);
+bool PowSSE(void *pow_ctx);
 
 #ifdef _MSC_VER
 #include <intrin.h>

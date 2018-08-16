@@ -23,7 +23,7 @@
 
 static CLContext _opencl_ctx[MAX_NUM_DEVICES];
 
-static int write_cl_buffer(CLContext *ctx,
+static bool write_cl_buffer(CLContext *ctx,
                            int64_t *mid_low,
                            int64_t *mid_high,
                            int mwm,
@@ -36,20 +36,20 @@ static int write_cl_buffer(CLContext *ctx,
     if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_MID_LOW], CL_TRUE, 0,
                              buffer_info[INDEX_OF_MID_LOW].size,
                              mid_low, 0, NULL, NULL) != CL_SUCCESS)
-        return 0;
+        return false;
     if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_MID_HIGH], CL_TRUE, 0,
                              buffer_info[INDEX_OF_MID_HIGH].size,
                              mid_high, 0, NULL, NULL) != CL_SUCCESS)
-        return 0;
+        return false;
     if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_MWM], CL_TRUE, 0,
                              buffer_info[INDEX_OF_MWM].size,
                              &mwm, 0, NULL, NULL) != CL_SUCCESS)
-        return 0;
+        return false;
     if (clEnqueueWriteBuffer(cmdq, memobj[INDEX_OF_LOOP_COUNT], CL_TRUE, 0,
                              buffer_info[INDEX_OF_LOOP_COUNT].size,
                              &loop_count, 0, NULL, NULL) != CL_SUCCESS)
-        return 0;
-    return 1;
+        return false;
+    return true;
 }
 
 static void init_state(int8_t *state,
@@ -188,22 +188,22 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     return c_state;
 }
 
-int PowCL(void *pow_ctx)
+bool PowCL(void *pow_ctx)
 {
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
     Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_LENGTH / 3);
     Trits_t *tr = trits_from_trytes(trytes_t);
     if (!tr)
-        return 0;
+        return false;
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
-        return 0;
+        return false;
 
     int8_t *ret = pwork(c_state, ctx->mwm, ctx->clctx);
     if (!ret)
-        return 0;
+        return false;
 
     memcpy(&tr->data[TRANSACTION_LENGTH - HASH_LENGTH], ret,
            HASH_LENGTH * sizeof(int8_t));
@@ -218,21 +218,21 @@ int PowCL(void *pow_ctx)
     free(c_state);
     free(ret);
 
-    return 1;
+    return true;
 }
 
-static int PoWCL_Context_Initialize(ImplContext *impl_ctx)
+static bool PoWCL_Context_Initialize(ImplContext *impl_ctx)
 {
     impl_ctx->num_max_thread = init_clcontext(_opencl_ctx);
     PoW_CL_Context *ctx = (PoW_CL_Context *) malloc(sizeof(PoW_CL_Context) * impl_ctx->num_max_thread);
-    if (!ctx) return 0;
+    if (!ctx) return false;
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].clctx = &_opencl_ctx[i];
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
-    return 1;
+    return true;
 }
 
 static void PoWCL_Context_Destroy(ImplContext *impl_ctx)
@@ -258,12 +258,12 @@ static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
     return NULL; /* It should not happen */
 }
 
-static int PoWCL_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+static bool PoWCL_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 {
     pthread_mutex_lock(&impl_ctx->lock);
     impl_ctx->bitmap |= 0x1 << ((PoW_CL_Context *) pow_ctx)->indexOfContext;
     pthread_mutex_unlock(&impl_ctx->lock);
-    return 1;
+    return true;
 }
 
 static int8_t *PoWCL_getPoWResult(void *pow_ctx)

@@ -7,6 +7,7 @@
 #include "dcurl.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #if defined(ENABLE_OPENCL)
 #include "pow_cl.h"
@@ -28,7 +29,7 @@
 #endif
 
 /* check whether dcurl is initialized */
-static int isInitialized = 0;
+static bool isInitialized = false;
 
 static sem_t notify;
 
@@ -46,18 +47,20 @@ extern ImplContext PoWC_Context;
 extern ImplContext PoWCL_Context;
 #endif
 
-int dcurl_init()
+bool dcurl_init()
 {
+    bool ret = true;
+
 #if defined(ENABLE_AVX)
-    registerImplContext(&PoWAVX_Context);
+    ret &= registerImplContext(&PoWAVX_Context);
 #elif defined(ENABLE_SSE)
-    registerImplContext(&PoWSSE_Context);
+    ret &= registerImplContext(&PoWSSE_Context);
 #else
-    registerImplContext(&PoWC_Context);
+    ret &= registerImplContext(&PoWC_Context);
 #endif
 
 #if defined(ENABLE_OPENCL)
-    registerImplContext(&PoWCL_Context);
+    ret &= registerImplContext(&PoWCL_Context);
 #endif
 
 #ifdef __APPLE__
@@ -65,7 +68,7 @@ int dcurl_init()
 #else
     sem_init(&notify, 0, 0);
 #endif
-    return 1; /* success */
+    return isInitialized = ret;
 }
 
 void dcurl_destroy()

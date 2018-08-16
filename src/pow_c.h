@@ -2,6 +2,7 @@
 #define POW_C_H_
 
 #include "trinary.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <pthread.h>
 #include "constants.h"
@@ -37,7 +38,7 @@ struct _pow_c_context {
     int mwm;
 };
 
-int PowC(void *pow_ctx);
+bool PowC(void *pow_ctx);
 
 #define HBITS 0xFFFFFFFFFFFFFFFFuLL
 #define LBITS 0x0000000000000000uLL

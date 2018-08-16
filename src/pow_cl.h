@@ -4,6 +4,7 @@
 #include "trinary.h"
 #include "clcontext.h"
 #include "constants.h"
+#include <stdbool.h>
 
 typedef struct _pow_cl_context PoW_CL_Context;
 
@@ -17,9 +18,7 @@ struct _pow_cl_context {
     int mwm;
 };
 
-int PowCL(void *pow_ctx);
-int pwork_ctx_init();
-void pwork_ctx_destroy(int context_size);
+bool PowCL(void *pow_ctx);
 
 /* Number of GPU devices supported */
 #define MAX_NUM_DEVICES 8
