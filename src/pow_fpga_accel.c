@@ -1,16 +1,16 @@
-/* 
- * Copyright (C) 2018 dcurl Developers. 
- * Copyright (c) 2018 Ievgen Korokyi. 
- * Use of this source code is governed by MIT license that can be 
+/*
+ * Copyright (C) 2018 dcurl Developers.
+ * Copyright (c) 2018 Ievgen Korokyi.
+ * Use of this source code is governed by MIT license that can be
  * found in the LICENSE file.
  */
 
+#include "pow_fpga_accel.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include "trinary.h"
 #include "constants.h"
-#include "pow_fpga_accel.h"
+#include "trinary.h"
 
 #define HPS_TO_FPGA_BASE 0xC0000000
 #define HPS_TO_FPGA_SPAN 0x0020000
@@ -25,12 +25,13 @@
 #define DEV_IDATA_FPGA "/dev/cpow-idata"
 #define DEV_ODATA_FPGA "/dev/cpow-odata"
 
-#define INT2STRING(I, S) {\
-	 S[0] = I & 0xff;\
-   	 S[1] = (I >> 8)  & 0xff;\
-   	 S[2] = (I >> 16) & 0xff;\
-   	 S[3] = (I >> 24) & 0xff;\
-	 }
+#define INT2STRING(I, S)         \
+    {                            \
+        S[0] = I & 0xff;         \
+        S[1] = (I >> 8) & 0xff;  \
+        S[2] = (I >> 16) & 0xff; \
+        S[3] = (I >> 24) & 0xff; \
+    }
 
 static int ctrl_fd;
 static int in_fd;
@@ -88,22 +89,22 @@ int pow_fpga_accel_init()
 
     return 1;
 
-fail_dev_open_mem_map:
-   close(devmem_fd);
-fail_dev_open_mem_open:
-   close(out_fd);
-fail_dev_open_odata:
-   close(in_fd);
-fail_dev_open_idata:
-   close(ctrl_fd);
-fail_dev_open_ctrl:
-   return 0;
+fail_to_open_memmap:
+    close(devmem_fd);
+fail_to_open_memopen:
+    close(out_fd);
+fail_to_open_odata:
+    close(in_fd);
+fail_to_open_idata:
+    close(ctrl_fd);
+fail_to_open_ctrl:
+    return 0;
 }
 
 void pow_fpga_accel_destroy()
 {
     int result;
-    
+
     close(in_fd);
     close(out_fd);
     close(ctrl_fd);
@@ -120,7 +121,8 @@ void pow_fpga_accel_destroy()
 int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
 {
     int8_t fpga_out_nonce_trits[NonceTrinarySize];
-    int8_t *otrytes = (int8_t *) malloc(sizeof(int8_t) * (transactionTrinarySize) / 3);
+    int8_t *otrytes =
+        (int8_t *) malloc(sizeof(int8_t) * (transactionTrinarySize) / 3);
 
     char result[4];
     char buf[4];
@@ -133,28 +135,30 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     if (!object_trits)
         return NULL;
 
-    if(write(in_fd, (char *) object_trits->data, transactionTrinarySize) < 0)
+    if (write(in_fd, (char *) object_trits->data, transactionTrinarySize) < 0)
         return NULL;
 
     INT2STRING(mwm, buf);
-    if(write(ctrl_fd, buf, sizeof(buf)) < 0)
+    if (write(ctrl_fd, buf, sizeof(buf)) < 0)
         return NULL;
-    if(read(ctrl_fd, result, sizeof(result)) < 0)
-        return NULL;
-
-    if(read(out_fd, (char *) fpga_out_nonce_trits, NonceTrinarySize) < 0)
+    if (read(ctrl_fd, result, sizeof(result)) < 0)
         return NULL;
 
-    Trits_t *object_nonce_trits = initTrits(fpga_out_nonce_trits, NonceTrinarySize);
+    if (read(out_fd, (char *) fpga_out_nonce_trits, NonceTrinarySize) < 0)
+        return NULL;
+
+    Trits_t *object_nonce_trits =
+        initTrits(fpga_out_nonce_trits, NonceTrinarySize);
     if (!object_nonce_trits)
-        return NULL;    
+        return NULL;
 
     Trytes_t *nonce_trytes = trytes_from_trits(object_nonce_trits);
     if (!nonce_trytes)
-        return NULL; 
-    
+        return NULL;
+
     memcpy(otrytes, itrytes, (NonceTrinaryOffset) / 3);
-    memcpy(otrytes + ((NonceTrinaryOffset) / 3), nonce_trytes->data, ((transactionTrinarySize) - (NonceTrinaryOffset)) / 3);
+    memcpy(otrytes + ((NonceTrinaryOffset) / 3), nonce_trytes->data,
+           ((transactionTrinarySize) - (NonceTrinaryOffset)) / 3);
 
     freeTrobject(object_trytes);
     freeTrobject(object_trits);
