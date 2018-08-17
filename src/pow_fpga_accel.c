@@ -122,16 +122,10 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     int8_t fpga_out_nonce_trits[NonceTrinarySize];
     int8_t *otrytes = (int8_t *) malloc(sizeof(int8_t) * (transactionTrinarySize) / 3);
 
-    size_t itrytelen = 0;
-    size_t itritlen = 0;
-
     char result[4];
     char buf[4];
 
-    itrytelen = strnlen((char *) itrytes, (transactionTrinarySize) / 3);
-    itritlen = 3 * itrytelen;
-
-    Trytes_t *object_trytes = initTrytes(itrytes, itrytelen);
+    Trytes_t *object_trytes = initTrytes(itrytes, (transactionTrinarySize) / 3);
     if (!object_trytes)
         return NULL;
 
@@ -139,7 +133,7 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     if (!object_trits)
         return NULL;
 
-    if(write(in_fd, (char *) object_trits->data, itritlen) < 0)
+    if(write(in_fd, (char *) object_trits->data, transactionTrinarySize) < 0)
         return NULL;
 
     INT2STRING(mwm, buf);
@@ -158,12 +152,9 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     Trytes_t *nonce_trytes = trytes_from_trits(object_nonce_trits);
     if (!nonce_trytes)
         return NULL; 
-
-    for (int i = 0; i < (transactionTrinarySize) / 3; i++)
-        if (i < (NonceTrinaryOffset) / 3)
-            otrytes[i] = itrytes[i];
-        else
-            otrytes[i] = nonce_trytes->data[i - (NonceTrinaryOffset) / 3];
+    
+    memcpy(otrytes, itrytes, (NonceTrinaryOffset) / 3);
+    memcpy(otrytes + ((NonceTrinaryOffset) / 3), nonce_trytes->data, ((transactionTrinarySize) - (NonceTrinaryOffset)) / 3);
 
     freeTrobject(object_trytes);
     freeTrobject(object_trits);
