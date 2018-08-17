@@ -25,9 +25,16 @@
 #define DEV_IDATA_FPGA "/dev/cpow-idata"
 #define DEV_ODATA_FPGA "/dev/cpow-odata"
 
-static FILE *ctrl_fd;
-static FILE *in_fd;
-static FILE *out_fd;
+#define INT2STRING(I, S) {\
+	 S[0] = I & 0xff;\
+   	 S[1] = (I >> 8)  & 0xff;\
+   	 S[2] = (I >> 16) & 0xff;\
+   	 S[3] = (I >> 24) & 0xff;\
+	 }
+
+static int ctrl_fd;
+static int in_fd;
+static int out_fd;
 static int devmem_fd;
 static void *fpga_regs_map;
 static uint32_t *cpow_map;
@@ -41,23 +48,23 @@ int pow_fpga_accel_init()
     fpga_regs_map = 0;
     cpow_map = 0;
 
-    ctrl_fd = fopen(DEV_CTRL_FPGA, "r+");
+    ctrl_fd = open(DEV_CTRL_FPGA, O_RDWR);
 
-    if (ctrl_fd == NULL) {
+    if (ctrl_fd < 0) {
         perror("cpow-ctrl open fail");
         goto fail_dev_open_ctrl;
     }
 
-    in_fd = fopen(DEV_IDATA_FPGA, "wb");
+    in_fd = open(DEV_IDATA_FPGA, O_RDWR);
 
-    if (in_fd == NULL) {
+    if (in_fd < 0) {
         perror("cpow-idata open fail");
         goto fail_dev_open_idata;
     }
 
-    out_fd = fopen(DEV_ODATA_FPGA, "rb");
+    out_fd = open(DEV_ODATA_FPGA, O_RDWR);
 
-    if (out_fd == NULL) {
+    if (out_fd < 0) {
         perror("cpow-odata open fail");
         goto fail_dev_open_odata;
     }
@@ -84,11 +91,11 @@ int pow_fpga_accel_init()
 fail_dev_open_mem_map:
    close(devmem_fd);
 fail_dev_open_mem_open:
-   fclose(out_fd);
+   close(out_fd);
 fail_dev_open_odata:
-   fclose(in_fd);
+   close(in_fd);
 fail_dev_open_idata:
-   fclose(ctrl_fd);
+   close(ctrl_fd);
 fail_dev_open_ctrl:
    return 0;
 }
@@ -97,9 +104,9 @@ void pow_fpga_accel_destroy()
 {
     int result;
     
-    fclose(in_fd);
-    fclose(out_fd);
-    fclose(ctrl_fd);
+    close(in_fd);
+    close(out_fd);
+    close(ctrl_fd);
 
     result = munmap(fpga_regs_map, HPS_TO_FPGA_SPAN);
 
@@ -118,7 +125,8 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     size_t itrytelen = 0;
     size_t itritlen = 0;
 
-    int result;
+    char result[4];
+    char buf[4];
 
     itrytelen = strnlen((char *) itrytes, (transactionTrinarySize) / 3);
     itritlen = 3 * itrytelen;
@@ -131,14 +139,17 @@ int8_t *PowFPGAAccel(int8_t *itrytes, int mwm, int index)
     if (!object_trits)
         return NULL;
 
-    fwrite((char *) object_trits->data, 1, itritlen, in_fd);
-    fflush(in_fd);
+    if(write(in_fd, (char *) object_trits->data, itritlen) < 0)
+        return NULL;
 
-    fwrite(&mwm, 1, 1, ctrl_fd);
-    fread(&result, sizeof(result), 1, ctrl_fd);
-    fflush(ctrl_fd);
+    INT2STRING(mwm, buf);
+    if(write(ctrl_fd, buf, sizeof(buf)) < 0)
+        return NULL;
+    if(read(ctrl_fd, result, sizeof(result)) < 0)
+        return NULL;
 
-    fread((char *) fpga_out_nonce_trits, 1, NonceTrinarySize, out_fd);
+    if(read(out_fd, (char *) fpga_out_nonce_trits, NonceTrinarySize) < 0)
+        return NULL;
 
     Trits_t *object_nonce_trits = initTrits(fpga_out_nonce_trits, NonceTrinarySize);
     if (!object_nonce_trits)
