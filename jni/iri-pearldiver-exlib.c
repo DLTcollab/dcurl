@@ -7,7 +7,7 @@
 JNIEXPORT jboolean JNICALL
 Java_com_iota_iri_hash_PearlDiver_exlib_1init(JNIEnv *env, jclass clazz)
 {
-    if (!dcurl_init(2, 1))
+    if (!dcurl_init())
         return JNI_FALSE;
     return JNI_TRUE;
 }
