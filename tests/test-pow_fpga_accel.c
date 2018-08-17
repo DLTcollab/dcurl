@@ -49,10 +49,13 @@ int main()
     /* test implementation of LampaLab's IOTA PoW FPGA with mwm = 14 */
     pow_fpga_accel_init();
     int8_t *ret_trytes = PowFPGAAccel((int8_t *)trytes, mwm, 0);
+    assert(ret_trytes);
     pow_fpga_accel_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
+    assert(trytes_t);
     Trytes_t *hash_trytes = hashTrytes(trytes_t);
+    assert(hash_trytes);
 
     /* Validation */
     Trits_t *ret_trits = trits_from_trytes(hash_trytes);
