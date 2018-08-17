@@ -31,7 +31,11 @@
 /* check whether dcurl is initialized */
 static bool isInitialized = false;
 
+#ifdef __APPLE__
+static dispatch_semaphore_t notify;
+#else
 static sem_t notify;
+#endif
 
 LIST_HEAD(IMPL_LIST);
 
