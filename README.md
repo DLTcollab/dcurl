@@ -10,10 +10,9 @@ enabled in multi-threaded execuction fashion, resulting in much faster proof-of-
 Reference Implementation (IRI).
 
 # Warning
-* You need to configure OpenCL platform and device by yourself in ```src/clcontext.c```
 * You need to configure paths and flags of OpenCL installation in ```mk/opencl.mk```
+* dcurl will automatically configure all the GPU divices on your platform.
 * Check JDK installation and set JAVA_HOME if you wish to specify.
-* Only one GPU can be facilitated with dcurl at the moment.
 * If your platform doesn't support Intel SSE, dcurl would be compiled with naive implementation.
 
 # Build Instructions
@@ -69,9 +68,6 @@ $ make BUILD_AVX=1 check
 ```
 
 # Tweaks
-* ```dcurl_init(2, 1)``` in ```jni/iri-pearldiver-exlib.c```
-    * ```2``` means 2 pow tasks executed in CPU,
-    * ```1``` means 1 pow tasks executed in GPU at the same time.
 * Number of threads to find nonce in CPU
     * ```$ export DCURL_NUM_CPU=26```
 
@@ -95,11 +91,6 @@ Supported IRI version: 1.5.3
 * Generate a drop-in replacement for `ccurl` and acquire performance boost!
     * ```$ make BUILD_COMPAT=1 check```
     * ```$ cp ./build/libdcurl.so <iota-gpu-pow>/libccurl.so```
-
-# TODO
-* ~~More test program :(~~
-* ~~Pre-compile OpenCL kernel functions and include it in dcurl.~~
-* Automatically configure dcurl after init()
 
 # Licensing
 
