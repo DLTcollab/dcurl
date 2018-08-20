@@ -34,10 +34,13 @@ ifeq ("$(BUILD_SSE)","1")
 CFLAGS += -msse2 -DENABLE_SSE
 endif
 endif
-endif
 
 ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
+endif
+
+ifeq ("$(BUILD_FPGA_ACCEL)","1")
+CFLAGS += -DENABLE_FPGA_ACCEL
 endif
 
 ifeq ("$(BUILD_JNI)","1")

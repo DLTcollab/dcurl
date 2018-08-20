@@ -1,5 +1,8 @@
 /* Test program for pow_fpga_accel */
 #include "common.h"
+#include "implcontext.h"
+
+extern ImplContext PoWFPGAAccel_Context;
 
 int main()
 {
@@ -46,11 +49,15 @@ int main()
 
     int mwm = 14;
 
-    /* test implementation of LampaLab's IOTA PoW FPGA with mwm = 14 */
-    pow_fpga_accel_init();
-    int8_t *ret_trytes = PowFPGAAccel((int8_t *)trytes, mwm, 0);
+    /* test implementation of the PoW FPGA accelerator with mwm = 14 */
+    initializeImplContext(&PoWFPGAAccel_Context);
+    void *pow_ctx =
+        getPoWContext(&PoWFPGAAccel_Context, (int8_t *) trytes, mwm);
+    assert(pow_ctx);
+    doThePoW(&PoWFPGAAccel_Context, pow_ctx);
+    int8_t *ret_trytes = getPoWResult(&PoWFPGAAccel_Context, pow_ctx);
     assert(ret_trytes);
-    pow_fpga_accel_destroy();
+    freePoWContext(&PoWFPGAAccel_Context, pow_ctx);
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
     assert(trytes_t);
