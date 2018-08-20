@@ -45,9 +45,12 @@ int main()
     int length_test_case = 2673;
 
     Trytes_t *answer = initTrytes((signed char *) "WPM9JCTQH9QHBHBJCODWDNPSLFLQDZADRAEZTZDL9OEGTVRZARVLVJHZIMPBPCTAIYJKWTUSRKNNTMFOQ", 81);
+    assert(answer);
     Trytes_t *trytes =
         initTrytes((signed char *) trytes_test_case, length_test_case);
+    assert(trytes);
     Trytes_t *ret_trytes = hashTrytes(trytes);
+    assert(ret_trytes);
 
     int ret = compareTrobject(ret_trytes, answer);
 

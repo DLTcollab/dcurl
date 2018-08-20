@@ -1,7 +1,7 @@
 OUT ?= ./build
 SRC := src
 
-CFLAGS = -Wall -fPIC
+CFLAGS = -Wall -fPIC -std=c99
 LDFLAGS = \
 	-lpthread
 
@@ -23,17 +23,14 @@ else
 CFLAGS += -Ofast
 endif
 
-SSE_S := $(shell grep -o sse /proc/cpuinfo | head -n 1)
+# Check specific CPU features available on build host
+include mk/cpu-features.mk
 
-# FIXME: avoid hardcoded architecture flags. We might support advanced SIMD
-# instructions for Intel and Arm later.
 ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -mavx2 -DENABLE_AVX
 else
-ifeq ("$(BUILD_FPGA_ACCEL)","1")
-CFLAGS += -DENABLE_FPGA_ACCEL
-else
-ifeq ($(SSE_S),sse)
+BUILD_SSE := $(call cpu_feature,SSE)
+ifeq ("$(BUILD_SSE)","1")
 CFLAGS += -msse2 -DENABLE_SSE
 endif
 endif
@@ -43,38 +40,32 @@ ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
 
-ifeq ("$(BUILD_FPGA_ACCEL)","1")
-include mk/fpga-accel.mk
-endif
-
 ifeq ("$(BUILD_JNI)","1")
 include mk/java.mk
 endif
 
 TESTS = \
 	trinary \
-	curl
+	curl \
+	dcurl \
+	multi-pow
 
 ifeq ("$(BUILD_AVX)","1")
 TESTS += \
-	pow_avx \
-	multi_pow_cpu
+	pow_avx
 else
-ifeq ($(SSE_S),sse)
+ifeq ("$(BUILD_SSE)","1")
 TESTS += \
-	pow_sse \
-	multi_pow_cpu
+	pow_sse
 else
 TESTS += \
-	pow_c \
-	multi_pow_cpu
+	pow_c
 endif
 endif
 
 ifeq ("$(BUILD_GPU)","1")
 TESTS += \
-	pow_cl \
-	multi_pow_gpu
+	pow_cl
 endif
 
 ifeq ("$(BUILD_COMPAT)", "1")
@@ -97,12 +88,13 @@ OBJS = \
 	curl.o \
 	constants.o \
 	trinary.o \
-	dcurl.o
+	dcurl.o \
+	implcontext.o
 
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
 else
-ifeq ($(SSE_S),sse)
+ifeq ("$(BUILD_SSE)","1")
 OBJS += pow_sse.o
 else
 OBJS += pow_c.o

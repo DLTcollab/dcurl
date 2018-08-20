@@ -13,10 +13,7 @@
 #include "constants.h"
 #include "cpu-utils.h"
 #include "curl.h"
-
-static pthread_mutex_t *pow_sse_mutex;
-static int *stopSSE;
-static int64_t *countSSE;
+#include "implcontext.h"
 
 static const int indices[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
@@ -169,13 +166,13 @@ static int64_t loop128(__m128i *lmid,
                        __m128i *hmid,
                        int m,
                        int8_t *nonce,
-                       int id)
+                       int *stopPoW)
 {
     int n = 0;
     int64_t i = 0;
     __m128i lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
 
-    for (i = 0; !incr128(lmid, hmid) && !stopSSE[id]; i++) {
+    for (i = 0; !incr128(lmid, hmid) && !*stopPoW; i++) {
         for (int j = 0; j < STATE_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
@@ -225,7 +222,8 @@ static void incrN128(int n, __m128i *mid_low, __m128i *mid_high)
     }
 }
 
-static int64_t pwork128(int8_t mid[], int mwm, int8_t nonce[], int n, int id)
+static int64_t pwork128(int8_t mid[], int mwm, int8_t nonce[], int n,
+                        int *stopPoW)
 {
     __m128i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
     para128(mid, lmid, hmid);
@@ -243,26 +241,23 @@ static int64_t pwork128(int8_t mid[], int mwm, int8_t nonce[], int n, int id)
     hmid[offset + 4] = _mm_set_epi64x(HIGH40, HIGH41);
     incrN128(n, lmid, hmid);
 
-    return loop128(lmid, hmid, mwm, nonce, id);
+    return loop128(lmid, hmid, mwm, nonce, stopPoW);
 }
 
 static void *pworkThread(void *pitem)
 {
     Pwork_struct *pworkInfo = (Pwork_struct *) pitem;
-    int task_id = pworkInfo->index;
-    pworkInfo->ret = pwork128(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
-                              pworkInfo->n, task_id);
+    pworkInfo->ret = pwork128(pworkInfo->mid, pworkInfo->mwm,
+                              pworkInfo->nonce, pworkInfo->n,
+                              pworkInfo->stopPoW);
 
-    pthread_mutex_lock(&pow_sse_mutex[task_id]);
+    pthread_mutex_lock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
-        stopSSE[task_id] = 1;
-        countSSE[task_id] += pworkInfo->ret;
+        *pworkInfo->stopPoW = 1;
         /* This means this thread got the result */
         pworkInfo->n = -1;
-    } else {
-        countSSE[task_id] += 1 - pworkInfo->ret;
     }
-    pthread_mutex_unlock(&pow_sse_mutex[task_id]);
+    pthread_mutex_unlock(pworkInfo->lock);
     pthread_exit(NULL);
 }
 
@@ -305,82 +300,47 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     return c_state;
 }
 
-static int8_t *nonce_to_result(Trytes_t *tx, Trytes_t *nonce)
+static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
 {
     int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
-    int8_t *rst = (int8_t *) malloc(rst_len + 1);
-    if (!rst)
-        return NULL;
 
-    memcpy(rst, tx->data, tx->len - NonceTrinarySize / 3);
-    memcpy(rst + tx->len - NonceTrinarySize / 3, nonce->data,
+    memcpy(ret, tx->data, tx->len - NonceTrinarySize / 3);
+    memcpy(ret + tx->len - NonceTrinarySize / 3, nonce->data,
            rst_len - (tx->len - NonceTrinarySize / 3));
-    rst[rst_len] = '\0';
-    return rst;
 }
 
-static size_t nproc;
-
-int pow_sse_init(int num_task)
+bool PowSSE(void *pow_ctx)
 {
-    pow_sse_mutex =
-        (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t) * num_task);
-    stopSSE = (int *) malloc(sizeof(int) * num_task);
-    countSSE = (int64_t *) malloc(sizeof(int64_t) * num_task);
+    PoW_SSE_Context *ctx = (PoW_SSE_Context *) pow_ctx;
 
-    if (!pow_sse_mutex || !stopSSE || !countSSE)
-        return 0;
+    /* Initialize the context */
+    ctx->stopPoW = 0;
+    pthread_mutex_init(&ctx->lock, NULL);
+    pthread_t *threads = ctx->threads;
+    Pwork_struct *pitem = ctx->pitem;
+    int8_t **nonce_array = ctx->nonce_array;
 
-    nproc = get_avail_nprocs();
-    return 1;
-}
-
-void pow_sse_destroy()
-{
-    free(pow_sse_mutex);
-    free(stopSSE);
-    free(countSSE);
-}
-
-int8_t *PowSSE(int8_t *trytes, int mwm, int index)
-{
-    stopSSE[index] = 0;
-    countSSE[index] = 0;
-
-    Trytes_t *trytes_t = initTrytes(trytes, 2673);
+    /* Prepare the input trytes for algorithm */
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_LENGTH / 3);
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
-        return NULL;
+        return false;
 
-    pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
-    if (!threads)
-        return NULL;
-
-    Pwork_struct *pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
-    if (!pitem)
-        return NULL;
-
-    /* Prepare nonce to each thread */
-    int8_t **nonce_array = (int8_t **) malloc(sizeof(int8_t *) * nproc);
-    if (!nonce_array)
-        return NULL;
-
-    /* init pthread mutex */
-    pthread_mutex_init(&pow_sse_mutex[index], NULL);
-
-    for (int i = 0; i < nproc; i++) {
+    /* Prepare arguments for pthread */
+    for (int i = 0; i < ctx->num_threads; i++) {
         pitem[i].mid = c_state;
-        pitem[i].mwm = mwm;
-        pitem[i].nonce = nonce_array[i] = (int8_t *) malloc(NonceTrinarySize);
+        pitem[i].mwm = ctx->mwm;
+        pitem[i].nonce = nonce_array[i];
         pitem[i].n = i;
+        pitem[i].lock = &ctx->lock;
+        pitem[i].stopPoW = &ctx->stopPoW;
         pitem[i].ret = 0;
-        pitem[i].index = index;
         pthread_create(&threads[i], NULL, pworkThread, (void *) &pitem[i]);
     }
 
     int completedIndex = -1;
-    for (int i = 0; i < nproc; i++) {
+    for (int i = 0; i < ctx->num_threads; i++) {
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
@@ -388,25 +348,99 @@ int8_t *PowSSE(int8_t *trytes, int mwm, int index)
 
     Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize);
     if (!nonce_t)
-        return NULL;
+        return false;
 
     Trytes_t *nonce = trytes_from_trits(nonce_t);
     if (!nonce)
-        return NULL;
+        return false;
 
-    int8_t *last_result = nonce_to_result(trytes_t, nonce);
+    nonce_to_result(trytes_t, nonce, ctx->output_trytes);
 
     /* Free memory */
     free(c_state);
-    for (int i = 0; i < nproc; i++) {
-        free(nonce_array[i]);
-    }
-    free(nonce_array);
-    free(threads);
-    free(pitem);
     freeTrobject(trytes_t);
     freeTrobject(nonce_t);
     freeTrobject(nonce);
 
-    return last_result;
+    return true;
 }
+
+static bool PoWSSE_Context_Initialize(ImplContext *impl_ctx)
+{
+    int nproc = get_avail_nprocs();
+    PoW_SSE_Context *ctx = (PoW_SSE_Context *) malloc(sizeof(PoW_SSE_Context) * impl_ctx->num_max_thread);
+    if(!ctx) return false;
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        ctx[i].threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
+        ctx[i].pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
+        ctx[i].nonce_array = (int8_t **) malloc(sizeof(int *) * nproc);
+        void *chunk = malloc(NonceTrinarySize * nproc);
+        if (!ctx[i].threads || !ctx[i].pitem || !ctx[i].nonce_array || !chunk) return false;
+        for (int j = 0; j < nproc; j++)
+            ctx[i].nonce_array[j] = (int8_t *) (chunk + j * NonceTrinarySize);
+        ctx[i].num_threads = nproc;
+        impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
+    }
+    impl_ctx->context = ctx;
+    pthread_mutex_init(&impl_ctx->lock, NULL);
+    return true;
+}
+
+static void PoWSSE_Context_Destroy(ImplContext *impl_ctx)
+{
+    PoW_SSE_Context *ctx = (PoW_SSE_Context *) impl_ctx->context;
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        free(ctx[i].threads);
+        free(ctx[i].pitem);
+        free(ctx[i].nonce_array[0]);
+        free(ctx[i].nonce_array);
+    }
+    free(ctx);
+}
+
+static void *PoWSSE_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
+{
+    pthread_mutex_lock(&impl_ctx->lock);
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        if (impl_ctx->bitmap & (0x1 << i)) {
+            impl_ctx->bitmap &= ~(0x1 << i);
+            pthread_mutex_unlock(&impl_ctx->lock);
+            PoW_SSE_Context *ctx = impl_ctx->context + sizeof(PoW_SSE_Context) * i;
+            memcpy(ctx->input_trytes, trytes, TRANSACTION_LENGTH / 3);
+            ctx->mwm = mwm;
+            ctx->indexOfContext = i;
+            return ctx;
+        }
+    }
+    pthread_mutex_unlock(&impl_ctx->lock);
+    return NULL; /* It should not happen */
+}
+
+static bool PoWSSE_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+{
+    pthread_mutex_lock(&impl_ctx->lock);
+    impl_ctx->bitmap |= 0x1 << ((PoW_SSE_Context *) pow_ctx)->indexOfContext;
+    pthread_mutex_unlock(&impl_ctx->lock);
+    return true;
+}
+
+static int8_t *PoWSSE_getPoWResult(void *pow_ctx)
+{
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_LENGTH / 3));
+    if (!ret) return NULL;
+    memcpy(ret, ((PoW_SSE_Context *) pow_ctx)->output_trytes, TRANSACTION_LENGTH / 3);
+    return ret;
+}
+
+ImplContext PoWSSE_Context = {
+    .context = NULL,
+    .bitmap = 0,
+    .num_max_thread = 2,
+    .num_working_thread = 0,
+    .initialize = PoWSSE_Context_Initialize,
+    .destroy = PoWSSE_Context_Destroy,
+    .getPoWContext = PoWSSE_getPoWContext,
+    .freePoWContext = PoWSSE_freePoWContext,
+    .doThePoW = PowSSE,
+    .getPoWResult = PoWSSE_getPoWResult,
+};

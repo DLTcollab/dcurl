@@ -1,8 +1,6 @@
-/* Test program for pow_sse */
+/* Test program for dcurl */
 #include "common.h"
-#include "implcontext.h"
-
-extern ImplContext PoWSSE_Context;
+#include "dcurl.h"
 
 int main()
 {
@@ -47,25 +45,21 @@ int main()
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999";
 
-    int mwm = 14;
+    int mwm = 9;
 
-    /* test SSE Implementation with mwm = 14 */
-    initializeImplContext(&PoWSSE_Context);
-    void *pow_ctx = getPoWContext(&PoWSSE_Context, (int8_t *) trytes, mwm);
-    assert(pow_ctx);
-    doThePoW(&PoWSSE_Context, pow_ctx);
-    int8_t *ret_trytes = getPoWResult(&PoWSSE_Context, pow_ctx);
+    /* test dcurl Implementation with mwm = 9 */
+    dcurl_init();
+    int8_t *ret_trytes = dcurl_entry((int8_t *) trytes, mwm);
     assert(ret_trytes);
-    freePoWContext(&PoWSSE_Context, pow_ctx);
+    dcurl_destroy();
 
     Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
     assert(trytes_t);
     Trytes_t *hash_trytes = hashTrytes(trytes_t);
     assert(hash_trytes);
-    Trits_t *ret_trits = trits_from_trytes(hash_trytes);
-    assert(ret_trits);
 
     /* Validation */
+    Trits_t *ret_trits = trits_from_trytes(hash_trytes);
     for (int i = 243 - 1; i >= 243 - mwm; i--) {
         assert(ret_trits->data[i] == 0);
     }
