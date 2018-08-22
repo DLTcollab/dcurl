@@ -3,18 +3,19 @@
 [![Build Status](https://travis-ci.org/DLTcollab/dcurl.svg?branch=dev)](https://travis-ci.org/DLTcollab/dcurl)
 ![Supported IRI version](https://img.shields.io/badge/Supported%20IRI%20Version-1.5.3-brightgreen.svg)
 
-Hardware-accelerated implementation for IOTA PearlDiver, which utilizes multi-threaded SIMD and GPU.
+Hardware-accelerated implementation for IOTA PearlDiver, which utilizes multi-threaded SIMD, FPGA and GPU.
 
 # Introduction
 dcurl exploits SIMD instructions on CPU and OpenCL on GPU. Both CPU and GPU accelerations can be
 enabled in multi-threaded execuction fashion, resulting in much faster proof-of-work (PoW) for IOTA
-Reference Implementation (IRI).
+Reference Implementation (IRI). Additionally, dcurl also supports the FPGA-accelerated solution further described in docs/FPGA-ACCEL.md
 
 # Warning
 * You need to configure paths and flags of OpenCL installation in ```mk/opencl.mk```
 * dcurl will automatically configure all the GPU divices on your platform.
 * Check JDK installation and set JAVA_HOME if you wish to specify.
 * If your platform doesn't support Intel SSE, dcurl would be compiled with naive implementation.
+* For the IOTA hardware accelerator, we integrate [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) into dcurl. Lampa Lab provides soc_system.rbf only for DE10-nano board. You need to synthesize to get soc_system.rbf for using Arrow SoCKit board and [this RBF file](https://github.com/ajblane/dcurl/releases/tag/v1.0-SoCKit) can be downloaded from our release. Moreover, you need to download [Lampa Lab-provided Linux image](https://github.com/LampaLab/iota_fpga/releases/tag/v0.1) to flash into the micro-SD card and root password is 123456. Finally, you also need to download dcurl into root directory.
 
 # Build Instructions
 * dcurl allows various combinations of build configurations to fit final use scenarios.
@@ -24,6 +25,7 @@ Reference Implementation (IRI).
     - ``BUILD_JNI``: build a shared library for IRI. The build system would generate JNI header file
                      downloading from [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface).
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
+    - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
 * Alternatively, you can specify conditional build as following:
 ```shell
 $ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1
@@ -66,6 +68,27 @@ $ make BUILD_AVX=1 check
         [ Verified ]
 *** Validating build/test-pow_avx ***
         [ Verified ]
+```
+
+* Test with Arrow SoCKit board
+```shell
+root@lampa:~# sh init_curl_pow.sh 
+root@lampa:~# cd dcurl
+root@lampa:~/dcurl# make BUILD_FPGA_ACCEL=1 check
+```
+
+* Expected Results
+```
+*** Validating build/test-trinary ***
+        [ Verified ]
+*** Validating build/test-curl ***
+        [ Verified ]
+*** Validating build/test-pow_c ***
+        [ Verified ]
+*** Validating build/test-multi_pow_cpu ***
+        [ Verified ]
+*** Validating build/test-pow_fpga_accel *** 
+        [ Verified ] 
 ```
 
 # Tweaks

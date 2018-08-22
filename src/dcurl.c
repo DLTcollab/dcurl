@@ -12,6 +12,9 @@
 #if defined(ENABLE_OPENCL)
 #include "pow_cl.h"
 #endif
+#if defined(ENABLE_FPGA_ACCEL)
+#include "pow_fpga_accel.h"
+#endif
 #include "trinary.h"
 #include "implcontext.h"
 #if defined(ENABLE_AVX)
@@ -51,6 +54,10 @@ extern ImplContext PoWC_Context;
 extern ImplContext PoWCL_Context;
 #endif
 
+#if defined(ENABLE_FPGA_ACCEL)
+extern ImplContext PoWFPGAAccel_Context;
+#endif
+
 bool dcurl_init()
 {
     bool ret = true;
@@ -65,6 +72,10 @@ bool dcurl_init()
 
 #if defined(ENABLE_OPENCL)
     ret &= registerImplContext(&PoWCL_Context);
+#endif
+
+#if defined(ENABLE_FPGA_ACCEL)
+    ret &= registerImplContext(&PoWFPGAAccel_Context);
 #endif
 
 #ifdef __APPLE__

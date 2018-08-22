@@ -12,3 +12,6 @@ BUILD_JNI ?= 0
 
 # Build cCurl compatible interface
 BUILD_COMPAT ?= 0
+
+# Build FPGA backend or not
+BUILD_FPGA_ACCEL ?= 0
