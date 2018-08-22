@@ -8,14 +8,14 @@ Hardware-accelerated implementation for IOTA PearlDiver, which utilizes multi-th
 # Introduction
 dcurl exploits SIMD instructions on CPU and OpenCL on GPU. Both CPU and GPU accelerations can be
 enabled in multi-threaded execuction fashion, resulting in much faster proof-of-work (PoW) for IOTA
-Reference Implementation (IRI).
+Reference Implementation (IRI). Additionally, dcurl also supports the FPGA-accelerated solution further described in docs/FPGA-ACCEL.md
 
 # Warning
 * You need to configure paths and flags of OpenCL installation in ```mk/opencl.mk```
 * dcurl will automatically configure all the GPU divices on your platform.
 * Check JDK installation and set JAVA_HOME if you wish to specify.
 * If your platform doesn't support Intel SSE, dcurl would be compiled with naive implementation.
-* For the IOTA hardware accelerator, we integrate [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) into dcurl. Lampa Lab supports soc_system.rbf only for DE10-nano board. You need to synthesize to get soc_system.rbf for using Arrow SoCKit board.
+* For the IOTA hardware accelerator, we integrate [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) into dcurl. Lampa Lab provides soc_system.rbf only for DE10-nano board. You need to synthesize to get soc_system.rbf for using Arrow SoCKit board and [this RBF file](https://github.com/ajblane/dcurl/releases/tag/v1.0-SoCKit) can be downloaded from our release. Moreover, you need to download [Lampa Lab-provided Linux image](https://github.com/LampaLab/iota_fpga/releases/tag/v0.1) to flash into the micro-SD card and root password is 123456. Finally, you also need to download dcurl into root directory.
 
 # Build Instructions
 * dcurl allows various combinations of build configurations to fit final use scenarios.
@@ -70,7 +70,7 @@ $ make BUILD_AVX=1 check
         [ Verified ]
 ```
 
-* Test with Arrow SoCKit board with [Download](https://github.com/LampaLab/iota_fpga/releases/tag/v0.1) Linux sd-card image, root password is 123456 and you need to download dcurl into root directory. 
+* Test with Arrow SoCKit board
 ```shell
 root@lampa:~# sh init_curl_pow.sh 
 root@lampa:~# cd dcurl

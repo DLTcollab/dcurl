@@ -1,0 +1,22 @@
+
+IOTA FPGA-accelerated solution for Dcurl
+----------------------------------------
+
+Dcurl supports IOTA FPGA-accelerated solutions to improve PoW performance. PoW calculation time for MWM=14 is between 0.001 and 0.8 second and 0.14 second in average and The time for MWM=15 is between 0.01 and 2 second and 0.42 second in average. Currently, it is experimented and verfied on Arrow Sockit board and Intel FPGA DE10-Nano board. We reuse the Lampa Lab-provied FPGA-accelerated solution. 
+
+Here is a brief summary of the tasks Lampa Lab have done:
+* Use Verilog to implement Curl & POW accelerators
+* Use System Verilog and UVM to verify the accelerators
+* Synthesize Curl & POW hardware accelerators for Intel FPGA DE10-Nano board and flash it into the board
+* Write Linux drivers in Gloden System Reference Design for Curl & POW hardware accelerators and verify them
+You want to known it much more and further look at [LampaLab/iota_fpga](https://github.com/LampaLab/iota_fpga)
+
+Here is a brief summary of the tasks we have done:
+* Resynthesize the POW hardware accelerator for Arrow Sockit board and flash it into the board
+* Integrate the IOTA PoW hardware accelerator into dcurl's implementation interface
+* Test and verify it
+
+
+ 
+
+
