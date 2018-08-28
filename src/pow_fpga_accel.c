@@ -54,11 +54,11 @@ static bool PoWFPGAAccel(void *pow_ctx)
     Trits_t *object_trits = trits_from_trytes(object_trytes);
     if (!object_trits)
         return false;
-    
-    lseek(ctx->in_fd,0,0);
-    lseek(ctx->ctrl_fd,0,0);
-    lseek(ctx->out_fd,0,0);
-    
+
+    lseek(ctx->in_fd, 0, 0);
+    lseek(ctx->ctrl_fd, 0, 0);
+    lseek(ctx->out_fd, 0, 0);
+
     if (write(ctx->in_fd, (char *) object_trits->data, transactionTrinarySize) <
         0)
         return false;
