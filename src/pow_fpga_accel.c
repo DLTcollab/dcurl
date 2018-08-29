@@ -132,14 +132,11 @@ static void *PoWFPGAAccel_getPoWContext(ImplContext *impl_ctx,
                                         int8_t *trytes,
                                         int mwm)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
-
     PoW_FPGA_Accel_Context *ctx = impl_ctx->context;
     memcpy(ctx->input_trytes, trytes, (transactionTrinarySize) / 3);
     ctx->mwm = mwm;
     ctx->indexOfContext = 0;
 
-    pthread_mutex_unlock(&impl_ctx->lock);
     return ctx;
 }
 
