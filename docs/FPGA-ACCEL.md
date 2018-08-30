@@ -20,5 +20,5 @@ Here is a brief summary of the tasks we have done:
 For IOTA FPGA-accelerated integration into dcurl, we consider one dcurl maps one FPGA board unlike the GPU-accelerated solution which is considered a multi-GPU scenario. 
 
 Here is a simple summary of integrating FPGA-accelerated solution into dcurl:
-* Do not have a responsibility to multi-thread management as possible
-* Do not implememt multi-threads
+* Only one thread is allowed to do FPGA PoW
+* No multi-thread management inside the FPGA Implementation Context is implemented
