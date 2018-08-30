@@ -7,18 +7,9 @@
 
 #include "pow_fpga_accel.h"
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #include "implcontext.h"
 #include "trinary.h"
-
-#define HPS_TO_FPGA_BASE 0xC0000000
-#define HPS_TO_FPGA_SPAN 0x0020000
-#define HASH_CNT_REG_OFFSET 4
-#define TICK_CNT_LOW_REG_OFFSET 5
-#define TICK_CNT_HI_REG_OFFSET 6
-#define MWM_MASK_REG_OFFSET 3
-#define CPOW_BASE 0
 
 /* Set FPGA configuration for device files */
 #define DEV_CTRL_FPGA "/dev/cpow-ctrl"
@@ -32,10 +23,6 @@
         S[2] = (I >> 16) & 0xff; \
         S[3] = (I >> 24) & 0xff; \
     }
-
-static int devmem_fd;
-static void *fpga_regs_map;
-static uint32_t *cpow_map;
 
 static bool PoWFPGAAccel(void *pow_ctx)
 {
@@ -95,119 +82,66 @@ static bool PoWFPGAAccel(void *pow_ctx)
 
 static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
 {
-    int i = 0;
-    devmem_fd = 0;
-    fpga_regs_map = 0;
-    cpow_map = 0;
-
-    PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) malloc(
-        sizeof(PoW_FPGA_Accel_Context) * impl_ctx->num_max_thread);
+    PoW_FPGA_Accel_Context *ctx =
+        (PoW_FPGA_Accel_Context *) malloc(sizeof(PoW_FPGA_Accel_Context));
     if (!ctx)
         goto fail_to_malloc;
 
-    for (i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx[i].ctrl_fd = open(DEV_CTRL_FPGA, O_RDWR);
-        if (ctx[i].ctrl_fd < 0) {
-            perror("cpow-ctrl open fail");
-            goto fail_to_open_ctrl;
-        }
-        ctx[i].in_fd = open(DEV_IDATA_FPGA, O_RDWR);
-        if (ctx[i].in_fd < 0) {
-            perror("cpow-idata open fail");
-            goto fail_to_open_idata;
-        }
-        ctx[i].out_fd = open(DEV_ODATA_FPGA, O_RDWR);
-        if (ctx[i].out_fd < 0) {
-            perror("cpow-odata open fail");
-            goto fail_to_open_odata;
-        }
-        impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
+    ctx->ctrl_fd = open(DEV_CTRL_FPGA, O_RDWR);
+    if (ctx->ctrl_fd < 0) {
+        perror("cpow-ctrl open fail");
+        goto fail_to_open_ctrl;
     }
+    ctx->in_fd = open(DEV_IDATA_FPGA, O_RDWR);
+    if (ctx->in_fd < 0) {
+        perror("cpow-idata open fail");
+        goto fail_to_open_idata;
+    }
+    ctx->out_fd = open(DEV_ODATA_FPGA, O_RDWR);
+    if (ctx->out_fd < 0) {
+        perror("cpow-odata open fail");
+        goto fail_to_open_odata;
+    }
+
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
 
-    devmem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if (devmem_fd < 0) {
-        perror("devmem open");
-        goto fail_to_open_memopen;
-    }
-
-    fpga_regs_map =
-        (uint32_t *) mmap(NULL, HPS_TO_FPGA_SPAN, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, devmem_fd, HPS_TO_FPGA_BASE);
-    if (fpga_regs_map == MAP_FAILED) {
-        perror("devmem mmap");
-        goto fail_to_open_memmap;
-    }
-
-    cpow_map = (uint32_t *) (fpga_regs_map + CPOW_BASE);
-
     return true;
 
-fail_to_open_memmap:
-    close(devmem_fd);
-fail_to_open_memopen:
-    close(ctx[i].out_fd);
 fail_to_open_odata:
-    close(ctx[i].in_fd);
+    close(ctx->in_fd);
 fail_to_open_idata:
-    close(ctx[i].ctrl_fd);
+    close(ctx->ctrl_fd);
 fail_to_open_ctrl:
 fail_to_malloc:
-    for (int j = i - 1; j > 0; j--) {
-        close(ctx[j].in_fd);
-        close(ctx[j].out_fd);
-        close(ctx[j].ctrl_fd);
-    }
     return false;
 }
 
 static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
 {
     PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) impl_ctx->context;
-    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        close(ctx[i].in_fd);
-        close(ctx[i].out_fd);
-        close(ctx[i].ctrl_fd);
-    }
+
+    close(ctx->in_fd);
+    close(ctx->out_fd);
+    close(ctx->ctrl_fd);
+
     free(ctx);
-
-    int result = munmap(fpga_regs_map, HPS_TO_FPGA_SPAN);
-    if (result < 0) {
-        perror("devmem munmap");
-    }
-
-    close(devmem_fd);
 }
 
 static void *PoWFPGAAccel_getPoWContext(ImplContext *impl_ctx,
                                         int8_t *trytes,
                                         int mwm)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
-    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        if (impl_ctx->bitmap & (0x1 << i)) {
-            impl_ctx->bitmap &= ~(0x1 << i);
-            pthread_mutex_unlock(&impl_ctx->lock);
-            PoW_FPGA_Accel_Context *ctx =
-                impl_ctx->context + sizeof(PoW_FPGA_Accel_Context) * i;
-            memcpy(ctx->input_trytes, trytes, (transactionTrinarySize) / 3);
-            ctx->mwm = mwm;
-            ctx->indexOfContext = i;
-            return ctx;
-        }
-    }
+    PoW_FPGA_Accel_Context *ctx = impl_ctx->context;
+    memcpy(ctx->input_trytes, trytes, (transactionTrinarySize) / 3);
+    ctx->mwm = mwm;
+    ctx->indexOfContext = 0;
 
-    pthread_mutex_unlock(&impl_ctx->lock);
-    return NULL; /* It should not happen */
+    return ctx;
 }
 
 static bool PoWFPGAAccel_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
-    impl_ctx->bitmap |= 0x1
-                        << ((PoW_FPGA_Accel_Context *) pow_ctx)->indexOfContext;
-    pthread_mutex_unlock(&impl_ctx->lock);
     return true;
 }
 
