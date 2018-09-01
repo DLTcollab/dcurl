@@ -32,7 +32,7 @@ endif
 SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,jni))
 SHELL_HACK := $(shell mkdir -p $(OUT)/com/iota/iri/hash)
 
-GITHUB_REPO ?= chenwei-tw/iri/feat/new_pow_interface
+GITHUB_REPO ?= chenwei-tw/iri/external-pow-interface
 PearlDriverSRC := src/main/java/com/iota/iri/hash/PearlDiver.java
 
 $(OUT)/com/iota/iri/hash/PearlDiver.java: $(OUT)/com/iota/iri/hash
