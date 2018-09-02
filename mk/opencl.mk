@@ -1,5 +1,5 @@
 # FIXME: perform sanity checks before compilation
-OPENCL_LIB ?= /usr/local/cuda-9.1/lib64
+OPENCL_LIB ?= /usr/local/cuda/lib64
 
 CFLAGS += \
         -DENABLE_OPENCL \
