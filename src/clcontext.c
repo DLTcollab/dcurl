@@ -119,15 +119,15 @@ static bool init_cl_buffer(CLContext *ctx)
 static bool init_BufferInfo(CLContext *ctx)
 {
     ctx->kernel_info.buffer_info[INDEX_OF_TRIT_HASH] =
-        (BufferInfo){sizeof(char) * HASH_LENGTH, CL_MEM_WRITE_ONLY};
+        (BufferInfo){sizeof(char) * HASH_TRITS_LENGTH, CL_MEM_WRITE_ONLY};
     ctx->kernel_info.buffer_info[INDEX_OF_MID_LOW] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
     ctx->kernel_info.buffer_info[INDEX_OF_MID_HIGH] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
     ctx->kernel_info.buffer_info[INDEX_OF_STATE_LOW] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
     ctx->kernel_info.buffer_info[INDEX_OF_STATE_HIGH] =
-        (BufferInfo){sizeof(int64_t) * STATE_LENGTH, CL_MEM_READ_WRITE, 2};
+        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
     ctx->kernel_info.buffer_info[INDEX_OF_MWM] =
         (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
     ctx->kernel_info.buffer_info[INDEX_OF_FOUND] =

@@ -32,8 +32,8 @@ struct _pow_avx_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
-    int8_t input_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
-    int8_t output_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
+    int8_t input_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
+    int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
 };
 
@@ -45,11 +45,8 @@ bool PowAVX(void *pow_ctx);
 #include <x86intrin.h>
 #endif
 
-#define HASH_LENGTH 243               // trits
-#define STATE_LENGTH 3 * HASH_LENGTH  // trits
-#define NONCE_LENGTH 81
 #define TX_LENGTH 2673  // trytes
-#define INCR_START HASH_LENGTH - NONCE_LENGTH + 4 + 27
+#define INCR_START HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27
 
 #ifdef __AVX2__
 #define HBITS 0xFFFFFFFFFFFFFFFFuLL

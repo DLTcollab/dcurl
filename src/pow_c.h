@@ -33,8 +33,8 @@ struct _pow_c_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
-    int8_t input_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
-    int8_t output_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
+    int8_t input_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
+    int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
 };
 
@@ -42,11 +42,8 @@ bool PowC(void *pow_ctx);
 
 #define HBITS 0xFFFFFFFFFFFFFFFFuLL
 #define LBITS 0x0000000000000000uLL
-#define HASH_LENGTH 243               // trits
-#define NONCE_LENGTH 81               // trits
-#define STATE_LENGTH 3 * HASH_LENGTH  // trits
 #define TX_LENGTH 2673                // trytes
-#define INCR_START HASH_LENGTH - NONCE_LENGTH + 4 + 27
+#define INCR_START HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27
 #define LOW0 \
     0xDB6DB6DB6DB6DB6DuLL  // 0b1101101101101101101101101101101101101101101101101101101101101101L;
 #define HIGH0 \

@@ -123,7 +123,7 @@ int main()
         assert(ret_trits);
 
         /* Validation */
-        for (int i = HASH_LENGTH - 1; i >= HASH_LENGTH - mwm; i--) {
+        for (int i = HASH_TRITS_LENGTH - 1; i >= HASH_TRITS_LENGTH - mwm; i--) {
             assert(ret_trits->data[i] == 0);
         }
 

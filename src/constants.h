@@ -8,12 +8,15 @@
 #define Depth 3
 #define Radix 3
 
+#define HASH_TRYTES_LENGTH 81
+#define NONCE_TRYTES_LENGTH 27
+#define STATE_TRYTES_LENGTH 3 * HASH_TRYTES_LENGTH
 #define TRANSACTION_TRYTES_LENGTH 2673
 
-#define HASH_LENGTH 243                                      // trits
-#define NONCE_LENGTH 81                                      // trits
-#define STATE_LENGTH 3 * HASH_LENGTH                         // trits
-#define TRANSACTION_LENGTH (TRANSACTION_TRYTES_LENGTH * 3)   // trits
+#define HASH_TRITS_LENGTH 243
+#define NONCE_TRITS_LENGTH 81
+#define STATE_TRITS_LENGTH 3 * HASH_TRITS_LENGTH
+#define TRANSACTION_TRITS_LENGTH (TRANSACTION_TRYTES_LENGTH * 3)
 
 #define SignatureMessageFragmentTrinaryOffset 0
 #define SignatureMessageFragmentTrinarySize 6561
