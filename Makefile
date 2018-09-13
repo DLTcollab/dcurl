@@ -51,32 +51,11 @@ TESTS = \
 	trinary \
 	curl \
 	dcurl \
-	multi-pow
-
-ifeq ("$(BUILD_AVX)","1")
-TESTS += \
-	pow_avx
-else
-ifeq ("$(BUILD_SSE)","1")
-TESTS += \
-	pow_sse
-else
-TESTS += \
-	pow_c
-endif
-endif
-
-ifeq ("$(BUILD_GPU)","1")
-TESTS += \
-	pow_cl
-endif
+	multi-pow \
+	pow
 
 ifeq ("$(BUILD_COMPAT)", "1")
 TESTS += ccurl-multi_pow
-endif
-
-ifeq ("$(BUILD_FPGA_ACCEL)","1")
-TESTS += pow_fpga_accel
 endif
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))

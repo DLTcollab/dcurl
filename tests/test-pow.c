@@ -1,8 +1,40 @@
-/* Test program for pow_sse */
+/* Test program for pow_*.c */
 #include "common.h"
 #include "implcontext.h"
 
+#if defined(ENABLE_AVX)
+extern ImplContext PoWAVX_Context;
+#elif defined(ENABLE_SSE)
 extern ImplContext PoWSSE_Context;
+#else
+extern ImplContext PoWC_Context;
+#endif
+
+#if defined(ENABLE_OPENCL)
+extern ImplContext PoWCL_Context;
+#endif
+
+#if defined(ENABLE_FPGA_ACCEL)
+extern ImplContext PoWFPGAAccel_Context;
+#endif
+
+const char *description[ ] = {
+#if defined(ENABLE_AVX)
+    "CPU - AVX",
+#elif defined(ENABLE_SSE)
+    "CPU - SSE",
+#else
+    "CPU - pure C",
+#endif
+
+#if defined(ENABLE_OPENCL)
+    "GPU - OpenCL",
+#endif
+
+#if defined(ENABLE_FPGA_ACCEL)
+    "FPGA",
+#endif
+};
 
 int main()
 {
@@ -49,31 +81,59 @@ int main()
 
     int mwm = 14;
 
-    /* test SSE Implementation with mwm = 14 */
-    initializeImplContext(&PoWSSE_Context);
-    void *pow_ctx = getPoWContext(&PoWSSE_Context, (int8_t *) trytes, mwm);
-    assert(pow_ctx);
-    doThePoW(&PoWSSE_Context, pow_ctx);
-    int8_t *ret_trytes = getPoWResult(&PoWSSE_Context, pow_ctx);
-    assert(ret_trytes);
-    freePoWContext(&PoWSSE_Context, pow_ctx);
+    ImplContext ImplContextArr[ ] = {
+#if defined(ENABLE_AVX)
+        PoWAVX_Context,
+#elif defined(ENABLE_SSE)
+        PoWSSE_Context,
+#else
+        PoWC_Context,
+#endif
 
-    Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
-    assert(trytes_t);
-    Trytes_t *hash_trytes = hashTrytes(trytes_t);
-    assert(hash_trytes);
-    Trits_t *ret_trits = trits_from_trytes(hash_trytes);
-    assert(ret_trits);
+#if defined(ENABLE_OPENCL)
+        PoWCL_Context,
+#endif
 
-    /* Validation */
-    for (int i = 243 - 1; i >= 243 - mwm; i--) {
-        assert(ret_trits->data[i] == 0);
+#if defined(ENABLE_FPGA_ACCEL)
+        PoWFPGAAccel_Context,
+#endif
+    };
+
+
+    for (int idx = 0; idx < sizeof(ImplContextArr) / sizeof(ImplContext); idx++) {
+        printf("%s\n",description[idx]);
+
+        ImplContext *PoW_Context_ptr = &ImplContextArr[idx];
+
+        /* test implementation with mwm = 14 */
+        initializeImplContext(PoW_Context_ptr);
+        void *pow_ctx = getPoWContext(PoW_Context_ptr, (int8_t *) trytes, mwm);
+        assert(pow_ctx);
+        doThePoW(PoW_Context_ptr, pow_ctx);
+        int8_t *ret_trytes = getPoWResult(PoW_Context_ptr, pow_ctx);
+        assert(ret_trytes);
+        freePoWContext(PoW_Context_ptr, pow_ctx);
+        destroyImplContext(PoW_Context_ptr);
+
+        Trytes_t *trytes_t = initTrytes(ret_trytes, TRANSACTION_TRYTES_LENGTH);
+        assert(trytes_t);
+        Trytes_t *hash_trytes = hashTrytes(trytes_t);
+        assert(hash_trytes);
+        Trits_t *ret_trits = trits_from_trytes(hash_trytes);
+        assert(ret_trits);
+
+        /* Validation */
+        for (int i = HASH_LENGTH - 1; i >= HASH_LENGTH - mwm; i--) {
+            assert(ret_trits->data[i] == 0);
+        }
+
+        free(ret_trytes);
+        freeTrobject(trytes_t);
+        freeTrobject(hash_trytes);
+        freeTrobject(ret_trits);
+
+        printf("Success.\n");
     }
-
-    free(ret_trytes);
-    freeTrobject(trytes_t);
-    freeTrobject(hash_trytes);
-    freeTrobject(ret_trits);
 
     return 0;
 }
