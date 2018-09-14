@@ -13,8 +13,8 @@ struct _pow_cl_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
-    int8_t input_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
-    int8_t output_trytes[TRANSACTION_LENGTH / 3]; /* 2673 */
+    int8_t input_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
+    int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
 };
 

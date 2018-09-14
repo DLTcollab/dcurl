@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "constants.h"
 #include "cpu-utils.h"
 #include "curl.h"
 #include "implcontext.h"
@@ -70,11 +69,11 @@ static void transform128(__m128i *lmid, __m128i *hmid)
 {
     int t1, t2;
     __m128i alpha, beta, gamma, delta;
-    __m128i *lto = lmid + STATE_LENGTH, *hto = hmid + STATE_LENGTH;
+    __m128i *lto = lmid + STATE_TRITS_LENGTH, *hto = hmid + STATE_TRITS_LENGTH;
     __m128i *lfrom = lmid, *hfrom = hmid;
 
     for (int r = 0; r < 80; r++) {
-        for (int j = 0; j < STATE_LENGTH; j++) {
+        for (int j = 0; j < STATE_TRITS_LENGTH; j++) {
             t1 = indices[j];
             t2 = indices[j + 1];
             alpha = lfrom[t1];
@@ -90,7 +89,7 @@ static void transform128(__m128i *lmid, __m128i *hmid)
         lto = lswap;
         hto = hswap;
     }
-    for (int j = 0; j < HASH_LENGTH; j++) {
+    for (int j = 0; j < HASH_TRITS_LENGTH; j++) {
         t1 = indices[j];
         t2 = indices[j + 1];
         alpha = lfrom[t1];
@@ -108,14 +107,14 @@ static int incr128(__m128i *mid_low, __m128i *mid_high)
     __m128i carry;
     carry = _mm_set_epi64x(LOW00, LOW01);
 
-    for (i = INCR_START; i < HASH_LENGTH && (i == INCR_START || carry[0]);
+    for (i = INCR_START; i < HASH_TRITS_LENGTH && (i == INCR_START || carry[0]);
          i++) {
         __m128i low = mid_low[i], high = mid_high[i];
         mid_low[i] = high ^ low;
         mid_high[i] = low;
         carry = high & (~low);
     }
-    return i == HASH_LENGTH;
+    return i == HASH_TRITS_LENGTH;
 }
 
 static void seri128(__m128i *low, __m128i *high, int n, int8_t *r)
@@ -127,17 +126,17 @@ static void seri128(__m128i *low, __m128i *high, int n, int8_t *r)
         index = 1;
     }
 
-    for (int i = HASH_LENGTH - NONCE_LENGTH; i < HASH_LENGTH; i++) {
+    for (int i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH; i++) {
         uint64_t ll = (low[i][index] >> n) & 1;
         uint64_t hh = (high[i][index] >> n) & 1;
         if (hh == 0 && ll == 1) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = -1;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = -1;
         }
         if (hh == 1 && ll == 1) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = 0;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = 0;
         }
         if (hh == 1 && ll == 0) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = 1;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = 1;
         }
     }
 }
@@ -146,7 +145,7 @@ static int check128(__m128i *l, __m128i *h, int m)
 {
     __m128i nonce_probe = _mm_set_epi64x(HBITS, HBITS);
 
-    for (int i = HASH_LENGTH - m; i < HASH_LENGTH; i++) {
+    for (int i = HASH_TRITS_LENGTH - m; i < HASH_TRITS_LENGTH; i++) {
         nonce_probe &= ~(l[i] ^ h[i]);
         if (nonce_probe[0] == LBITS && nonce_probe[1] == LBITS) {
             return -1;
@@ -170,17 +169,17 @@ static int64_t loop128(__m128i *lmid,
 {
     int n = 0;
     int64_t i = 0;
-    __m128i lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
+    __m128i lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
 
     for (i = 0; !incr128(lmid, hmid) && !*stopPoW; i++) {
-        for (int j = 0; j < STATE_LENGTH; j++) {
+        for (int j = 0; j < STATE_TRITS_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
         }
 
         transform128(lcpy, hcpy);
 
-        if ((n = check128(lcpy + STATE_LENGTH, hcpy + STATE_LENGTH, m)) >= 0) {
+        if ((n = check128(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH, m)) >= 0) {
             seri128(lmid, hmid, n, nonce);
             return i * 128;
         }
@@ -190,7 +189,7 @@ static int64_t loop128(__m128i *lmid,
 
 static void para128(int8_t in[], __m128i l[], __m128i h[])
 {
-    for (int i = 0; i < STATE_LENGTH; i++) {
+    for (int i = 0; i < STATE_TRITS_LENGTH; i++) {
         switch (in[i]) {
         case 0:
             l[i] = _mm_set_epi64x(HBITS, HBITS);
@@ -212,8 +211,8 @@ static void incrN128(int n, __m128i *mid_low, __m128i *mid_high)
 {
     for (int j = 0; j < n; j++) {
         __m128i carry = _mm_set_epi64x(HBITS, HBITS);
-        for (int i = HASH_LENGTH * 2 / 3 + 4;
-             i < HASH_LENGTH * 2 / 3 + 4 + 27 && carry[0]; i++) {
+        for (int i = HASH_TRYTES_LENGTH * 2 + 4;
+             i < HASH_TRYTES_LENGTH * 2 + 4 + 27 && carry[0]; i++) {
             __m128i low = mid_low[i], high = mid_high[i];
             mid_low[i] = high ^ low;
             mid_high[i] = low;
@@ -225,9 +224,9 @@ static void incrN128(int n, __m128i *mid_low, __m128i *mid_high)
 static int64_t pwork128(int8_t mid[], int mwm, int8_t nonce[], int n,
                         int *stopPoW)
 {
-    __m128i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
+    __m128i lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
     para128(mid, lmid, hmid);
-    int offset = HASH_LENGTH - NONCE_LENGTH;
+    int offset = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH;
 
     lmid[offset] = _mm_set_epi64x(LOW00, LOW01);
     hmid[offset] = _mm_set_epi64x(HIGH00, HIGH01);
@@ -321,7 +320,7 @@ bool PowSSE(void *pow_ctx)
     int8_t **nonce_array = ctx->nonce_array;
 
     /* Prepare the input trytes for algorithm */
-    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_LENGTH / 3);
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
@@ -406,7 +405,7 @@ static void *PoWSSE_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm
             impl_ctx->bitmap &= ~(0x1 << i);
             pthread_mutex_unlock(&impl_ctx->lock);
             PoW_SSE_Context *ctx = impl_ctx->context + sizeof(PoW_SSE_Context) * i;
-            memcpy(ctx->input_trytes, trytes, TRANSACTION_LENGTH / 3);
+            memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;
             return ctx;
@@ -426,9 +425,9 @@ static bool PoWSSE_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWSSE_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_LENGTH / 3));
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
     if (!ret) return NULL;
-    memcpy(ret, ((PoW_SSE_Context *) pow_ctx)->output_trytes, TRANSACTION_LENGTH / 3);
+    memcpy(ret, ((PoW_SSE_Context *) pow_ctx)->output_trytes, TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 

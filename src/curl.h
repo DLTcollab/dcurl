@@ -1,10 +1,8 @@
 #ifndef CURL_H_
 #define CURL_H_
 
+#include "constants.h"
 #include "trinary.h"
-
-#define HASH_LENGTH 243
-#define STATE_LENGTH 3 * HASH_LENGTH
 
 typedef struct _curl {
     Trits_t *state;

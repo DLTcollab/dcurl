@@ -18,7 +18,6 @@
 #include <string.h>
 #include "curl.h"
 #include "clcontext.h"
-#include "constants.h"
 #include "implcontext.h"
 
 static CLContext _opencl_ctx[MAX_NUM_DEVICES];
@@ -57,7 +56,7 @@ static void init_state(int8_t *state,
                        int64_t *mid_high,
                        size_t offset)
 {
-    for (int i = 0; i < STATE_LENGTH; i++) {
+    for (int i = 0; i < STATE_TRITS_LENGTH; i++) {
         switch (state[i]) {
         case 0:
             mid_low[i] = HIGH_BITS;
@@ -90,15 +89,15 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
     CLContext *titan = ctx;
     global_offset = 0;
     num_groups = titan->num_cores;
-    local_work_size = STATE_LENGTH;
+    local_work_size = STATE_TRITS_LENGTH;
     while (local_work_size > titan->num_work_group) {
         local_work_size /= 3;
     }
 
     global_work_size = local_work_size * num_groups;
 
-    int64_t mid_low[STATE_LENGTH] = {0}, mid_high[STATE_LENGTH] = {0};
-    init_state(state, mid_low, mid_high, HASH_LENGTH - NONCE_LENGTH);
+    int64_t mid_low[STATE_TRITS_LENGTH] = {0}, mid_high[STATE_TRITS_LENGTH] = {0};
+    init_state(state, mid_low, mid_high, HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH);
 
     if (!write_cl_buffer(titan, mid_low, mid_high, mwm, 32))
         return NULL;
@@ -136,12 +135,12 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
         return NULL; /* Running "finalize" kernel function failed */
     }
 
-    int8_t *buf = malloc(HASH_LENGTH);
+    int8_t *buf = malloc(HASH_TRITS_LENGTH);
     if (!buf) return NULL;
 
     if (found > 0) {
         if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[INDEX_OF_TRIT_HASH],
-                                              CL_TRUE, 0, HASH_LENGTH * sizeof(int8_t), buf,
+                                              CL_TRUE, 0, HASH_TRITS_LENGTH * sizeof(int8_t), buf,
                                               1, &ev, NULL)) {
             return NULL; /* Read buffer failed */
         }
@@ -192,7 +191,7 @@ bool PowCL(void *pow_ctx)
 {
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
-    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_LENGTH / 3);
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
     Trits_t *tr = trits_from_trytes(trytes_t);
     if (!tr)
         return false;
@@ -205,11 +204,11 @@ bool PowCL(void *pow_ctx)
     if (!ret)
         return false;
 
-    memcpy(&tr->data[TRANSACTION_LENGTH - HASH_LENGTH], ret,
-           HASH_LENGTH * sizeof(int8_t));
+    memcpy(&tr->data[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH], ret,
+           HASH_TRITS_LENGTH * sizeof(int8_t));
 
     Trytes_t *last = trytes_from_trits(tr);
-    memcpy(ctx->output_trytes, last->data, TRANSACTION_LENGTH / 3);
+    memcpy(ctx->output_trytes, last->data, TRANSACTION_TRYTES_LENGTH);
 
     freeTrobject(tr);
     freeTrobject(trytes_t);
@@ -248,7 +247,7 @@ static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
             impl_ctx->bitmap &= ~(0x1 << i);
             pthread_mutex_unlock(&impl_ctx->lock);
             PoW_CL_Context *ctx = impl_ctx->context + sizeof(PoW_CL_Context) * i;
-            memcpy(ctx->input_trytes, trytes, TRANSACTION_LENGTH / 3);
+            memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;
             return ctx;
@@ -268,9 +267,9 @@ static bool PoWCL_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWCL_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_LENGTH / 3));
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
     if (!ret) return NULL;
-    memcpy(ret, ((PoW_CL_Context *) pow_ctx)->output_trytes, TRANSACTION_LENGTH / 3);
+    memcpy(ret, ((PoW_CL_Context *) pow_ctx)->output_trytes, TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 

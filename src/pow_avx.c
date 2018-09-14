@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "constants.h"
 #include "cpu-utils.h"
 #include "curl.h"
 #include "implcontext.h"
@@ -72,11 +71,11 @@ static void transform256(__m256i *lmid, __m256i *hmid)
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     int t1, t2;
     __m256i alpha, beta, gamma, delta, ngamma;
-    __m256i *lto = lmid + STATE_LENGTH, *hto = hmid + STATE_LENGTH;
+    __m256i *lto = lmid + STATE_TRITS_LENGTH, *hto = hmid + STATE_TRITS_LENGTH;
     __m256i *lfrom = lmid, *hfrom = hmid;
 
     for (int r = 0; r < 80; r++) {
-        for (int j = 0; j < STATE_LENGTH; j++) {
+        for (int j = 0; j < STATE_TRITS_LENGTH; j++) {
             t1 = indices[j];
             t2 = indices[j + 1];
 
@@ -101,7 +100,7 @@ static void transform256(__m256i *lmid, __m256i *hmid)
         lto = lswap;
         hto = hswap;
     }
-    for (int j = 0; j < HASH_LENGTH; j++) {
+    for (int j = 0; j < HASH_TRITS_LENGTH; j++) {
         t1 = indices[j];
         t2 = indices[j + 1];
         alpha = lfrom[t1];
@@ -123,7 +122,7 @@ static int incr256(__m256i *mid_low, __m256i *mid_high)
     int i;
     __m256i carry = _mm256_set_epi64x(LOW00, LOW01, LOW02, LOW03);
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
-    for (i = INCR_START; i < HASH_LENGTH && (i == INCR_START || carry[0]);
+    for (i = INCR_START; i < HASH_TRITS_LENGTH && (i == INCR_START || carry[0]);
          i++) {
         __m256i low = mid_low[i], high = mid_high[i];
         __m256i nlow = _mm256_andnot_si256(low, one);
@@ -131,7 +130,7 @@ static int incr256(__m256i *mid_low, __m256i *mid_high)
         mid_high[i] = low;
         carry = _mm256_and_si256(nlow, high); /* high & (~low) */
     }
-    return i == HASH_LENGTH;
+    return i == HASH_TRITS_LENGTH;
 }
 
 static void seri256(__m256i *low, __m256i *high, int n, int8_t *r)
@@ -139,17 +138,17 @@ static void seri256(__m256i *low, __m256i *high, int n, int8_t *r)
     int index = n >> 6;
     n = n % 64;
 
-    for (int i = HASH_LENGTH - NONCE_LENGTH; i < HASH_LENGTH; i++) {
+    for (int i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH; i++) {
         uint64_t ll = (low[i][index] >> n) & 1;
         uint64_t hh = (high[i][index] >> n) & 1;
         if (hh == 0 && ll == 1) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = -1;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = -1;
         }
         if (hh == 1 && ll == 1) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = 0;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = 0;
         }
         if (hh == 1 && ll == 0) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = 1;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = 1;
         }
     }
 }
@@ -159,7 +158,7 @@ static int check256(__m256i *l, __m256i *h, int m)
     __m256i nonce_probe = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
 
-    for (int i = HASH_LENGTH - m; i < HASH_LENGTH; i++) {
+    for (int i = HASH_TRITS_LENGTH - m; i < HASH_TRITS_LENGTH; i++) {
         __m256i tmp = _mm256_andnot_si256(_mm256_xor_si256(l[i], h[i]), one);
         nonce_probe = _mm256_and_si256(
             tmp, nonce_probe); /* nonce_probe &= ~(l[i] ^ h[i]) */
@@ -181,7 +180,7 @@ static int check256(__m256i *l, __m256i *h, int m)
 
 static void para256(int8_t in[], __m256i l[], __m256i h[])
 {
-    for (int i = 0; i < STATE_LENGTH; i++) {
+    for (int i = 0; i < STATE_TRITS_LENGTH; i++) {
         switch (in[i]) {
         case 0:
             l[i] = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
@@ -204,8 +203,8 @@ static void incrN256(int n, __m256i *mid_low, __m256i *mid_high)
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     for (int j = 0; j < n; j++) {
         __m256i carry = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
-        for (int i = HASH_LENGTH * 2 / 3 + 4;
-             i < HASH_LENGTH * 2 / 3 + 4 + 27 && carry[0]; i++) {
+        for (int i = HASH_TRYTES_LENGTH * 2 + 4;
+             i < HASH_TRYTES_LENGTH * 2 + 4 + 27 && carry[0]; i++) {
             __m256i low = mid_low[i], high = mid_high[i];
             __m256i nlow = _mm256_andnot_si256(low, one);
             mid_low[i] = _mm256_xor_si256(high, low);
@@ -223,15 +222,15 @@ static int loop256(__m256i *lmid,
                    int *stopPoW)
 {
     int i = 0, n = 0;
-    __m256i lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
+    __m256i lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
 
     for (i = 0; !incr256(lmid, hmid) && !*stopPoW; i++) {
-        for (int j = 0; j < STATE_LENGTH; j++) {
+        for (int j = 0; j < STATE_TRITS_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
         }
         transform256(lcpy, hcpy);
-        if ((n = check256(lcpy + STATE_LENGTH, hcpy + STATE_LENGTH, m)) >= 0) {
+        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH, m)) >= 0) {
             seri256(lmid, hmid, n, nonce);
             return i * 256;
         }
@@ -242,8 +241,8 @@ static int loop256(__m256i *lmid,
 static int64_t pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
                         int *stopPoW)
 {
-    __m256i lmid[STATE_LENGTH], hmid[STATE_LENGTH];
-    int offset = HASH_LENGTH - NONCE_LENGTH;
+    __m256i lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
+    int offset = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH;
     para256(mid, lmid, hmid);
     lmid[offset] = _mm256_set_epi64x(LOW00, LOW01, LOW02, LOW03);
     hmid[offset] = _mm256_set_epi64x(HIGH00, HIGH01, HIGH02, HIGH03);
@@ -267,10 +266,10 @@ void transform256(__m256d *lmid, __m256d *hmid)
     __m256d one = _mm256_set_pd(HBITS, HBITS, HBITS, HBITS);
     int j, r, t1, t2;
     __m256d alpha, beta, gamma, delta, ngamma;
-    __m256d *lto = lmid + STATE_LENGTH, *hto = hmid + STATE_LENGTH;
+    __m256d *lto = lmid + STATE_TRITS_LENGTH, *hto = hmid + STATE_TRITS_LENGTH;
     __m256d *lfrom = lmid, *hfrom = hmid;
     for (r = 0; r < 80; r++) {
-        for (j = 0; j < STATE_LENGTH; j++) {
+        for (j = 0; j < STATE_TRITS_LENGTH; j++) {
             t1 = indices___[j];
             t2 = indices___[j + 1];
 
@@ -295,7 +294,7 @@ void transform256(__m256d *lmid, __m256d *hmid)
         lto = lswap;
         hto = hswap;
     }
-    for (j = 0; j < HASH_LENGTH; j++) {
+    for (j = 0; j < HASH_TRITS_LENGTH; j++) {
         t1 = indices___[j];
         t2 = indices___[j + 1];
 
@@ -320,14 +319,14 @@ int incr256(__m256d *mid_low, __m256d *mid_high)
     int i;
     __m256d carry;
     carry = _mm256_set_pd(LBITS, LBITS, LBITS, LBITS);
-    for (i = INCR_START; i < HASH_LENGTH && (i == INCR_START || carry[0]);
+    for (i = INCR_START; i < HASH_TRITS_LENGTH && (i == INCR_START || carry[0]);
          i++) {
         __m256d low = mid_low[i], high = mid_high[i];
         mid_low[i] = _mm256_xor_pd(high, low);
         mid_high[i] = low;
         carry = _mm256_andnot_pd(low, high);  // high & (~low);
     }
-    return i == HASH_LENGTH;
+    return i == HASH_TRITS_LENGTH;
 }
 
 void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
@@ -345,19 +344,19 @@ void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
         n -= 192;
         index = 3;
     }
-    for (i = HASH_LENGTH - NONCE_LENGTH; i < HASH_LENGTH; i++) {
+    for (i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH; i++) {
         long long l = ((dl) low[i][index]).l;
         long long h = ((dl) high[i][index]).l;
         long ll = (l >> n) & 1;
         long hh = (h >> n) & 1;
         if (hh == 0 && ll == 1) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = -1;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = -1;
         }
         if (hh == 1 && ll == 1) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = 0;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = 0;
         }
         if (hh == 1 && ll == 0) {
-            r[i + NONCE_LENGTH - HASH_LENGTH] = 1;
+            r[i + NONCE_TRITS_LENGTH - HASH_TRITS_LENGTH] = 1;
         }
     }
 }
@@ -367,7 +366,7 @@ int check256(__m256d *l, __m256d *h, int m)
     int i, j;  // omit init for speed
 
     __m256d nonce_probe = _mm256_set_pd(HBITS, HBITS, HBITS, HBITS);
-    for (i = HASH_LENGTH - m; i < HASH_LENGTH; i++) {
+    for (i = HASH_TRITS_LENGTH - m; i < HASH_TRITS_LENGTH; i++) {
         nonce_probe = _mm256_andnot_pd(_mm256_xor_pd(l[i], h[i]),
                                        nonce_probe);  //&= ~(l[i] ^ h[i]);
         if (nonce_probe[0] == LBITS && nonce_probe[1] == LBITS &&
@@ -389,7 +388,7 @@ int check256(__m256d *l, __m256d *h, int m)
 void para256(int8_t in[], __m256d l[], __m256d h[])
 {
     int i = 0;
-    for (i = 0; i < STATE_LENGTH; i++) {
+    for (i = 0; i < STATE_TRITS_LENGTH; i++) {
         switch (in[i]) {
         case 0:
             l[i] = _mm256_set_pd(HBITS, HBITS, HBITS, HBITS);
@@ -413,8 +412,8 @@ void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
     for (j = 0; j < n; j++) {
         __m256d carry;
         carry = _mm256_set_pd(HBITS, HBITS, HBITS, HBITS);
-        for (i = HASH_LENGTH * 2 / 3 + 4;
-             i < HASH_LENGTH * 2 / 3 + 4 + 27 && carry[0]; i++) {
+        for (i = HASH_TRYTES_LENGTH * 2 + 4;
+             i < HASH_TRYTES_LENGTH * 2 + 4 + 27 && carry[0]; i++) {
             __m256d low = mid_low[i], high = mid_high[i];
             mid_low[i] = _mm256_xor_pd(high, low);
             mid_high[i] = low;
@@ -428,14 +427,14 @@ int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
 {
     int i = 0, n = 0, j = 0;
 
-    __m256d lcpy[STATE_LENGTH * 2], hcpy[STATE_LENGTH * 2];
+    __m256d lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
     for (i = 0; !incr256(lmid, hmid) && !*stopPoW; i++) {
-        for (j = 0; j < STATE_LENGTH; j++) {
+        for (j = 0; j < STATE_TRITS_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
         }
         transform256(lcpy, hcpy);
-        if ((n = check256(lcpy + STATE_LENGTH, hcpy + STATE_LENGTH, m)) >= 0) {
+        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH, m)) >= 0) {
             seri256(lmid, hmid, n, nonce);
             return i * 256;
         }
@@ -446,8 +445,8 @@ int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
 long long int pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
                        int *stopPoW)
 {
-    __m256d lmid[STATE_LENGTH], hmid[STATE_LENGTH];
-    int offset = HASH_LENGTH - NONCE_LENGTH;
+    __m256d lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
+    int offset = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH;
     para256(mid, lmid, hmid);
     lmid[offset] = _mm256_set_pd(LOW00, LOW01, LOW02, LOW03);
     hmid[offset] = _mm256_set_pd(HIGH00, HIGH01, HIGH02, HIGH03);
@@ -544,7 +543,7 @@ bool PowAVX(void *pow_ctx)
     int8_t **nonce_array = ctx->nonce_array;
 
     /* Prepare the input trytes for algorithm */
-    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_LENGTH / 3);
+    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
 
     int8_t *c_state = tx_to_cstate(trytes_t);
     if (!c_state)
@@ -629,7 +628,7 @@ static void *PoWAVX_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm
             impl_ctx->bitmap &= ~(0x1 << i);
             pthread_mutex_unlock(&impl_ctx->lock);
             PoW_AVX_Context *ctx = impl_ctx->context + sizeof(PoW_AVX_Context) * i;
-            memcpy(ctx->input_trytes, trytes, TRANSACTION_LENGTH / 3);
+            memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;
             return ctx;
@@ -649,9 +648,9 @@ static bool PoWAVX_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_LENGTH / 3));
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
     if (!ret) return NULL;
-    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes, TRANSACTION_LENGTH / 3);
+    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes, TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 

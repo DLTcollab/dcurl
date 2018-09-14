@@ -4,15 +4,15 @@
  * found in the LICENSE file.
  */
 
-#define HASH_LENGTH 243
+#define HASH_TRITS_LENGTH 243
 #define OFFSET_LENGTH 4
-#define NONCE_LENGTH HASH_LENGTH / 3
-#define INT_LENGTH NONCE_LENGTH / 3
-#define NONCE_START HASH_LENGTH - NONCE_LENGTH
+#define NONCE_TRITS_LENGTH HASH_TRITS_LENGTH / 3
+#define INT_LENGTH NONCE_TRITS_LENGTH / 3
+#define NONCE_START HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH
 #define NONCE_INIT_START NONCE_START + OFFSET_LENGTH
 #define NONCE_INCREMENT_START NONCE_INIT_START + INT_LENGTH
 #define NUMBER_OF_ROUNDS 81
-#define STATE_LENGTH 3 * HASH_LENGTH
+#define STATE_TRITS_LENGTH 3 * HASH_TRITS_LENGTH
 #define HALF_LENGTH 364
 #define HIGH_BITS 0xFFFFFFFFFFFFFFFF
 #define LOW_BITS 0x0000000000000000
@@ -23,7 +23,7 @@
 /**
  * t1 = j == 0? 0:(((j - 1)%2)+1)*HALF_LENGTH - ((j-1)>>1);
  */
-__constant size_t INDEX[STATE_LENGTH + 1] = {
+__constant size_t INDEX[STATE_TRITS_LENGTH + 1] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
     357, 721, 356, 720, 355, 719, 354, 718, 353, 717, 352, 716, 351, 715, 350,
     714, 349, 713, 348, 712, 347, 711, 346, 710, 345, 709, 344, 708, 343, 707,
@@ -156,7 +156,7 @@ void check(__global bc_trit_t* state_low, __global bc_trit_t* state_high,
            __global bc_trit_t* nonce_probe, __private size_t gr_id) {
   int i;
   *nonce_probe = HIGH_BITS;
-  for (i = HASH_LENGTH - *min_weight_magnitude; i < HASH_LENGTH; i++) {
+  for (i = HASH_TRITS_LENGTH - *min_weight_magnitude; i < HASH_TRITS_LENGTH; i++) {
     *nonce_probe &= ~(state_low[i] ^ state_high[i]);
     if (*nonce_probe == 0)
       return;
@@ -174,11 +174,11 @@ void setup_ids(__private size_t* id, __private size_t* gid,
   *id = get_local_id(0);
   *l_size = get_local_size(0);
   *gr_id = get_global_id(0) / *l_size;
-  *gid = *gr_id * STATE_LENGTH;
-  l_rem = STATE_LENGTH % *l_size;
-  *n_trits = STATE_LENGTH / *l_size;
+  *gid = *gr_id * STATE_TRITS_LENGTH;
+  l_rem = STATE_TRITS_LENGTH % *l_size;
+  *n_trits = STATE_TRITS_LENGTH / *l_size;
   *n_trits += l_rem == 0 ? 0 : 1;
-  *n_trits -= (*n_trits) * (*id) < STATE_LENGTH ? 0 : 1;
+  *n_trits -= (*n_trits) * (*id) < STATE_TRITS_LENGTH ? 0 : 1;
 }
 
 __kernel void init(__global char* trit_hash, __global bc_trit_t* mid_low,
@@ -225,7 +225,7 @@ __kernel void search(__global char* trit_hash, __global bc_trit_t* mid_low,
   for (i = 0; i < *loop_count; i++) {
     if (id == 0)
       increment(&(mid_low[gid]), &(mid_high[gid]), NONCE_INCREMENT_START,
-                HASH_LENGTH);
+                HASH_TRITS_LENGTH);
 
     barrier(CLK_LOCAL_MEM_FENCE);
     copy_mid_to_state(&(mid_low[gid]), &(mid_high[gid]), &(state_low[gid]),
@@ -258,7 +258,7 @@ __kernel void finalize(__global char* trit_hash, __global bc_trit_t* mid_low,
   if (gr_id == (size_t)(*found - 1) && nonce_probe[gr_id] != 0) {
     for (i = 0; i < n_trits; i++) {
       j = id + i * l_size;
-      if (j < HASH_LENGTH) {
+      if (j < HASH_TRITS_LENGTH) {
         trit_hash[j] =
             (mid_low[gid + j] & nonce_probe[gr_id]) == 0
                 ? 1
