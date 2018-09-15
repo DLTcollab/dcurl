@@ -101,6 +101,7 @@ void dcurl_destroy()
 int8_t *dcurl_entry(int8_t *trytes, int mwm)
 {
     void *pow_ctx = NULL;
+    int8_t *res = NULL;
 
     ImplContext *impl = NULL;
     struct list_head *p;
@@ -123,9 +124,11 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
     } while ('z' > 'b');
 
 pow:
-    if (!doThePoW(impl, pow_ctx)) return NULL;
-
-    int8_t *ret_trytes = getPoWResult(impl, pow_ctx);
+    if (!doThePoW(impl, pow_ctx)) {
+        res = NULL;
+    } else {
+        res = getPoWResult(impl, pow_ctx);
+    }
     freePoWContext(impl, pow_ctx);
     exitImplContext(impl);
 #ifdef __APPLE__
@@ -133,5 +136,5 @@ pow:
 #else
     sem_post(&notify);
 #endif
-    return ret_trytes;
+    return res;
 }
