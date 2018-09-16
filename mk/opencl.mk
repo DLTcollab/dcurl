@@ -13,8 +13,6 @@ ifneq ($(OPENCL_LIB_AVAIL),0)
 	$(error "Please check the availability of your OpenCL shared library in $(OPENCL_LIB_PATH)")
 endif
 
-CFLAGS += \
-        -DENABLE_OPENCL \
-        -I$(OPENCL_LIB_PATH)/../include
+CFLAGS += -DENABLE_OPENCL
 
 LDFLAGS += -L$(OPENCL_LIB_PATH) -lOpenCL
