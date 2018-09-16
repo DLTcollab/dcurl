@@ -36,4 +36,6 @@ $(OUT)/local.mk:
 	$(Q)cp -f mk/defs.mk $@
 
 clean:
+	$(RM) $(deps) $(TESTS) $(LIBS) $(OBJS)
+distclean:
 	$(RM) -r $(OUT)
