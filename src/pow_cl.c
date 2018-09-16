@@ -275,6 +275,7 @@ static int8_t *PoWCL_getPoWResult(void *pow_ctx)
 
 ImplContext PoWCL_Context = {
     .context = NULL,
+    .description = "GPU (OpenCL)",
     .bitmap = 0,
     .num_max_thread = 0,
     .num_working_thread = 0,

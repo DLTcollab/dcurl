@@ -1,4 +1,5 @@
 #include "implcontext.h"
+#include <stdio.h>
 
 extern struct list_head IMPL_LIST;
 
@@ -10,7 +11,12 @@ bool registerImplContext(ImplContext *impl_ctx)
 
 bool initializeImplContext(ImplContext *impl_ctx)
 {
-    return impl_ctx->initialize(impl_ctx);
+    bool res = impl_ctx->initialize(impl_ctx);
+    if (res) {
+        printf("[DCURL LOG] Implementation %s is loaded and initialized successfully\n",
+               impl_ctx->description);
+    }
+    return res;
 }
 
 void destroyImplContext(ImplContext *impl_ctx)

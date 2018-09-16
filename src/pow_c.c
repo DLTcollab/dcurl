@@ -417,6 +417,7 @@ static int8_t *PoWC_getPoWResult(void *pow_ctx)
 
 ImplContext PoWC_Context = {
     .context = NULL,
+    .description = "CPU (Pure C)",
     .bitmap = 0,
     .num_max_thread = 2,
     .num_working_thread = 0,

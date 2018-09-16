@@ -10,6 +10,7 @@ typedef struct _impl_context ImplContext;
 
 struct _impl_context {
     void *context;
+    char *description;
 
     /* Multi-thread Management */
     pthread_mutex_t lock;

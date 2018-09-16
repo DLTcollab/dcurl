@@ -656,6 +656,7 @@ static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
 
 ImplContext PoWAVX_Context = {
     .context = NULL,
+    .description = "CPU (Intel AVX)",
     .bitmap = 0,
     .num_max_thread = 2,
     .num_working_thread = 0,

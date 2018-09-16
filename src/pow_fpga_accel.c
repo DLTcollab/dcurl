@@ -158,6 +158,7 @@ static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
 
 ImplContext PoWFPGAAccel_Context = {
     .context = NULL,
+    .description = "FPGA",
     .bitmap = 0,
     .num_max_thread = 1,  // num_max_thread >= 1
     .num_working_thread = 0,
