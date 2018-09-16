@@ -28,56 +28,73 @@ static bool PoWFPGAAccel(void *pow_ctx)
 {
     PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) pow_ctx;
 
-    int8_t fpga_out_nonce_trits[NonceTrinarySize];
+    int8_t fpga_out_nonce_trit[NonceTrinarySize];
 
     char result[4];
     char buf[4];
+    bool res = true;
 
-    Trytes_t *object_trytes =
+    Trytes_t *object_tryte = NULL, nonce_tryte = NULL;
+    Trits_t *object_trit = NULL, *object_nonce_trit = NULL;
+
+    object_tryte =
         initTrytes(ctx->input_trytes, (transactionTrinarySize) / 3);
-    if (!object_trytes)
-        return false;
+    if (!object_tryte) return false;
 
-    Trits_t *object_trits = trits_from_trytes(object_trytes);
-    if (!object_trits)
-        return false;
+    object_trit = trits_from_trytes(object_tryte);
+    if (!object_trit) {
+        res = false;
+        goto fail;
+    }
 
     lseek(ctx->in_fd, 0, 0);
     lseek(ctx->ctrl_fd, 0, 0);
     lseek(ctx->out_fd, 0, 0);
 
     if (write(ctx->in_fd, (char *) object_trits->data, transactionTrinarySize) <
-        0)
-        return false;
+        0) {
+        res = false;
+        goto fail;
+    }
 
     INT2STRING(ctx->mwm, buf);
-    if (write(ctx->ctrl_fd, buf, sizeof(buf)) < 0)
-        return false;
-    if (read(ctx->ctrl_fd, result, sizeof(result)) < 0)
-        return false;
+    if (write(ctx->ctrl_fd, buf, sizeof(buf)) < 0) {
+        res = false;
+        goto fail;
+    }
+    if (read(ctx->ctrl_fd, result, sizeof(result)) < 0) {
+        res = false;
+        goto fail;
+    }
 
-    if (read(ctx->out_fd, (char *) fpga_out_nonce_trits, NonceTrinarySize) < 0)
-        return false;
+    if (read(ctx->out_fd, (char *) fpga_out_nonce_trit, NonceTrinarySize) < 0) {
+        res = false;
+        goto fail;
+    }
 
-    Trits_t *object_nonce_trits =
-        initTrits(fpga_out_nonce_trits, NonceTrinarySize);
-    if (!object_nonce_trits)
-        return false;
+    object_nonce_trit =
+        initTrits(fpga_out_nonce_trit, NonceTrinarySize);
+    if (!object_nonce_trit) {
+        res = false;
+        goto fail;
+    }
 
-    Trytes_t *nonce_trytes = trytes_from_trits(object_nonce_trits);
-    if (!nonce_trytes)
-        return false;
+    nonce_tryte = trytes_from_trits(object_nonce_trit);
+    if (!nonce_tryte) {
+        res = false;
+        goto fail;
+    }
 
     memcpy(ctx->output_trytes, ctx->input_trytes, (NonceTrinaryOffset) / 3);
     memcpy(ctx->output_trytes + ((NonceTrinaryOffset) / 3), nonce_trytes->data,
            ((transactionTrinarySize) - (NonceTrinaryOffset)) / 3);
 
-    freeTrobject(object_trytes);
-    freeTrobject(object_trits);
-    freeTrobject(object_nonce_trits);
-    freeTrobject(nonce_trytes);
-
-    return true;
+fail:
+    freeTrobject(object_tryte);
+    freeTrobject(object_trit);
+    freeTrobject(object_nonce_trit);
+    freeTrobject(nonce_tryte);
+    return res;
 }
 
 static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)

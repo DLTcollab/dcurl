@@ -485,28 +485,24 @@ static void *pworkThread(void *pitem)
 
 static int8_t *tx_to_cstate(Trytes_t *tx)
 {
-    Curl *c = initCurl();
-    if (!c)
-        return NULL;
-
-    int8_t *c_state = (int8_t *) malloc(c->state->len);
-    if (!c_state)
-        return NULL;
-
+    Trytes_t *inn = NULL;
+    Trits_t *tr = NULL;
     int8_t tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+
+    Curl *c = initCurl();
+    int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
+    if (!c || !c_state) goto fail;
 
     /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
     memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
 
-    Trytes_t *inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
-    if (!inn)
-        return NULL;
+    inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    if (!inn) goto fail;
 
     Absorb(c, inn);
 
-    Trits_t *tr = trits_from_trytes(tx);
-    if (!tr)
-        return NULL;
+    tr = trits_from_trytes(tx);
+    if (!tr) goto fail;
 
     /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
     memcpy(c_state, tr->data + transactionTrinarySize - HashSize,
@@ -518,8 +514,13 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     freeTrobject(inn);
     freeTrobject(tr);
     freeCurl(c);
-
     return c_state;
+fail:
+    freeTrobject(inn);
+    freeTrobject(tr);
+    freeCurl(c);
+    free(c_state);
+    return NULL;
 }
 
 static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
@@ -533,9 +534,12 @@ static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
 
 bool PowAVX(void *pow_ctx)
 {
-    PoW_AVX_Context *ctx = (PoW_AVX_Context *) pow_ctx;
+    bool res = true;
+    Trits_t *nonce_trit = NULL;
+    Trytes_t *tx_tryte = NULL, *nonce_tryte = NULL;
 
     /* Initialize the context */
+    PoW_AVX_Context *ctx = (PoW_AVX_Context *) pow_ctx;
     ctx->stopPoW = 0;
     pthread_mutex_init(&ctx->lock, NULL);
     pthread_t *threads = ctx->threads;
@@ -543,11 +547,14 @@ bool PowAVX(void *pow_ctx)
     int8_t **nonce_array = ctx->nonce_array;
 
     /* Prepare the input trytes for algorithm */
-    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
+    tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
+    if (!tx_tryte) return false;
 
-    int8_t *c_state = tx_to_cstate(trytes_t);
-    if (!c_state)
-        return false;
+    int8_t *c_state = tx_to_cstate(tx_tryte);
+    if (!c_state) {
+        res = false;
+        goto fail;
+    }
 
     /* Prepare arguments for pthread */
     for (int i = 0; i < ctx->num_threads; i++) {
@@ -568,55 +575,75 @@ bool PowAVX(void *pow_ctx)
             completedIndex = i;
     }
 
-    Trits_t *nonce_t = initTrits(nonce_array[completedIndex], NonceTrinarySize);
-    if (!nonce_t)
-        return false;
+    nonce_trit = initTrits(nonce_array[completedIndex], NonceTrinarySize);
+    if (!nonce_trit) {
+        res = false;
+        goto fail;
+    }
 
-    Trytes_t *nonce = trytes_from_trits(nonce_t);
-    if (!nonce)
-        return false;
+    nonce_tryte = trytes_from_trits(nonce_trit);
+    if (!nonce_tryte) {
+        res = false;
+        goto fail;
+    }
 
-    nonce_to_result(trytes_t, nonce, ctx->output_trytes);
+    nonce_to_result(tx_tryte, nonce_tryte, ctx->output_trytes);
 
+fail:
     /* Free memory */
     free(c_state);
-    freeTrobject(trytes_t);
-    freeTrobject(nonce_t);
-    freeTrobject(nonce);
+    freeTrobject(tx_tryte);
+    freeTrobject(nonce_trit);
+    freeTrobject(nonce_tryte);
 
-    return true;
+    return res;
 }
 
 static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
 {
     int nproc = get_avail_nprocs();
+    if (impl_ctx->num_max_thread <= 0 || nproc <= 0) return false;
+
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) * impl_ctx->num_max_thread);
     if (!ctx) return false;
+
+    /* Pre-allocate Memory Chunk for each field */
+    void *threads_chunk = malloc(impl_ctx->num_max_thread * sizeof(pthread_t) * nproc);
+    void *pitem_chunk = malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
+    void *nonce_ptr_chunk = malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
+    void *nonce_chunk = malloc(impl_ctx->num_max_thread * NonceTrinarySize * nproc);
+    if (!threads_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) goto fail;
+
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx[i].threads = (pthread_t *) malloc(sizeof(pthread_t) * nproc);
-        ctx[i].pitem = (Pwork_struct *) malloc(sizeof(Pwork_struct) * nproc);
-        ctx[i].nonce_array = (int8_t **) malloc(sizeof(int *) * nproc);
-        void *chunk = malloc(NonceTrinarySize * nproc);
-        if (!ctx[i].threads || !ctx[i].pitem || !ctx[i].nonce_array || !chunk) return false;
+        ctx[i].threads = (pthread_t *) (threads_chunk + i * sizeof(pthread_t) * nproc);
+        ctx[i].pitem = (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
+        ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
         for (int j = 0; j < nproc; j++)
-            ctx[i].nonce_array[j] = (int8_t *) (chunk + j * NonceTrinarySize);
+            ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk + i * NonceTrinarySize * nproc +
+                                                j * NonceTrinarySize);
         ctx[i].num_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
     return true;
+
+fail:
+    free(ctx);
+    free(threads_chunk);
+    free(pitem_chunk);
+    free(nonce_ptr_chunk);
+    free(nonce_chunk);
+    return false;
 }
 
 static void PoWAVX_Context_Destroy(ImplContext *impl_ctx)
 {
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) impl_ctx->context;
-    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        free(ctx[i].threads);
-        free(ctx[i].pitem);
-        free(ctx[i].nonce_array[0]);
-        free(ctx[i].nonce_array);
-    }
+    free(ctx[0].threads);
+    free(ctx[0].pitem);
+    free(ctx[0].nonce_array[0]);
+    free(ctx[0].nonce_array);
     free(ctx);
 }
 
