@@ -23,7 +23,7 @@ Reference Implementation (IRI). Additionally, dcurl also supports the FPGA-accel
     - ``BUILD_AVX``: build Intel AVX-accelerated Curl backend.
     - ``BUILD_GPU``: build OpenCL-based GPU accelerations.
     - ``BUILD_JNI``: build a shared library for IRI. The build system would generate JNI header file
-                     downloading from [latest JAVA source](https://github.com/chenwei-tw/iri/tree/feat/new_pow_interface).
+                     downloading from [latest JAVA source](https://github.com/DLTcollab/iri).
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
     - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
 * Alternatively, you can specify conditional build as following:
@@ -103,7 +103,7 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 ![](https://lh4.googleusercontent.com/2U_TpfAtEbPdHBcGKD1zl0t0bzo2Rubj0DxXxvV-Rh31Yr7oCCtptutQpLLizMgR7ousEXUtwM6RASnQLOJnGePhQ5Emh1w8l8GlKzMtZ0Yv-TySF2gh3u48BAmllAJv2VjNaxgFGCA)
 
 # IRI Adaptation
-[Modified IRI accepting external PoW Library](https://github.com/chenwei-tw/iri/tree/external-pow-interface)
+[Modified IRI accepting external PoW Library](https://github.com/DLTcollab/iri)
 Supported IRI version: 1.5.3
 * ```$ cd ~/iri && mvn compile && mvn package```
 * ```$ cp ~/dcurl/build/libdcurl.so ~/iri```
