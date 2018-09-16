@@ -151,27 +151,24 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
 
 static int8_t *tx_to_cstate(Trytes_t *tx)
 {
-    Curl *c = initCurl();
-    if (!c)
-        return NULL;
-
-    int8_t *c_state = (int8_t *) malloc(c->state->len);
-    if (!c_state)
-        return NULL;
-
+    Trytes_t *inn = NULL;
+    Trits_t *tr = NULL;
     int8_t tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+
+    Curl *c = initCurl();
+    int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
+    if (!c || !c_state) goto fail;
 
     /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
     memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
-    Trytes_t *inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
-    if (!inn)
-        return NULL;
+
+    inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    if (!inn) goto fail;
 
     Absorb(c, inn);
 
-    Trits_t *tr = trits_from_trytes(tx);
-    if (!tr)
-        return NULL;
+    tr = trits_from_trytes(tx);
+    if (!tr) goto fail;
 
     /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
     memcpy(c_state, tr->data + transactionTrinarySize - HashSize,
@@ -183,41 +180,61 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     freeTrobject(inn);
     freeTrobject(tr);
     freeCurl(c);
-
     return c_state;
+fail:
+    freeTrobject(inn);
+    freeTrobject(tr);
+    freeCurl(c);
+    free(c_state);
+    return NULL;
 }
 
 bool PowCL(void *pow_ctx)
 {
+    bool res = true;
+    int8_t *c_state = NULL, *pow_result = NULL;
+    Trits_t *tx_trit = NULL;
+    Trytes_t *tx_tryte = NULL, *res_tryte = NULL;
+
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
-    Trytes_t *trytes_t = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
-    Trits_t *tr = trits_from_trytes(trytes_t);
-    if (!tr)
-        return false;
+    tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
+    if (!tx_tryte) return false;
 
-    int8_t *c_state = tx_to_cstate(trytes_t);
-    if (!c_state)
-        return false;
+    tx_trit = trits_from_trytes(tx_tryte);
+    if (!tx_trit) {
+        res = false;
+        goto fail;
+    }
 
-    int8_t *ret = pwork(c_state, ctx->mwm, ctx->clctx);
-    if (!ret)
-        return false;
+    c_state = tx_to_cstate(tx_tryte);
+    if (!c_state) {
+        res = false;
+        goto fail;
+    }
 
-    memcpy(&tr->data[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH], ret,
+    pow_result = pwork(c_state, ctx->mwm, ctx->clctx);
+    if (!pow_result) {
+        res = false;
+        goto fail;
+    }
+    memcpy(&tx_trit->data[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH], pow_result,
            HASH_TRITS_LENGTH * sizeof(int8_t));
 
-    Trytes_t *last = trytes_from_trits(tr);
-    memcpy(ctx->output_trytes, last->data, TRANSACTION_TRYTES_LENGTH);
+    res_tryte = trytes_from_trits(tx_trit);
+    if (!res_tryte) {
+        res = false;
+        goto fail;
+    }
+    memcpy(ctx->output_trytes, res_tryte->data, TRANSACTION_TRYTES_LENGTH);
 
-    freeTrobject(tr);
-    freeTrobject(trytes_t);
-    freeTrobject(last);
-    /* hack */
+fail:
+    freeTrobject(tx_trit);
+    freeTrobject(tx_tryte);
+    freeTrobject(res_tryte);
     free(c_state);
-    free(ret);
-
-    return true;
+    free(pow_result);
+    return res;
 }
 
 static bool PoWCL_Context_Initialize(ImplContext *impl_ctx)
