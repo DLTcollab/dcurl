@@ -1,5 +1,5 @@
 /*
- * Copyright (C)  2018 National Cheng Kung University, Taiwan.
+ * Copyright (C) 2018 National Cheng Kung University, Taiwan.
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE file.
  */

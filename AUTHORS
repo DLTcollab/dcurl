@@ -1,9 +1,13 @@
 dcurl is written by:
   Chen Wei <zhenwei.tw@gmail.com>
   Jim Huang <jserv@biilabs.io>
+  AjMaChInE <ajblane0612@gmail.com>
 
 Externel Source:
 * src/pow_sse.c is derived from preliminary work of Shinya Yagyu.
-* src/pow_cl.c and src/pow_kernel.clare adopted from ccurl [1].
+* src/pow_cl.c and src/pow_kernel.cl are adopted from ccurl [1].
+* src/pow_fpga_accel.c is derived from accelerator by LampaLab [2].
+* src/list.h is adopted from National Cheng Kung University, Taiwan.
 
 [1] https://github.com/iotaledger/ccurl
+[2] https://github.com/LampaLab/iota_fpga
