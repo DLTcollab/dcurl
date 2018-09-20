@@ -99,7 +99,7 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
     int64_t mid_low[STATE_TRITS_LENGTH] = {0}, mid_high[STATE_TRITS_LENGTH] = {0};
     init_state(state, mid_low, mid_high, HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH);
 
-    if (!write_cl_buffer(titan, mid_low, mid_high, mwm, 32))
+    if (!write_cl_buffer(titan, mid_low, mid_high, mwm, LOOP_COUNT))
         return NULL;
 
     if (CL_SUCCESS == clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[INDEX_OF_KERNEL_INIT],
@@ -118,6 +118,7 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
             }
             clWaitForEvents(1, &ev1);
             clReleaseEvent(ev1);
+            titan->hashTimes += 64 * num_groups * LOOP_COUNT;
             if (CL_SUCCESS != clEnqueueReadBuffer(titan->cmdq, titan->buffer[INDEX_OF_FOUND],
                                                   CL_TRUE, 0, sizeof(char),
                                                   &found, 0, NULL, NULL)) {
@@ -197,6 +198,7 @@ bool PowCL(void *pow_ctx)
     Trytes_t *tx_tryte = NULL, *res_tryte = NULL;
 
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
+    ctx->clctx->hashTimes = 0;
 
     tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
     if (!tx_tryte) return false;
@@ -290,6 +292,11 @@ static int8_t *PoWCL_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static uint64_t PoWCL_getHashTimes(void *pow_ctx)
+{
+    return ((PoW_CL_Context *) pow_ctx)->clctx->hashTimes;
+}
+
 ImplContext PoWCL_Context = {
     .context = NULL,
     .description = "GPU (OpenCL)",
@@ -302,4 +309,5 @@ ImplContext PoWCL_Context = {
     .freePoWContext = PoWCL_freePoWContext,
     .doThePoW = PowCL,
     .getPoWResult = PoWCL_getPoWResult,
+    .getHashTimes = PoWCL_getHashTimes,
 };

@@ -173,6 +173,13 @@ static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static uint64_t PoWFPGAAccel_getHashTimes(void *pow_ctx)
+{
+    uint64_t count = 0;
+
+    return count;
+}
+
 ImplContext PoWFPGAAccel_Context = {
     .context = NULL,
     .description = "FPGA",
@@ -185,4 +192,5 @@ ImplContext PoWFPGAAccel_Context = {
     .freePoWContext = PoWFPGAAccel_freePoWContext,
     .doThePoW = PoWFPGAAccel,
     .getPoWResult = PoWFPGAAccel_getPoWResult,
+    .getHashTimes = PoWFPGAAccel_getHashTimes,
 };
