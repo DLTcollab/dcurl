@@ -457,6 +457,22 @@ static int8_t *PoWSSE_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static uint64_t PoWSSE_getHashTimes(void *pow_ctx)
+{
+    uint64_t count = 0;
+    PoW_SSE_Context *ctx = (PoW_SSE_Context *) pow_ctx;
+    Pwork_struct *pitem = ctx->pitem;
+
+    for (int i = 0; i < ctx->num_threads; i++) {
+        if (pitem[i].ret >= 0 )
+            count += (uint64_t)pitem[i].ret;
+        else
+            count += (uint64_t)(-(pitem[i].ret) + 1);
+    }
+
+    return count;
+}
+
 ImplContext PoWSSE_Context = {
     .context = NULL,
     .description = "CPU (Intel SSE)",
@@ -469,4 +485,5 @@ ImplContext PoWSSE_Context = {
     .freePoWContext = PoWSSE_freePoWContext,
     .doThePoW = PowSSE,
     .getPoWResult = PoWSSE_getPoWResult,
+    .getHashTimes = PoWSSE_getHashTimes,
 };

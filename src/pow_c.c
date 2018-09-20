@@ -441,6 +441,22 @@ static int8_t *PoWC_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static uint64_t PoWC_getHashTimes(void *pow_ctx)
+{
+    uint64_t count = 0;
+    PoW_C_Context *ctx = (PoW_C_Context *) pow_ctx;
+    Pwork_struct *pitem = ctx->pitem;
+
+    for (int i = 0; i < ctx->num_threads; i++) {
+        if (pitem[i].ret >= 0 )
+            count += (uint64_t)pitem[i].ret;
+        else
+            count += (uint64_t)(-(pitem[i].ret) + 1);
+    }
+
+    return count;
+}
+
 ImplContext PoWC_Context = {
     .context = NULL,
     .description = "CPU (Pure C)",
@@ -453,4 +469,5 @@ ImplContext PoWC_Context = {
     .freePoWContext = PoWC_freePoWContext,
     .doThePoW = PowC,
     .getPoWResult = PoWC_getPoWResult,
+    .getHashTimes = PoWC_getHashTimes,
 };

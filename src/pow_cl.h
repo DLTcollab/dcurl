@@ -34,4 +34,6 @@ bool PowCL(void *pow_ctx);
 #define LOW_3 0xFFC0000007FFFFFF
 #define HIGH_3 0x003FFFFFFFFFFFFF
 
+#define LOOP_COUNT 32
+
 #endif

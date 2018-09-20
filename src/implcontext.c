@@ -64,3 +64,8 @@ int8_t *getPoWResult(ImplContext *impl_ctx, void *pow_ctx)
 {
     return impl_ctx->getPoWResult(pow_ctx);
 }
+
+uint64_t getHashTimes(ImplContext *impl_ctx, void *pow_ctx)
+{
+    return impl_ctx->getHashTimes(pow_ctx);
+}
