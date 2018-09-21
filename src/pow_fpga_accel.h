@@ -13,6 +13,8 @@ struct _pow_fpga_accel_context {
     int8_t input_trytes[(transactionTrinarySize) / 3];  /* 2673 */
     int8_t output_trytes[(transactionTrinarySize) / 3]; /* 2673 */
     int mwm;
+    /* PoW-related result */
+    uint64_t hash_count;
     /* Device files for the PFGA accelerator*/
     int ctrl_fd;
     int in_fd;

@@ -16,6 +16,8 @@ struct _pow_cl_context {
     int8_t input_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
+    /* PoW-related result */
+    uint64_t hash_count;
 };
 
 bool PowCL(void *pow_ctx);
@@ -33,5 +35,7 @@ bool PowCL(void *pow_ctx);
 #define HIGH_2 0xFFC01FFFF803FFFF
 #define LOW_3 0xFFC0000007FFFFFF
 #define HIGH_3 0x003FFFFFFFFFFFFF
+
+#define LOOP_COUNT 32
 
 #endif

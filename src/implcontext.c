@@ -64,3 +64,8 @@ int8_t *getPoWResult(ImplContext *impl_ctx, void *pow_ctx)
 {
     return impl_ctx->getPoWResult(pow_ctx);
 }
+
+uint64_t getHashCount(ImplContext *impl_ctx, void *pow_ctx)
+{
+    return impl_ctx->getHashCount(pow_ctx);
+}

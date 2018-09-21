@@ -27,6 +27,7 @@
 static bool PoWFPGAAccel(void *pow_ctx)
 {
     PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) pow_ctx;
+    ctx->hash_count = 0;
 
     int8_t fpga_out_nonce_trit[NonceTrinarySize];
 
@@ -173,6 +174,11 @@ static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static uint64_t PoWFPGAAccel_getHashCount(void *pow_ctx)
+{
+    return ((PoW_FPGA_Accel_Context *) pow_ctx)->hash_count;
+}
+
 ImplContext PoWFPGAAccel_Context = {
     .context = NULL,
     .description = "FPGA",
@@ -185,4 +191,5 @@ ImplContext PoWFPGAAccel_Context = {
     .freePoWContext = PoWFPGAAccel_freePoWContext,
     .doThePoW = PoWFPGAAccel,
     .getPoWResult = PoWFPGAAccel_getPoWResult,
+    .getHashCount = PoWFPGAAccel_getHashCount,
 };

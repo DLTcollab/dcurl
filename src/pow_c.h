@@ -36,6 +36,8 @@ struct _pow_c_context {
     int8_t input_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
+    /* PoW-related result */
+    uint64_t hash_count;
 };
 
 bool PowC(void *pow_ctx);

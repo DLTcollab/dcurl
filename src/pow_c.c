@@ -302,6 +302,7 @@ bool PowC(void *pow_ctx)
     /* Initialize the context */
     PoW_C_Context *ctx = (PoW_C_Context *) pow_ctx;
     ctx->stopPoW = 0;
+    ctx->hash_count = 0;
     pthread_mutex_init(&ctx->lock, NULL);
     pthread_t *threads = ctx->threads;
     Pwork_struct *pitem = ctx->pitem;
@@ -334,6 +335,7 @@ bool PowC(void *pow_ctx)
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
+        ctx->hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
 
     nonce_trit = initTrits(nonce_array[completedIndex], NonceTrinarySize);
@@ -441,6 +443,11 @@ static int8_t *PoWC_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static uint64_t PoWC_getHashCount(void *pow_ctx)
+{
+    return ((PoW_C_Context *) pow_ctx)->hash_count;
+}
+
 ImplContext PoWC_Context = {
     .context = NULL,
     .description = "CPU (Pure C)",
@@ -453,4 +460,5 @@ ImplContext PoWC_Context = {
     .freePoWContext = PoWC_freePoWContext,
     .doThePoW = PowC,
     .getPoWResult = PoWC_getPoWResult,
+    .getHashCount = PoWC_getHashCount,
 };

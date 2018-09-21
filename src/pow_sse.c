@@ -6,6 +6,7 @@
  */
 
 #include "pow_sse.h"
+#include <inttypes.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -318,6 +319,7 @@ bool PowSSE(void *pow_ctx)
     /* Initialize the context */
     PoW_SSE_Context *ctx = (PoW_SSE_Context *) pow_ctx;
     ctx->stopPoW = 0;
+    ctx->hash_count = 0;
     pthread_mutex_init(&ctx->lock, NULL);
     pthread_t *threads = ctx->threads;
     Pwork_struct *pitem = ctx->pitem;
@@ -350,6 +352,7 @@ bool PowSSE(void *pow_ctx)
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
+        ctx->hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
 
     nonce_trit = initTrits(nonce_array[completedIndex], NonceTrinarySize);
@@ -457,6 +460,11 @@ static int8_t *PoWSSE_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static uint64_t PoWSSE_getHashCount(void *pow_ctx)
+{
+    return ((PoW_SSE_Context *) pow_ctx)->hash_count;
+}
+
 ImplContext PoWSSE_Context = {
     .context = NULL,
     .description = "CPU (Intel SSE)",
@@ -469,4 +477,5 @@ ImplContext PoWSSE_Context = {
     .freePoWContext = PoWSSE_freePoWContext,
     .doThePoW = PowSSE,
     .getPoWResult = PoWSSE_getPoWResult,
+    .getHashCount = PoWSSE_getHashCount,
 };
