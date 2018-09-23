@@ -19,8 +19,9 @@
 #include "pow_cl.h"
 #endif
 
-#include <stdlib.h>
+#include <inttypes.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #ifdef NDEBUG
 #undef NDEBUG
