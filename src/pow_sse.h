@@ -2,6 +2,7 @@
 #define POW_SSE_H_
 
 #include "trinary.h"
+#include "common.h"
 #include "constants.h"
 #include <stdint.h>
 #include <pthread.h>
@@ -35,8 +36,8 @@ struct _pow_sse_context {
     int8_t input_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
-    /* PoW-related result */
-    uint64_t hash_count;
+    /* PoW-related information */
+    PoW_Info *pow_info;
 };
 
 bool PowSSE(void *pow_ctx);

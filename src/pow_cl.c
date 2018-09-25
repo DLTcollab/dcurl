@@ -230,7 +230,7 @@ bool PowCL(void *pow_ctx)
     }
     memcpy(ctx->output_trytes, res_tryte->data, TRANSACTION_TRYTES_LENGTH);
 
-    ctx->hash_count = ctx->clctx->hash_count;
+    ctx->pow_info->hash_count = ctx->clctx->hash_count;
 
 fail:
     freeTrobject(tx_trit);
@@ -246,18 +246,31 @@ static bool PoWCL_Context_Initialize(ImplContext *impl_ctx)
     impl_ctx->num_max_thread = init_clcontext(_opencl_ctx);
     PoW_CL_Context *ctx = (PoW_CL_Context *) malloc(sizeof(PoW_CL_Context) * impl_ctx->num_max_thread);
     if (!ctx) return false;
+
+    /* Pre-allocate Memory Chunk */
+    void *pow_info_chunk = malloc(sizeof(PoW_Info) * impl_ctx->num_max_thread);
+    if (!pow_info_chunk) goto fail;
+
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].clctx = &_opencl_ctx[i];
+        ctx[i].pow_info = (PoW_Info *) (pow_info_chunk + i * sizeof(PoW_Info));
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
     return true;
+
+fail:
+    free(ctx);
+    free(pow_info_chunk);
+    return false;
 }
 
 static void PoWCL_Context_Destroy(ImplContext *impl_ctx)
 {
-    free(impl_ctx->context);
+    PoW_CL_Context *ctx = (PoW_CL_Context *) impl_ctx->context;
+    free(ctx->pow_info);
+    free(ctx);
 }
 
 static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
@@ -294,9 +307,9 @@ static int8_t *PoWCL_getPoWResult(void *pow_ctx)
     return ret;
 }
 
-static uint64_t PoWCL_getHashCount(void *pow_ctx)
+static void *PoWCL_getPoWInfo(void *pow_ctx)
 {
-    return ((PoW_CL_Context *) pow_ctx)->hash_count;
+    return ((PoW_CL_Context *) pow_ctx)->pow_info;
 }
 
 ImplContext PoWCL_Context = {
@@ -311,5 +324,5 @@ ImplContext PoWCL_Context = {
     .freePoWContext = PoWCL_freePoWContext,
     .doThePoW = PowCL,
     .getPoWResult = PoWCL_getPoWResult,
-    .getHashCount = PoWCL_getHashCount,
+    .getPoWInfo = PoWCL_getPoWInfo,
 };

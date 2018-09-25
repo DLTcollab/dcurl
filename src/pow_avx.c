@@ -541,7 +541,8 @@ bool PowAVX(void *pow_ctx)
     /* Initialize the context */
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) pow_ctx;
     ctx->stopPoW = 0;
-    ctx->hash_count = 0;
+    ctx->pow_info->time = 0;
+    ctx->pow_info->hash_count = 0;
     pthread_mutex_init(&ctx->lock, NULL);
     pthread_t *threads = ctx->threads;
     Pwork_struct *pitem = ctx->pitem;
@@ -574,7 +575,7 @@ bool PowAVX(void *pow_ctx)
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
-        ctx->hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
+        ctx->pow_info->hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
 
     nonce_trit = initTrits(nonce_array[completedIndex], NonceTrinarySize);
@@ -614,7 +615,8 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
     void *pitem_chunk = malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
     void *nonce_ptr_chunk = malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
     void *nonce_chunk = malloc(impl_ctx->num_max_thread * NonceTrinarySize * nproc);
-    if (!threads_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) goto fail;
+    void *pow_info_chunk = malloc(impl_ctx->num_max_thread * sizeof(PoW_Info));
+    if (!threads_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk || !pow_info_chunk) goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].threads = (pthread_t *) (threads_chunk + i * sizeof(pthread_t) * nproc);
@@ -623,6 +625,7 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
         for (int j = 0; j < nproc; j++)
             ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk + i * NonceTrinarySize * nproc +
                                                 j * NonceTrinarySize);
+        ctx[i].pow_info = (PoW_Info *) (pow_info_chunk + i * sizeof(PoW_Info));
         ctx[i].num_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
@@ -636,6 +639,7 @@ fail:
     free(pitem_chunk);
     free(nonce_ptr_chunk);
     free(nonce_chunk);
+    free(pow_info_chunk);
     return false;
 }
 
@@ -646,6 +650,7 @@ static void PoWAVX_Context_Destroy(ImplContext *impl_ctx)
     free(ctx[0].pitem);
     free(ctx[0].nonce_array[0]);
     free(ctx[0].nonce_array);
+    free(ctx[0].pow_info);
     free(ctx);
 }
 
@@ -683,9 +688,9 @@ static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
     return ret;
 }
 
-static uint64_t PoWAVX_getHashCount(void *pow_ctx)
+static void *PoWAVX_getPoWInfo(void *pow_ctx)
 {
-    return ((PoW_AVX_Context *) pow_ctx)->hash_count;
+    return ((PoW_AVX_Context *) pow_ctx)->pow_info;
 }
 
 ImplContext PoWAVX_Context = {
@@ -700,5 +705,5 @@ ImplContext PoWAVX_Context = {
     .freePoWContext = PoWAVX_freePoWContext,
     .doThePoW = PowAVX,
     .getPoWResult = PoWAVX_getPoWResult,
-    .getHashCount = PoWAVX_getHashCount,
+    .getPoWInfo = PoWAVX_getPoWInfo,
 };

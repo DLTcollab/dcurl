@@ -113,7 +113,8 @@ int main()
         int8_t *ret_trytes = getPoWResult(PoW_Context_ptr, pow_ctx);
         assert(ret_trytes);
 #if defined(ENABLE_STAT)
-        printf("Hash count: %"PRIu64"\n", getHashCount(PoW_Context_ptr, pow_ctx));
+        PoW_Info *info = (PoW_Info *) getPoWInfo(PoW_Context_ptr, pow_ctx);
+        printf("Hash count: %"PRIu64"\n", info->hash_count);
 #endif
         freePoWContext(PoW_Context_ptr, pow_ctx);
         destroyImplContext(PoW_Context_ptr);
