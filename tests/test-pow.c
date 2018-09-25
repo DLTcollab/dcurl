@@ -98,7 +98,7 @@ int main()
         PoWFPGAAccel_Context,
 #endif
     };
-
+    PoW_Info pow_info; 
 
     for (int idx = 0; idx < sizeof(ImplContextArr) / sizeof(ImplContext); idx++) {
         printf("%s\n",description[idx]);
@@ -112,10 +112,10 @@ int main()
         doThePoW(PoW_Context_ptr, pow_ctx);
         int8_t *ret_trytes = getPoWResult(PoW_Context_ptr, pow_ctx);
         assert(ret_trytes);
-#if defined(ENABLE_STAT)
         PoW_Info *info = (PoW_Info *) getPoWInfo(PoW_Context_ptr, pow_ctx);
-        printf("Hash count: %"PRIu64"\n", info->hash_count);
-#endif
+        assert(info);
+        pow_info.time = info->time;
+        pow_info.hash_count = info->hash_count;
         freePoWContext(PoW_Context_ptr, pow_ctx);
         destroyImplContext(PoW_Context_ptr);
 
@@ -136,6 +136,11 @@ int main()
         freeTrobject(hash_trytes);
         freeTrobject(ret_trits);
 
+#if defined(ENABLE_STAT)
+        printf("Hash count: %"PRIu64"\n", pow_info.hash_count);
+        printf("PoW execution time: %.0lf sec\n", pow_info.time);
+        printf("Hash rate: %.3lf kH/sec\n", pow_info.hash_count / pow_info.time / 1000);
+#endif
         printf("Success.\n");
     }
 

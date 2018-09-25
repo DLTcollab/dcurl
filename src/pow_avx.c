@@ -537,6 +537,7 @@ bool PowAVX(void *pow_ctx)
     bool res = true;
     Trits_t *nonce_trit = NULL;
     Trytes_t *tx_tryte = NULL, *nonce_tryte = NULL;
+    time_t start_time, end_time;
 
     /* Initialize the context */
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) pow_ctx;
@@ -558,6 +559,7 @@ bool PowAVX(void *pow_ctx)
         goto fail;
     }
 
+    time(&start_time);
     /* Prepare arguments for pthread */
     for (int i = 0; i < ctx->num_threads; i++) {
         pitem[i].mid = c_state;
@@ -577,6 +579,8 @@ bool PowAVX(void *pow_ctx)
             completedIndex = i;
         ctx->pow_info->hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
+    time(&end_time);
+    ctx->pow_info->time = difftime(end_time, start_time);
 
     nonce_trit = initTrits(nonce_array[completedIndex], NonceTrinarySize);
     if (!nonce_trit) {

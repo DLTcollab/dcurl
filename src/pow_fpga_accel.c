@@ -38,6 +38,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
 
     Trytes_t *object_tryte = NULL, nonce_tryte = NULL;
     Trits_t *object_trit = NULL, *object_nonce_trit = NULL;
+    time_t start_time, end_time;
 
     object_tryte =
         initTrytes(ctx->input_trytes, (transactionTrinarySize) / 3);

@@ -197,6 +197,7 @@ bool PowCL(void *pow_ctx)
     int8_t *c_state = NULL, *pow_result = NULL;
     Trits_t *tx_trit = NULL;
     Trytes_t *tx_tryte = NULL, *res_tryte = NULL;
+    time_t start_time, end_time;
 
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
@@ -215,7 +216,10 @@ bool PowCL(void *pow_ctx)
         goto fail;
     }
 
+    time(&start_time);
     pow_result = pwork(c_state, ctx->mwm, ctx->clctx);
+    time(&end_time);
+    ctx->pow_info->time = difftime(end_time, start_time);
     if (!pow_result) {
         res = false;
         goto fail;
