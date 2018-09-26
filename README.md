@@ -26,6 +26,7 @@ Reference Implementation (IRI). Additionally, dcurl also supports the FPGA-accel
                      downloading from [latest JAVA source](https://github.com/DLTcollab/iri).
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
     - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
+    - ``BUILD_STAT``: show the statistics of the PoW information.
 * Alternatively, you can specify conditional build as following:
 ```shell
 $ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1
@@ -43,13 +44,15 @@ $ make BUILD_GPU=1 check
         [ Verified ]
 *** Validating build/test-curl ***
         [ Verified ]
-*** Validating build/test-multi_pow_cpu ***
+*** Validating build/test-durl ***
+[dcurl] Implementation GPU (OpenCL) is initialized successfully
         [ Verified ]
-*** Validating build/test-pow_sse ***
+*** Validating build/test-multi_pow ***
         [ Verified ]
-*** Validating build/test-pow_cl ***
-        [ Verified ]
-*** Validating build/test-multi_pow_gpu ***
+*** Validating build/test-pow ***
+GPU - OpenCL
+[dcurl] Implementation GPU (OpenCL) is initialized successfully
+Success.
         [ Verified ]
 ```
 
@@ -64,9 +67,41 @@ $ make BUILD_AVX=1 check
         [ Verified ]
 *** Validating build/test-curl ***
         [ Verified ]
+*** Validating build/test-dcurl ***
+[dcurl] Implementation CPU (Intel AVX) is initialized successfully
+        [ Verified ]
 *** Validating build/test-multi_pow_cpu ***
         [ Verified ]
-*** Validating build/test-pow_avx ***
+*** Validating build/test-pow ***
+CPU - AVX
+[dcurl] Implementation CPU (Intel AVX) is initialized successfully
+Success.
+        [ Verified ]
+```
+
+* Test with AVX and show the PoW statistics
+```shell
+$ make BUILD_AVX=1 BUILD_STAT=1 check
+```
+
+* Expected Results
+```
+*** Validating build/test-trinary ***
+        [ Verified ]
+*** Validating build/test-curl ***
+        [ Verified ]
+*** Validating build/test-dcurl ***
+[dcurl] Implementation CPU (Intel AVX) is initialized successfully
+        [ Verified ]
+*** Validating build/test-multi_pow_cpu ***
+        [ Verified ]
+*** Validating build/test-pow ***
+CPU - AVX
+[dcurl] Implementation CPU (Intel AVX) is initialized successfully
+Hash count: 7396100
+PoW execution time: 3 sec
+Hash rate: 2465366.667 kH/sec
+Success.
         [ Verified ]
 ```
 
@@ -83,11 +118,19 @@ root@lampa:~/dcurl# make BUILD_FPGA_ACCEL=1 check
         [ Verified ]
 *** Validating build/test-curl ***
         [ Verified ]
-*** Validating build/test-pow_c ***
+*** Validating build/test-dcurl ***
+[dcurl] Implementation CPU (Intel SSE) is initialized successfully
+[dcurl] Implementation FPGA is initialized successfully
         [ Verified ]
-*** Validating build/test-multi_pow_cpu ***
+*** Validating build/test-multi_pow ***
         [ Verified ]
-*** Validating build/test-pow_fpga_accel *** 
+*** Validating build/test-pow ***
+CPU - SSE
+[dcurl] Implementation CPU (Intel SSE) is initialized successfully
+Success.
+FPGA
+[dcurl] Implementation FPGA is initialized successfully
+Success.
         [ Verified ] 
 ```
 
