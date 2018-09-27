@@ -36,7 +36,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
     char buf[4];
     bool res = true;
 
-    Trytes_t *object_tryte = NULL, nonce_tryte = NULL;
+    Trytes_t *object_tryte = NULL, *nonce_tryte = NULL;
     Trits_t *object_trit = NULL, *object_nonce_trit = NULL;
     time_t start_time, end_time;
 
@@ -54,7 +54,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
     lseek(ctx->ctrl_fd, 0, 0);
     lseek(ctx->out_fd, 0, 0);
 
-    if (write(ctx->in_fd, (char *) object_trits->data, TRANSACTION_TRITS_LENGTH) <
+    if (write(ctx->in_fd, (char *) object_trit->data, TRANSACTION_TRITS_LENGTH) <
         0) {
         res = false;
         goto fail;
@@ -89,7 +89,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
     }
 
     memcpy(ctx->output_trytes, ctx->input_trytes, (NonceTrinaryOffset) / 3);
-    memcpy(ctx->output_trytes + ((NonceTrinaryOffset) / 3), nonce_trytes->data,
+    memcpy(ctx->output_trytes + ((NonceTrinaryOffset) / 3), nonce_tryte->data,
            ((TRANSACTION_TRITS_LENGTH) - (NonceTrinaryOffset)) / 3);
 
 fail:
