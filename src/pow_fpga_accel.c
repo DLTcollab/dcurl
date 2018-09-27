@@ -7,6 +7,7 @@
 
 #include "pow_fpga_accel.h"
 #include <fcntl.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include "implcontext.h"
 #include "trinary.h"
@@ -15,6 +16,18 @@
 #define DEV_CTRL_FPGA "/dev/cpow-ctrl"
 #define DEV_IDATA_FPGA "/dev/cpow-idata"
 #define DEV_ODATA_FPGA "/dev/cpow-odata"
+#define DEV_MEM_FPGA "/dev/mem"
+
+/* Set memory map of fpga-accelerator PoW */
+#define HPS_TO_FPGA_BASE 0xC0000000
+#define HPS_TO_FPGA_SPAN 0x0020000
+#define HASH_CNT_REG_OFFSET 4
+#define TICK_CNT_LOW_REG_OFFSET 5
+#define TICK_CNT_HI_REG_OFFSET 6
+#define CPOW_BASE 0
+
+/* Set FPGA operation frequency 100 MHz */
+#define FPGA_OPERATION_FREQUENCY 100000000
 
 #define INT2STRING(I, S)         \
     {                            \
@@ -36,9 +49,12 @@ static bool PoWFPGAAccel(void *pow_ctx)
     char buf[4];
     bool res = true;
 
+    uint32_t tick_cnt_l = 0;
+    uint32_t tick_cnt_h = 0;
+    uint64_t tick_cnt = 0;
+
     Trytes_t *object_tryte = NULL, *nonce_tryte = NULL;
     Trits_t *object_trit = NULL, *object_nonce_trit = NULL;
-    time_t start_time, end_time;
 
     object_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
     if (!object_tryte)
@@ -88,6 +104,13 @@ static bool PoWFPGAAccel(void *pow_ctx)
         goto fail;
     }
 
+    tick_cnt_l = *(ctx->cpow_map + TICK_CNT_LOW_REG_OFFSET);
+    tick_cnt_h = *(ctx->cpow_map + TICK_CNT_HI_REG_OFFSET);
+    tick_cnt = tick_cnt_h;
+    tick_cnt = (tick_cnt << 32) | tick_cnt_l;
+    ctx->pow_info->time = (double) tick_cnt / (double) FPGA_OPERATION_FREQUENCY;
+    ctx->pow_info->hash_count = *(ctx->cpow_map + HASH_CNT_REG_OFFSET);
+
     memcpy(ctx->output_trytes, ctx->input_trytes, (NonceTrinaryOffset) / 3);
     memcpy(ctx->output_trytes + ((NonceTrinaryOffset) / 3), nonce_tryte->data,
            ((TRANSACTION_TRITS_LENGTH) - (NonceTrinaryOffset)) / 3);
@@ -127,11 +150,31 @@ static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
     if (!ctx->pow_info)
         goto fail_to_malloc_pow_info;
 
+    ctx->devmem_fd = open(DEV_MEM_FPGA, O_RDWR | O_SYNC);
+    if (ctx->devmem_fd < 0) {
+        perror("devmem open fail");
+        goto fail_to_open_mem;
+    }
+
+    ctx->fpga_regs_map =
+        (uint32_t *) mmap(NULL, HPS_TO_FPGA_SPAN, PROT_READ | PROT_WRITE,
+                          MAP_SHARED, ctx->devmem_fd, HPS_TO_FPGA_BASE);
+    if (ctx->fpga_regs_map == MAP_FAILED) {
+        perror("devmem mmap fial");
+        goto fail_to_mmap;
+    }
+
+    ctx->cpow_map = (uint32_t *) (ctx->fpga_regs_map + CPOW_BASE);
+
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
 
     return true;
 
+fail_to_mmap:
+    close(ctx->devmem_fd);
+fail_to_open_mem:
+    free(ctx->pow_info);
 fail_to_malloc_pow_info:
     close(ctx->out_fd);
 fail_to_open_odata:
@@ -150,6 +193,12 @@ static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
     close(ctx->in_fd);
     close(ctx->out_fd);
     close(ctx->ctrl_fd);
+
+    int result = munmap(ctx->fpga_regs_map, HPS_TO_FPGA_SPAN);
+    if (result < 0) {
+        perror("devmem munmap fail");
+    }
+    close(ctx->devmem_fd);
 
     free(ctx->pow_info);
     free(ctx);
