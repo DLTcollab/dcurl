@@ -123,11 +123,17 @@ static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
         goto fail_to_open_odata;
     }
 
+    ctx->pow_info = (PoW_Info *) malloc(sizeof(PoW_Info));
+    if(!ctx->pow_info)
+        goto fail_to_malloc_pow_info;
+
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
 
     return true;
 
+fail_to_malloc_pow_info:
+    close(ctx->out_fd);
 fail_to_open_odata:
     close(ctx->in_fd);
 fail_to_open_idata:
@@ -144,7 +150,8 @@ static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
     close(ctx->in_fd);
     close(ctx->out_fd);
     close(ctx->ctrl_fd);
-
+ 
+    free(ctx->pow_info);
     free(ctx);
 }
 
