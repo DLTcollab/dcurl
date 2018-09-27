@@ -40,9 +40,9 @@ static bool PoWFPGAAccel(void *pow_ctx)
     Trits_t *object_trit = NULL, *object_nonce_trit = NULL;
     time_t start_time, end_time;
 
-    object_tryte =
-        initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
-    if (!object_tryte) return false;
+    object_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
+    if (!object_tryte)
+        return false;
 
     object_trit = trits_from_trytes(object_tryte);
     if (!object_trit) {
@@ -54,8 +54,8 @@ static bool PoWFPGAAccel(void *pow_ctx)
     lseek(ctx->ctrl_fd, 0, 0);
     lseek(ctx->out_fd, 0, 0);
 
-    if (write(ctx->in_fd, (char *) object_trit->data, TRANSACTION_TRITS_LENGTH) <
-        0) {
+    if (write(ctx->in_fd, (char *) object_trit->data,
+              TRANSACTION_TRITS_LENGTH) < 0) {
         res = false;
         goto fail;
     }
@@ -70,13 +70,13 @@ static bool PoWFPGAAccel(void *pow_ctx)
         goto fail;
     }
 
-    if (read(ctx->out_fd, (char *) fpga_out_nonce_trit, NONCE_TRITS_LENGTH) < 0) {
+    if (read(ctx->out_fd, (char *) fpga_out_nonce_trit, NONCE_TRITS_LENGTH) <
+        0) {
         res = false;
         goto fail;
     }
 
-    object_nonce_trit =
-        initTrits(fpga_out_nonce_trit, NONCE_TRITS_LENGTH);
+    object_nonce_trit = initTrits(fpga_out_nonce_trit, NONCE_TRITS_LENGTH);
     if (!object_nonce_trit) {
         res = false;
         goto fail;
@@ -124,7 +124,7 @@ static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
     }
 
     ctx->pow_info = (PoW_Info *) malloc(sizeof(PoW_Info));
-    if(!ctx->pow_info)
+    if (!ctx->pow_info)
         goto fail_to_malloc_pow_info;
 
     impl_ctx->context = ctx;
@@ -150,7 +150,7 @@ static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
     close(ctx->in_fd);
     close(ctx->out_fd);
     close(ctx->ctrl_fd);
- 
+
     free(ctx->pow_info);
     free(ctx);
 }
@@ -174,8 +174,7 @@ static bool PoWFPGAAccel_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret =
-        (int8_t *) malloc(sizeof(int8_t) * TRANSACTION_TRYTES_LENGTH);
+    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * TRANSACTION_TRYTES_LENGTH);
     if (!ret)
         return NULL;
     memcpy(ret, ((PoW_FPGA_Accel_Context *) pow_ctx)->output_trytes,
