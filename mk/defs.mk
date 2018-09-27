@@ -15,3 +15,6 @@ BUILD_COMPAT ?= 0
 
 # Build FPGA backend or not
 BUILD_FPGA_ACCEL ?= 0
+
+# Show the PoW-related statistic messages or not
+BUILD_STAT ?= 0

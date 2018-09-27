@@ -47,6 +47,10 @@ ifeq ("$(BUILD_JNI)","1")
 include mk/java.mk
 endif
 
+ifeq ("$(BUILD_STAT)","1")
+CFLAGS += -DENABLE_STAT
+endif
+
 TESTS = \
 	trinary \
 	curl \

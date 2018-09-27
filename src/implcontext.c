@@ -64,3 +64,8 @@ int8_t *getPoWResult(ImplContext *impl_ctx, void *pow_ctx)
 {
     return impl_ctx->getPoWResult(pow_ctx);
 }
+
+void *getPoWInfo(ImplContext *impl_ctx, void *pow_ctx)
+{
+    return impl_ctx->getPoWInfo(pow_ctx);
+}

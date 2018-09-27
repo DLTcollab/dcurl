@@ -4,7 +4,6 @@
 #define MinTryteValue -13
 #define MaxTryteValue 13
 #define SignatureSize 6561
-#define HashSize 243
 #define Depth 3
 #define Radix 3
 

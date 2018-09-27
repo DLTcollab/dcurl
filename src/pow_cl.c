@@ -87,6 +87,7 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
     char found = 0;
     cl_event ev, ev1;
     CLContext *titan = ctx;
+    ctx->hash_count = 0;
     global_offset = 0;
     num_groups = titan->num_cores;
     local_work_size = STATE_TRITS_LENGTH;
@@ -99,7 +100,7 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
     int64_t mid_low[STATE_TRITS_LENGTH] = {0}, mid_high[STATE_TRITS_LENGTH] = {0};
     init_state(state, mid_low, mid_high, HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH);
 
-    if (!write_cl_buffer(titan, mid_low, mid_high, mwm, 32))
+    if (!write_cl_buffer(titan, mid_low, mid_high, mwm, LOOP_COUNT))
         return NULL;
 
     if (CL_SUCCESS == clEnqueueNDRangeKernel(titan->cmdq, titan->kernel[INDEX_OF_KERNEL_INIT],
@@ -107,6 +108,7 @@ static int8_t *pwork(int8_t *state, int mwm, CLContext *ctx)
                                              &local_work_size, 0, NULL, &ev)) {
         clWaitForEvents(1, &ev);
         clReleaseEvent(ev);
+        ctx->hash_count += 64 * num_groups * LOOP_COUNT;
 
         while (found == 0) {
             if (CL_SUCCESS !=
@@ -153,16 +155,16 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
 {
     Trytes_t *inn = NULL;
     Trits_t *tr = NULL;
-    int8_t tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+    int8_t tyt[TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] = {0};
 
     Curl *c = initCurl();
     int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
     if (!c || !c_state) goto fail;
 
-    /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
-    memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
+    /* Copy tx->data[:TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] to tyt */
+    memcpy(tyt, tx->data, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
 
-    inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    inn = initTrytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
     if (!inn) goto fail;
 
     Absorb(c, inn);
@@ -170,12 +172,12 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     tr = trits_from_trytes(tx);
     if (!tr) goto fail;
 
-    /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
-    memcpy(c_state, tr->data + transactionTrinarySize - HashSize,
-           tr->len - (transactionTrinarySize - HashSize));
-    memcpy(c_state + tr->len - (transactionTrinarySize - HashSize),
-           c->state->data + tr->len - (transactionTrinarySize - HashSize),
-           c->state->len - tr->len + (transactionTrinarySize - HashSize));
+    /* Prepare an array storing tr[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH:] */
+    memcpy(c_state, tr->data + TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH,
+           tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
+    memcpy(c_state + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->data + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->len - tr->len + (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
 
     freeTrobject(inn);
     freeTrobject(tr);
@@ -195,6 +197,7 @@ bool PowCL(void *pow_ctx)
     int8_t *c_state = NULL, *pow_result = NULL;
     Trits_t *tx_trit = NULL;
     Trytes_t *tx_tryte = NULL, *res_tryte = NULL;
+    time_t start_time, end_time;
 
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
@@ -213,7 +216,10 @@ bool PowCL(void *pow_ctx)
         goto fail;
     }
 
+    time(&start_time);
     pow_result = pwork(c_state, ctx->mwm, ctx->clctx);
+    time(&end_time);
+    ctx->pow_info->time = difftime(end_time, start_time);
     if (!pow_result) {
         res = false;
         goto fail;
@@ -227,6 +233,8 @@ bool PowCL(void *pow_ctx)
         goto fail;
     }
     memcpy(ctx->output_trytes, res_tryte->data, TRANSACTION_TRYTES_LENGTH);
+
+    ctx->pow_info->hash_count = ctx->clctx->hash_count;
 
 fail:
     freeTrobject(tx_trit);
@@ -242,18 +250,31 @@ static bool PoWCL_Context_Initialize(ImplContext *impl_ctx)
     impl_ctx->num_max_thread = init_clcontext(_opencl_ctx);
     PoW_CL_Context *ctx = (PoW_CL_Context *) malloc(sizeof(PoW_CL_Context) * impl_ctx->num_max_thread);
     if (!ctx) return false;
+
+    /* Pre-allocate Memory Chunk */
+    void *pow_info_chunk = malloc(sizeof(PoW_Info) * impl_ctx->num_max_thread);
+    if (!pow_info_chunk) goto fail;
+
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].clctx = &_opencl_ctx[i];
+        ctx[i].pow_info = (PoW_Info *) (pow_info_chunk + i * sizeof(PoW_Info));
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
     return true;
+
+fail:
+    free(ctx);
+    free(pow_info_chunk);
+    return false;
 }
 
 static void PoWCL_Context_Destroy(ImplContext *impl_ctx)
 {
-    free(impl_ctx->context);
+    PoW_CL_Context *ctx = (PoW_CL_Context *) impl_ctx->context;
+    free(ctx->pow_info);
+    free(ctx);
 }
 
 static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
@@ -290,6 +311,11 @@ static int8_t *PoWCL_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static void *PoWCL_getPoWInfo(void *pow_ctx)
+{
+    return ((PoW_CL_Context *) pow_ctx)->pow_info;
+}
+
 ImplContext PoWCL_Context = {
     .context = NULL,
     .description = "GPU (OpenCL)",
@@ -302,4 +328,5 @@ ImplContext PoWCL_Context = {
     .freePoWContext = PoWCL_freePoWContext,
     .doThePoW = PowCL,
     .getPoWResult = PoWCL_getPoWResult,
+    .getPoWInfo = PoWCL_getPoWInfo,
 };

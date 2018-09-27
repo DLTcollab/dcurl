@@ -41,6 +41,7 @@ typedef struct {
     cl_ulong max_memory;
     size_t num_work_group;
     KernelInfo kernel_info;
+    uint64_t hash_count;
 } CLContext;
 
 enum {

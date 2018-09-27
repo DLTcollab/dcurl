@@ -6,6 +6,7 @@
  */
 
 #include "pow_sse.h"
+#include <inttypes.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -264,16 +265,16 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
 {
     Trytes_t *inn = NULL;
     Trits_t *tr = NULL;
-    int8_t tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+    int8_t tyt[TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] = {0};
 
     Curl *c = initCurl();
     int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
     if (!c || !c_state) goto fail;
 
-    /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
-    memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
+    /* Copy tx->data[:TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] to tyt */
+    memcpy(tyt, tx->data, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
 
-    inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    inn = initTrytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
     if (!inn) goto fail;
 
     Absorb(c, inn);
@@ -281,12 +282,12 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     tr = trits_from_trytes(tx);
     if (!tr) goto fail;
 
-    /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
-    memcpy(c_state, tr->data + transactionTrinarySize - HashSize,
-           tr->len - (transactionTrinarySize - HashSize));
-    memcpy(c_state + tr->len - (transactionTrinarySize - HashSize),
-           c->state->data + tr->len - (transactionTrinarySize - HashSize),
-           c->state->len - tr->len + (transactionTrinarySize - HashSize));
+    /* Prepare an array storing tr[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH:] */
+    memcpy(c_state, tr->data + TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH,
+           tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
+    memcpy(c_state + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->data + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->len - tr->len + (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
 
     freeTrobject(inn);
     freeTrobject(tr);
@@ -302,11 +303,11 @@ fail:
 
 static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
 {
-    int rst_len = tx->len - NonceTrinarySize / 3 + nonce->len;
+    int rst_len = tx->len - NONCE_TRYTES_LENGTH + nonce->len;
 
-    memcpy(ret, tx->data, tx->len - NonceTrinarySize / 3);
-    memcpy(ret + tx->len - NonceTrinarySize / 3, nonce->data,
-           rst_len - (tx->len - NonceTrinarySize / 3));
+    memcpy(ret, tx->data, tx->len - NONCE_TRYTES_LENGTH);
+    memcpy(ret + tx->len - NONCE_TRYTES_LENGTH, nonce->data,
+           rst_len - (tx->len - NONCE_TRYTES_LENGTH));
 }
 
 bool PowSSE(void *pow_ctx)
@@ -314,10 +315,13 @@ bool PowSSE(void *pow_ctx)
     bool res = true;
     Trits_t *nonce_trit = NULL;
     Trytes_t *tx_tryte = NULL, *nonce_tryte = NULL;
+    time_t start_time, end_time;
 
     /* Initialize the context */
     PoW_SSE_Context *ctx = (PoW_SSE_Context *) pow_ctx;
     ctx->stopPoW = 0;
+    ctx->pow_info->time = 0;
+    ctx->pow_info->hash_count = 0;
     pthread_mutex_init(&ctx->lock, NULL);
     pthread_t *threads = ctx->threads;
     Pwork_struct *pitem = ctx->pitem;
@@ -333,6 +337,7 @@ bool PowSSE(void *pow_ctx)
         goto fail;
     }
 
+    time(&start_time);
     /* Prepare arguments for pthread */
     for (int i = 0; i < ctx->num_threads; i++) {
         pitem[i].mid = c_state;
@@ -350,9 +355,12 @@ bool PowSSE(void *pow_ctx)
         pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
+        ctx->pow_info->hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
+    time(&end_time);
+    ctx->pow_info->time = difftime(end_time, start_time);
 
-    nonce_trit = initTrits(nonce_array[completedIndex], NonceTrinarySize);
+    nonce_trit = initTrits(nonce_array[completedIndex], NONCE_TRITS_LENGTH);
     if (!nonce_trit) {
         res = false;
         goto fail;
@@ -387,16 +395,18 @@ static bool PoWSSE_Context_Initialize(ImplContext *impl_ctx)
     void *threads_chunk = malloc(impl_ctx->num_max_thread * sizeof(pthread_t) * nproc);
     void *pitem_chunk = malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
     void *nonce_ptr_chunk = malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
-    void *nonce_chunk = malloc(impl_ctx->num_max_thread * NonceTrinarySize * nproc);
-    if (!threads_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) goto fail;
+    void *nonce_chunk = malloc(impl_ctx->num_max_thread * NONCE_TRITS_LENGTH * nproc);
+    void *pow_info_chunk = malloc(impl_ctx->num_max_thread * sizeof(PoW_Info));
+    if (!threads_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk || !pow_info_chunk) goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].threads = (pthread_t *) (threads_chunk + i * sizeof(pthread_t) * nproc);
         ctx[i].pitem = (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
         ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
         for (int j = 0; j < nproc; j++)
-            ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk + i * NonceTrinarySize * nproc +
-                                                j * NonceTrinarySize);
+            ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
+                                                j * NONCE_TRITS_LENGTH);
+        ctx[i].pow_info = (PoW_Info *) (pow_info_chunk + i * sizeof(PoW_Info));
         ctx[i].num_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
@@ -410,6 +420,7 @@ fail:
     free(pitem_chunk);
     free(nonce_ptr_chunk);
     free(nonce_chunk);
+    free(pow_info_chunk);
     return false;
 }
 
@@ -420,6 +431,7 @@ static void PoWSSE_Context_Destroy(ImplContext *impl_ctx)
     free(ctx[0].pitem);
     free(ctx[0].nonce_array[0]);
     free(ctx[0].nonce_array);
+    free(ctx[0].pow_info);
     free(ctx);
 }
 
@@ -457,6 +469,11 @@ static int8_t *PoWSSE_getPoWResult(void *pow_ctx)
     return ret;
 }
 
+static void *PoWSSE_getPoWInfo(void *pow_ctx)
+{
+    return ((PoW_SSE_Context *) pow_ctx)->pow_info;
+}
+
 ImplContext PoWSSE_Context = {
     .context = NULL,
     .description = "CPU (Intel SSE)",
@@ -469,4 +486,5 @@ ImplContext PoWSSE_Context = {
     .freePoWContext = PoWSSE_freePoWContext,
     .doThePoW = PowSSE,
     .getPoWResult = PoWSSE_getPoWResult,
+    .getPoWInfo = PoWSSE_getPoWInfo,
 };
