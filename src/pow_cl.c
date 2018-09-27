@@ -155,16 +155,16 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
 {
     Trytes_t *inn = NULL;
     Trits_t *tr = NULL;
-    int8_t tyt[(transactionTrinarySize - HashSize) / 3] = {0};
+    int8_t tyt[TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] = {0};
 
     Curl *c = initCurl();
     int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
     if (!c || !c_state) goto fail;
 
-    /* Copy tx->data[:(transactionTrinarySize - HashSize) / 3] to tyt */
-    memcpy(tyt, tx->data, (transactionTrinarySize - HashSize) / 3);
+    /* Copy tx->data[:TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] to tyt */
+    memcpy(tyt, tx->data, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
 
-    inn = initTrytes(tyt, (transactionTrinarySize - HashSize) / 3);
+    inn = initTrytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
     if (!inn) goto fail;
 
     Absorb(c, inn);
@@ -172,12 +172,12 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     tr = trits_from_trytes(tx);
     if (!tr) goto fail;
 
-    /* Prepare an array storing tr[transactionTrinarySize - HashSize:] */
-    memcpy(c_state, tr->data + transactionTrinarySize - HashSize,
-           tr->len - (transactionTrinarySize - HashSize));
-    memcpy(c_state + tr->len - (transactionTrinarySize - HashSize),
-           c->state->data + tr->len - (transactionTrinarySize - HashSize),
-           c->state->len - tr->len + (transactionTrinarySize - HashSize));
+    /* Prepare an array storing tr[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH:] */
+    memcpy(c_state, tr->data + TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH,
+           tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
+    memcpy(c_state + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->data + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->len - tr->len + (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
 
     freeTrobject(inn);
     freeTrobject(tr);

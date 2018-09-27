@@ -11,8 +11,8 @@ struct _pow_fpga_accel_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
-    int8_t input_trytes[(transactionTrinarySize) / 3];  /* 2673 */
-    int8_t output_trytes[(transactionTrinarySize) / 3]; /* 2673 */
+    int8_t input_trytes[TRANSACTION_TRYTES_LENGTH];  /* 2673 */
+    int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
     /* PoW-related information */
     PoW_Info *pow_info;

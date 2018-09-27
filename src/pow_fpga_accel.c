@@ -30,7 +30,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
     ctx->pow_info->time = 0;
     ctx->pow_info->hash_count = 0;
 
-    int8_t fpga_out_nonce_trit[NonceTrinarySize];
+    int8_t fpga_out_nonce_trit[NONCE_TRITS_LENGTH];
 
     char result[4];
     char buf[4];
@@ -41,7 +41,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
     time_t start_time, end_time;
 
     object_tryte =
-        initTrytes(ctx->input_trytes, (transactionTrinarySize) / 3);
+        initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
     if (!object_tryte) return false;
 
     object_trit = trits_from_trytes(object_tryte);
@@ -54,7 +54,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
     lseek(ctx->ctrl_fd, 0, 0);
     lseek(ctx->out_fd, 0, 0);
 
-    if (write(ctx->in_fd, (char *) object_trits->data, transactionTrinarySize) <
+    if (write(ctx->in_fd, (char *) object_trits->data, TRANSACTION_TRITS_LENGTH) <
         0) {
         res = false;
         goto fail;
@@ -70,13 +70,13 @@ static bool PoWFPGAAccel(void *pow_ctx)
         goto fail;
     }
 
-    if (read(ctx->out_fd, (char *) fpga_out_nonce_trit, NonceTrinarySize) < 0) {
+    if (read(ctx->out_fd, (char *) fpga_out_nonce_trit, NONCE_TRITS_LENGTH) < 0) {
         res = false;
         goto fail;
     }
 
     object_nonce_trit =
-        initTrits(fpga_out_nonce_trit, NonceTrinarySize);
+        initTrits(fpga_out_nonce_trit, NONCE_TRITS_LENGTH);
     if (!object_nonce_trit) {
         res = false;
         goto fail;
@@ -90,7 +90,7 @@ static bool PoWFPGAAccel(void *pow_ctx)
 
     memcpy(ctx->output_trytes, ctx->input_trytes, (NonceTrinaryOffset) / 3);
     memcpy(ctx->output_trytes + ((NonceTrinaryOffset) / 3), nonce_trytes->data,
-           ((transactionTrinarySize) - (NonceTrinaryOffset)) / 3);
+           ((TRANSACTION_TRITS_LENGTH) - (NonceTrinaryOffset)) / 3);
 
 fail:
     freeTrobject(object_tryte);
@@ -153,7 +153,7 @@ static void *PoWFPGAAccel_getPoWContext(ImplContext *impl_ctx,
                                         int mwm)
 {
     PoW_FPGA_Accel_Context *ctx = impl_ctx->context;
-    memcpy(ctx->input_trytes, trytes, (transactionTrinarySize) / 3);
+    memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
     ctx->mwm = mwm;
     ctx->indexOfContext = 0;
 
@@ -168,11 +168,11 @@ static bool PoWFPGAAccel_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
 {
     int8_t *ret =
-        (int8_t *) malloc(sizeof(int8_t) * ((transactionTrinarySize) / 3));
+        (int8_t *) malloc(sizeof(int8_t) * TRANSACTION_TRYTES_LENGTH);
     if (!ret)
         return NULL;
     memcpy(ret, ((PoW_FPGA_Accel_Context *) pow_ctx)->output_trytes,
-           (transactionTrinarySize) / 3);
+           TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 
