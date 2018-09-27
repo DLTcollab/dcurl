@@ -138,7 +138,7 @@ int main()
 
 #if defined(ENABLE_STAT)
         printf("Hash count: %"PRIu64"\n", pow_info.hash_count);
-        printf("PoW execution time: %.0lf sec\n", pow_info.time);
+        printf("PoW execution time: %.3f sec\n", pow_info.time);
         printf("Hash rate: %.3lf kH/sec\n", pow_info.hash_count / pow_info.time / 1000);
 #endif
         printf("Success.\n");
