@@ -98,7 +98,6 @@ int main()
         PoWFPGAAccel_Context,
 #endif
     };
-    PoW_Info pow_info; 
 
     for (int idx = 0; idx < sizeof(ImplContextArr) / sizeof(ImplContext); idx++) {
         printf("%s\n",description[idx]);
@@ -112,10 +111,7 @@ int main()
         doThePoW(PoW_Context_ptr, pow_ctx);
         int8_t *ret_trytes = getPoWResult(PoW_Context_ptr, pow_ctx);
         assert(ret_trytes);
-        PoW_Info *info = (PoW_Info *) getPoWInfo(PoW_Context_ptr, pow_ctx);
-        assert(info);
-        pow_info.time = info->time;
-        pow_info.hash_count = info->hash_count;
+        PoW_Info pow_info = getPoWInfo(PoW_Context_ptr, pow_ctx);
         freePoWContext(PoW_Context_ptr, pow_ctx);
         destroyImplContext(PoW_Context_ptr);
 

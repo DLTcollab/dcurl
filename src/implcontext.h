@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include "list.h"
+#include "common.h"
 
 typedef struct _impl_context ImplContext;
 
@@ -25,7 +26,7 @@ struct _impl_context {
     void *(*getPoWContext)(ImplContext *impl_ctx, int8_t *trytes, int mwm);
     bool (*doThePoW)(void *pow_ctx);
     int8_t *(*getPoWResult)(void *pow_ctx);
-    void *(*getPoWInfo)(void *pow_ctx);
+    PoW_Info (*getPoWInfo)(void *pow_ctx);
     bool (*freePoWContext)(ImplContext *impl_ctx, void *pow_ctx);
 
     /* Linked list */
@@ -41,6 +42,6 @@ void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm);
 bool doThePoW(ImplContext *impl_ctx, void *pow_ctx);
 bool freePoWContext(ImplContext *impl_ctx, void *pow_ctx);
 int8_t *getPoWResult(ImplContext *impl_ctx, void *pow_ctx);
-void *getPoWInfo(ImplContext *impl_ctx, void *pow_ctx);
+PoW_Info getPoWInfo(ImplContext *impl_ctx, void *pow_ctx);
 
 #endif

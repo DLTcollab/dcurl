@@ -37,7 +37,7 @@ struct _pow_sse_context {
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
     /* PoW-related information */
-    PoW_Info *pow_info;
+    PoW_Info pow_info;
 };
 
 bool PowSSE(void *pow_ctx);
