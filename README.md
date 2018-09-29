@@ -109,7 +109,7 @@ Success.
 ```shell
 root@lampa:~# sh init_curl_pow.sh 
 root@lampa:~# cd dcurl
-root@lampa:~/dcurl# make BUILD_FPGA_ACCEL=1 check
+root@lampa:~/dcurl# make BUILD_STAT=1 BUILD_FPGA_ACCEL=1 check
 ```
 
 * Expected Results
@@ -119,17 +119,23 @@ root@lampa:~/dcurl# make BUILD_FPGA_ACCEL=1 check
 *** Validating build/test-curl ***
         [ Verified ]
 *** Validating build/test-dcurl ***
-[dcurl] Implementation CPU (Intel SSE) is initialized successfully
+[dcurl] Implementation CPU (Pure C) is initialized successfully
 [dcurl] Implementation FPGA is initialized successfully
         [ Verified ]
 *** Validating build/test-multi_pow ***
         [ Verified ]
 *** Validating build/test-pow ***
-CPU - SSE
-[dcurl] Implementation CPU (Intel SSE) is initialized successfully
+CPU - pure C
+[dcurl] Implementation CPU (Pure C) is initialized successfully
+Hash count: 836032
+PoW execution time: 43.000 sec
+Hash rate: 19.443 kH/sec
 Success.
 FPGA
 [dcurl] Implementation FPGA is initialized successfully
+Hash count: 5125680
+PoW execution time: 0.152 sec
+Hash rate: 33734.938 kH/sec
 Success.
         [ Verified ] 
 ```

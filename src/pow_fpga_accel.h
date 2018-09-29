@@ -15,11 +15,15 @@ struct _pow_fpga_accel_context {
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
     /* PoW-related information */
-    PoW_Info *pow_info;
+    PoW_Info pow_info;
     /* Device files for the PFGA accelerator*/
     int ctrl_fd;
     int in_fd;
     int out_fd;
+    int devmem_fd;
+    /* Memory map of fpga */
+    void *fpga_regs_map;
+    uint32_t *cpow_map;
 };
 
 #endif
