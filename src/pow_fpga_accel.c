@@ -40,8 +40,8 @@
 static bool PoWFPGAAccel(void *pow_ctx)
 {
     PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) pow_ctx;
-    ctx->pow_info->time = 0;
-    ctx->pow_info->hash_count = 0;
+    ctx->pow_info.time = 0;
+    ctx->pow_info.hash_count = 0;
 
     int8_t fpga_out_nonce_trit[NONCE_TRITS_LENGTH];
 
@@ -108,8 +108,8 @@ static bool PoWFPGAAccel(void *pow_ctx)
     tick_cnt_h = *(ctx->cpow_map + TICK_CNT_HI_REG_OFFSET);
     tick_cnt = tick_cnt_h;
     tick_cnt = (tick_cnt << 32) | tick_cnt_l;
-    ctx->pow_info->time = (double) tick_cnt / (double) FPGA_OPERATION_FREQUENCY;
-    ctx->pow_info->hash_count = *(ctx->cpow_map + HASH_CNT_REG_OFFSET);
+    ctx->pow_info.time = (double) tick_cnt / (double) FPGA_OPERATION_FREQUENCY;
+    ctx->pow_info.hash_count = *(ctx->cpow_map + HASH_CNT_REG_OFFSET);
 
     memcpy(ctx->output_trytes, ctx->input_trytes, (NonceTrinaryOffset) / 3);
     memcpy(ctx->output_trytes + ((NonceTrinaryOffset) / 3), nonce_tryte->data,
@@ -146,10 +146,6 @@ static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
         goto fail_to_open_odata;
     }
 
-    ctx->pow_info = (PoW_Info *) malloc(sizeof(PoW_Info));
-    if (!ctx->pow_info)
-        goto fail_to_malloc_pow_info;
-
     ctx->devmem_fd = open(DEV_MEM_FPGA, O_RDWR | O_SYNC);
     if (ctx->devmem_fd < 0) {
         perror("devmem open fail");
@@ -174,8 +170,6 @@ static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
 fail_to_mmap:
     close(ctx->devmem_fd);
 fail_to_open_mem:
-    free(ctx->pow_info);
-fail_to_malloc_pow_info:
     close(ctx->out_fd);
 fail_to_open_odata:
     close(ctx->in_fd);
@@ -200,7 +194,6 @@ static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
     }
     close(ctx->devmem_fd);
 
-    free(ctx->pow_info);
     free(ctx);
 }
 
@@ -233,7 +226,7 @@ static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
 
 static void *PoWFPGAAccel_getPoWInfo(void *pow_ctx)
 {
-    return ((PoW_FPGA_Accel_Context *) pow_ctx)->pow_info;
+    return &(((PoW_FPGA_Accel_Context *) pow_ctx)->pow_info);
 }
 
 ImplContext PoWFPGAAccel_Context = {
