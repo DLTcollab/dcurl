@@ -224,7 +224,7 @@ static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
     return ret;
 }
 
-static Pow_Info PoWFPGAAccel_getPoWInfo(void *pow_ctx)
+static PoW_Info PoWFPGAAccel_getPoWInfo(void *pow_ctx)
 {
     return ((PoW_FPGA_Accel_Context *) pow_ctx)->pow_info;
 }
