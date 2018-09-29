@@ -93,14 +93,15 @@ $ make BUILD_AVX=1 BUILD_STAT=1 check
 *** Validating build/test-dcurl ***
 [dcurl] Implementation CPU (Intel AVX) is initialized successfully
         [ Verified ]
-*** Validating build/test-multi_pow_cpu ***
+*** Validating build/test-multi-pow ***
+[dcurl] Implementation CPU (Intel AVX) is initialized successfully
         [ Verified ]
 *** Validating build/test-pow ***
 CPU - AVX
 [dcurl] Implementation CPU (Intel AVX) is initialized successfully
-Hash count: 7396100
-PoW execution time: 3 sec
-Hash rate: 2465366.667 kH/sec
+Hash count: 3182602
+PoW execution time: 0.434 sec
+Hash rate: 7333.736 kH/sec
 Success.
         [ Verified ]
 ```

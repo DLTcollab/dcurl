@@ -1,7 +1,7 @@
 OUT ?= ./build
 SRC := src
 
-CFLAGS = -Wall -fPIC -std=c99
+CFLAGS = -Wall -fPIC -std=gnu99
 LDFLAGS = \
 	-lpthread
 
@@ -75,7 +75,8 @@ OBJS = \
 	constants.o \
 	trinary.o \
 	dcurl.o \
-	implcontext.o
+	implcontext.o \
+	common.o
 
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
