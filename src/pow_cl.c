@@ -304,7 +304,7 @@ static int8_t *PoWCL_getPoWResult(void *pow_ctx)
     return ret;
 }
 
-static Pow_Info PoWCL_getPoWInfo(void *pow_ctx)
+static PoW_Info PoWCL_getPoWInfo(void *pow_ctx)
 {
     return ((PoW_CL_Context *) pow_ctx)->pow_info;
 }
