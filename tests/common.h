@@ -19,7 +19,6 @@
 #include "pow_cl.h"
 #endif
 
-#include <inttypes.h>
 #include <stdint.h>
 #include <stdlib.h>
 
