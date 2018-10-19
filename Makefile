@@ -3,6 +3,7 @@ SRC := src
 
 CFLAGS = -Wall -fPIC -std=gnu99
 LDFLAGS = \
+	-lm \
 	-lpthread
 
 UNAME_S := $(shell uname -s)
