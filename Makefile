@@ -17,7 +17,7 @@ endif
 -include $(OUT)/local.mk
 
 ifeq ("$(BUILD_DEBUG)","1")
-CFLAGS += -Og -g
+CFLAGS += -Og -g3
 else
 # Enable all the optimizations in release build
 CFLAGS += -Ofast
