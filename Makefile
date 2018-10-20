@@ -3,6 +3,7 @@ SRC := src
 
 CFLAGS = -Wall -fPIC -std=gnu99
 LDFLAGS = \
+	-lm \
 	-lpthread
 
 UNAME_S := $(shell uname -s)
@@ -17,7 +18,7 @@ endif
 -include $(OUT)/local.mk
 
 ifeq ("$(BUILD_DEBUG)","1")
-CFLAGS += -Og -g
+CFLAGS += -Og -g3
 else
 # Enable all the optimizations in release build
 CFLAGS += -Ofast
