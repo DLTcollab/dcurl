@@ -2,6 +2,7 @@ dcurl is written by:
   Chen Wei <zhenwei.tw@gmail.com>
   Jim Huang <jserv@biilabs.io>
   AjMaChInE <ajblane0612@gmail.com>
+  Cheng-Gang Cheng <marktwtn@biilabs.io>
 
 Externel Source:
 * src/pow_sse.c is derived from preliminary work of Shinya Yagyu.
