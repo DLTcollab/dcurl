@@ -48,7 +48,6 @@ bool PowAVX(void *pow_ctx);
 #include <x86intrin.h>
 #endif
 
-#define TX_LENGTH 2673  // trytes
 #define INCR_START HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27
 
 #ifdef __AVX2__
