@@ -68,5 +68,6 @@
         AttachmentTimestampUpperBoundTrinarySize + NonceTrinarySize
 
 extern char TryteAlphabet[];
+extern const int indices[];
 
 #endif
