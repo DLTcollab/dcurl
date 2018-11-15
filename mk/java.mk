@@ -30,19 +30,19 @@ $(error "curl is not available.")
 endif
 
 SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,jni))
-SHELL_HACK := $(shell mkdir -p $(OUT)/com/iota/iri/hash)
+SHELL_HACK := $(shell mkdir -p $(OUT)/com/iota/iri/crypto)
 
 GITHUB_REPO ?= DLTcollab/iri/testing
-PearlDriverSRC := src/main/java/com/iota/iri/hash/PearlDiver.java
+PearlDriverSRC := src/main/java/com/iota/iri/crypto/PearlDiver.java
 
-$(OUT)/com/iota/iri/hash/PearlDiver.java: $(OUT)/com/iota/iri/hash
+$(OUT)/com/iota/iri/crypto/PearlDiver.java: $(OUT)/com/iota/iri/crypto
 	$(VECHO) "  CURL\t$@\n"
 	$(Q)$(CURL) -s -o $@ \
 	"https://raw.githubusercontent.com/$(GITHUB_REPO)/$(PearlDriverSRC)"
 
-$(OUT)/jni/iri-pearldiver-exlib.h: $(OUT)/com/iota/iri/hash/PearlDiver.java
+$(OUT)/jni/iri-pearldiver-exlib.h: $(OUT)/com/iota/iri/crypto/PearlDiver.java
 	$(VECHO) "  JAVAH\t$@\n"
-	$(Q)$(JAVAH) -classpath $(OUT) -o $@ com.iota.iri.hash.PearlDiver
+	$(Q)$(JAVAH) -classpath $(OUT) -o $@ com.iota.iri.crypto.PearlDiver
 
 ifeq ($(UNAME_S),Darwin)
     # macOS
