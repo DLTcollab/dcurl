@@ -20,15 +20,18 @@ endif
 ifeq ("$(BUILD_DEBUG)","1")
 CFLAGS += -Og -g3
 else
-# Enable all the optimizations in release build
-CFLAGS += -Ofast
+# Enable all the valid optimizations for standard programs in release build
+CFLAGS += -O3
 endif
 
 # Check specific CPU features available on build host
 include mk/cpu-features.mk
 
 ifeq ("$(BUILD_AVX)","1")
-CFLAGS += -mavx -mavx2 -DENABLE_AVX
+CFLAGS += -mavx -DENABLE_AVX
+ifeq ("$(call cpu_feature,AVX2)","1")
+CFLAGS += -mavx2
+endif
 else
 BUILD_SSE := $(call cpu_feature,SSE)
 ifeq ("$(BUILD_SSE)","1")
