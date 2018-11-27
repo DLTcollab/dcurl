@@ -42,7 +42,7 @@ def validate(trytes, mwm):
 
 def call_dcurl(idx, mwm, lib, trytes_list):
     tmp = str(trytes_list[idx]).encode('ascii')
-    ret = lib.dcurl_entry(tmp, mwm)
+    ret = lib.dcurl_entry(tmp, mwm, 0)
     trytes = TryteString(ret[:2673])
 
     hash_trytes = hash(trytes)
@@ -56,7 +56,7 @@ def testing():
     # Settings of shared library
     libdcurl = ctypes.cdll.LoadLibrary(DCURL_PATH)
     #libdcurl.dcurl_init.argtypes = [ctypes.c_int, ctypes.c_int]
-    libdcurl.dcurl_entry.argtypes = [ctypes.c_char_p, ctypes.c_int]
+    libdcurl.dcurl_entry.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
     libdcurl.dcurl_entry.restype = ctypes.c_char_p
 
     libdcurl.dcurl_init()

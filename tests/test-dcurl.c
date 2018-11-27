@@ -49,7 +49,7 @@ int main()
 
     /* test dcurl Implementation with mwm = 9 */
     dcurl_init();
-    int8_t *ret_trytes = dcurl_entry((int8_t *) trytes, mwm);
+    int8_t *ret_trytes = dcurl_entry((int8_t *) trytes, mwm, 0);
     assert(ret_trytes);
     dcurl_destroy();
 

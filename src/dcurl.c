@@ -98,7 +98,7 @@ void dcurl_destroy()
 }
 
 
-int8_t *dcurl_entry(int8_t *trytes, int mwm)
+int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
 {
     void *pow_ctx = NULL;
     int8_t *res = NULL;
@@ -112,7 +112,7 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm)
         list_for_each(p, &IMPL_LIST) {
             impl = list_entry(p, ImplContext, list);
             if (enterImplContext(impl)) {
-                pow_ctx = getPoWContext(impl, trytes, mwm);
+                pow_ctx = getPoWContext(impl, trytes, mwm, threads);
                 goto pow;
             }
         }

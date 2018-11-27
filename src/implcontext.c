@@ -45,9 +45,9 @@ void exitImplContext(ImplContext *impl_ctx)
     pthread_mutex_unlock(&impl_ctx->lock);
 }
 
-void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
+void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm, int threads)
 {
-    return impl_ctx->getPoWContext(impl_ctx, trytes, mwm);
+    return impl_ctx->getPoWContext(impl_ctx, trytes, mwm, threads);
 }
 
 bool doThePoW(ImplContext *impl_ctx, void *pow_ctx)

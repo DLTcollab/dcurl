@@ -16,7 +16,8 @@ JNIEXPORT jboolean JNICALL
 Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
                                                 jclass clazz,
                                                 jbyteArray trits,
-                                                jint mwm)
+                                                jint mwm,
+                                                jint threads)
 {
     /*********** Get the Byte array from Java byte Array *************/
     jbyte *c_trits = (*env)->GetByteArrayElements(env, trits, NULL);
@@ -27,7 +28,7 @@ Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
         return JNI_FALSE;
     /****************************************************************/
 
-    int8_t *result = dcurl_entry(arg_trytes->data, mwm);
+    int8_t *result = dcurl_entry(arg_trytes->data, mwm, threads);
 
     /************ Write result back Java byte array *****************/
     Trytes_t *ret_trytes = initTrytes(result, 2673);

@@ -31,6 +31,7 @@ struct _pow_c_context {
     int8_t **nonce_array;
     int stopPoW;
     int num_threads;
+    int num_max_threads;
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */

@@ -337,7 +337,7 @@ static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
         for (int j = 0; j < nproc; j++)
             ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
                                                 j * NONCE_TRITS_LENGTH);
-        ctx[i].num_threads = nproc;
+        ctx[i].num_max_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
     }
     impl_ctx->context = ctx;
@@ -363,7 +363,7 @@ static void PoWC_Context_Destroy(ImplContext *impl_ctx)
     free(ctx);
 }
 
-static void *PoWC_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
+static void *PoWC_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm, int threads)
 {
     pthread_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
@@ -374,6 +374,10 @@ static void *PoWC_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;
+            if (threads > 0 && threads < ctx->num_max_threads)
+                ctx->num_threads = threads;
+            else
+                ctx->num_threads = ctx->num_max_threads;
             return ctx;
         }
     }
