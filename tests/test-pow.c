@@ -139,7 +139,7 @@ int main()
 
         /* test implementation with mwm = 14 */
         initializeImplContext(PoW_Context_ptr);
-        void *pow_ctx = getPoWContext(PoW_Context_ptr, (int8_t *) trytes, mwm);
+        void *pow_ctx = getPoWContext(PoW_Context_ptr, (int8_t *) trytes, mwm, 0);
         assert(pow_ctx);
 
         for (int count = 0; count < pow_total; count++) {

@@ -199,7 +199,8 @@ static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
 
 static void *PoWFPGAAccel_getPoWContext(ImplContext *impl_ctx,
                                         int8_t *trytes,
-                                        int mwm)
+                                        int mwm,
+                                        int threads)
 {
     PoW_FPGA_Accel_Context *ctx = impl_ctx->context;
     memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);

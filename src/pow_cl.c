@@ -270,7 +270,7 @@ static void PoWCL_Context_Destroy(ImplContext *impl_ctx)
     free(ctx);
 }
 
-static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm)
+static void *PoWCL_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm, int threads)
 {
     pthread_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
