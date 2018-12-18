@@ -32,7 +32,7 @@ endif
 SHELL_HACK := $(shell mkdir -p $(addprefix $(OUT)/,jni))
 SHELL_HACK := $(shell mkdir -p $(OUT)/com/iota/iri/crypto)
 
-GITHUB_REPO ?= DLTcollab/iri/testing
+GITHUB_REPO ?= DLTcollab/iri/dev-rebase
 PearlDriverSRC := src/main/java/com/iota/iri/crypto/PearlDiver.java
 
 $(OUT)/com/iota/iri/crypto/PearlDiver.java: $(OUT)/com/iota/iri/crypto
