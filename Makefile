@@ -27,6 +27,9 @@ endif
 # Check specific CPU features available on build host
 include mk/cpu-features.mk
 
+# Handle git submodule
+include mk/submodule.mk
+
 ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -DENABLE_AVX
 ifeq ("$(call cpu_feature,AVX2)","1")
@@ -117,17 +120,17 @@ OBJS := $(addprefix $(OUT)/, $(OBJS))
 
 $(OUT)/test-%.o: tests/test-%.c
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
 $(OUT)/%.o: $(SRC)/%.c
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libdcurl.so: $(OBJS)
+$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 

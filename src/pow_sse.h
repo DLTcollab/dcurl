@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <uv.h>
 
 typedef struct _pwork_struct Pwork_struct;
 
@@ -25,7 +26,9 @@ typedef struct _pow_sse_context PoW_SSE_Context;
 struct _pow_sse_context {
     /* Resource of computing */
     pthread_mutex_t lock;
-    pthread_t *threads;
+    /* Data type of libtuv */
+    uv_loop_t loop;
+    uv_work_t *work_req;
     Pwork_struct *pitem;
     int8_t **nonce_array;
     int stopPoW;

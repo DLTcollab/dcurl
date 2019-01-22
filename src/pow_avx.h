@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <uv.h>
 #include "common.h"
 #include "constants.h"
 
@@ -25,7 +26,9 @@ typedef struct _pow_avx_context PoW_AVX_Context;
 struct _pow_avx_context {
     /* Resource of computing */
     pthread_mutex_t lock;
-    pthread_t *threads;
+    /* Data type of libtuv */
+    uv_loop_t loop;
+    uv_work_t *work_req;
     Pwork_struct *pitem;
     int8_t **nonce_array;
     int stopPoW;
