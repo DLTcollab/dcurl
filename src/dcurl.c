@@ -94,6 +94,7 @@ void dcurl_destroy()
     list_for_each(p, &IMPL_LIST) {
         impl = list_entry(p, ImplContext, list);
         destroyImplContext(impl);
+        list_del(p);
     }
 }
 
