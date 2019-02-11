@@ -7,8 +7,10 @@ Hardware-accelerated implementation for IOTA PearlDiver, which utilizes multi-th
 
 ## Introduction
 dcurl exploits SIMD instructions on CPU and OpenCL on GPU. Both CPU and GPU accelerations can be
-enabled in multi-threaded execuction fashion, resulting in much faster proof-of-work (PoW) for IOTA
-Reference Implementation (IRI). Additionally, dcurl supports FPGA-accelerated PoW, described in [docs/fpga-accelerator.md](docs/fpga-accelerator.md).
+enabled in multi-threaded execuction fashion, resulting in much faster [proof-of-work (PoW) for IOTA](https://docs.iota.org/docs/the-tangle/0.1/concepts/proof-of-work).
+In addition, dcurl supports FPGA-accelerated PoW, described in [docs/fpga-accelerator.md](docs/fpga-accelerator.md).
+dcurl can be regarded as the drop-in replacement for [ccurl](https://github.com/iotaledger/ccurl).
+IOTA Reference Implementation (IRI) adaptation is available to benefit from hardware-accelerated PoW.
 
 
 ## Build Instructions
