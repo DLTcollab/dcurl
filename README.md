@@ -1,7 +1,7 @@
 # dcurl - Multi-threaded Curl implementation
 
 [![Build Status](https://travis-ci.org/DLTcollab/dcurl.svg?branch=dev)](https://travis-ci.org/DLTcollab/dcurl)
-![Supported IRI version](https://img.shields.io/badge/Supported%20IRI%20Version-1.5.3-brightgreen.svg)
+![Supported IRI version](https://img.shields.io/badge/Supported%20IRI%20Version-1.6.0-brightgreen.svg)
 
 Hardware-accelerated implementation for IOTA PearlDiver, which utilizes multi-threaded SIMD, FPGA and GPU.
 
@@ -154,7 +154,7 @@ After integrating dcurl into IRI, performance of <```attachToTangle```> is measu
 
 # IRI Adaptation
 [Modified IRI accepting external PoW Library](https://github.com/DLTcollab/iri)
-Supported IRI version: 1.5.3
+Supported IRI version: 1.6.0
 * ```$ cd ~/iri && mvn compile && mvn package```
 * ```$ cp ~/dcurl/build/libdcurl.so ~/iri```
 * ```$ cd ~/iri && java -Djava.library.path=./ -jar target/iri.jar -p <port> --pearldiver-exlib dcurl```
