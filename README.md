@@ -18,11 +18,11 @@ Check [docs/build-n-test.md](docs/build-n-test.md) for details.
 
 
 ## Performance
-After integrating dcurl into IRI, performance of <```attachToTangle```> is measured as following.
+After integrating dcurl into IRI, performance of [attachToTangle](https://iota.readme.io/reference#attachtotangle) is measured as following.
 * Each sampling is measured with 30 transaction trytes and total 200 samples are measured.
 * mwm = 14, 26 CPU threads to find nonce
 * Settings: enable 2 pow tasks in CPU, 1 pow tasks in GPU at the same time
-![](https://lh4.googleusercontent.com/2U_TpfAtEbPdHBcGKD1zl0t0bzo2Rubj0DxXxvV-Rh31Yr7oCCtptutQpLLizMgR7ousEXUtwM6RASnQLOJnGePhQ5Emh1w8l8GlKzMtZ0Yv-TySF2gh3u48BAmllAJv2VjNaxgFGCA)
+![](https://raw.githubusercontent.com/DLTcollab/dcurl/dev/docs/benchmark.png)
 
 
 ## IRI Adaptation
