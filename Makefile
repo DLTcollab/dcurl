@@ -118,11 +118,11 @@ endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 
-$(OUT)/test-%.o: tests/test-%.c
+$(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/%.o: $(SRC)/%.c
+$(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 

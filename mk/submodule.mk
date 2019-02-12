@@ -16,6 +16,8 @@ LIBTUV_PLATFORM := $(UNAME_M)-$(UNAME_S)
 # PIC (Position-Independent-Code) library
 LIBTUV_LIBRARY := $(LIBTUV_PATH)/build/$(LIBTUV_PLATFORM)/release/lib/libtuv.o
 
-$(LIBTUV_LIBRARY):
+$(LIBTUV_PATH)/include:
 	git submodule update --init $(LIBTUV_PATH)
+
+$(LIBTUV_LIBRARY):
 	$(MAKE) -C $(LIBTUV_PATH) TUV_BUILD_TYPE=release TUV_CREATE_PIC_LIB=yes
