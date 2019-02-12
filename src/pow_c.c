@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <uv.h>
 #include "cpu-utils.h"
 #include "curl.h"
 #include "implcontext.h"
@@ -176,12 +177,12 @@ static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n,
     return loop_cpu(lmid, hmid, mwm, nonce, stopPoW);
 }
 
-static void *pworkThread(void *pitem)
+static void work_cb(uv_work_t *req)
 {
-    Pwork_struct *pworkInfo = (Pwork_struct *) pitem;
+    Pwork_struct *pworkInfo = (Pwork_struct *) req->data;
     pworkInfo->ret = pwork(pworkInfo->mid, pworkInfo->mwm,
-                              pworkInfo->nonce, pworkInfo->n,
-                              pworkInfo->stopPoW);
+                           pworkInfo->nonce, pworkInfo->n,
+                           pworkInfo->stopPoW);
 
     pthread_mutex_lock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
@@ -190,7 +191,6 @@ static void *pworkThread(void *pitem)
         pworkInfo->n = -1;
     }
     pthread_mutex_unlock(pworkInfo->lock);
-    pthread_exit(NULL);
 }
 
 static int8_t *tx_to_cstate(Trytes_t *tx)
@@ -255,7 +255,8 @@ bool PowC(void *pow_ctx)
     ctx->pow_info.time = 0;
     ctx->pow_info.hash_count = 0;
     pthread_mutex_init(&ctx->lock, NULL);
-    pthread_t *threads = ctx->threads;
+    uv_loop_t *loop_ptr = &ctx->loop;
+    uv_work_t *work_req = ctx->work_req;
     Pwork_struct *pitem = ctx->pitem;
     int8_t **nonce_array = ctx->nonce_array;
 
@@ -279,12 +280,14 @@ bool PowC(void *pow_ctx)
         pitem[i].lock = &ctx->lock;
         pitem[i].stopPoW = &ctx->stopPoW;
         pitem[i].ret = 0;
-        pthread_create(&threads[i], NULL, pworkThread, (void *) &pitem[i]);
+        work_req[i].data = &pitem[i];
+        uv_queue_work(loop_ptr, &work_req[i], work_cb, NULL);
     }
+
+    uv_run(loop_ptr, UV_RUN_DEFAULT);
 
     int completedIndex = -1;
     for (int i = 0; i < ctx->num_threads; i++) {
-        pthread_join(threads[i], NULL);
         if (pitem[i].n == -1)
             completedIndex = i;
         ctx->pow_info.hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
@@ -324,14 +327,14 @@ static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
     if (!ctx) return false;
 
     /* Pre-allocate Memory Chunk for each field */
-    void *threads_chunk = malloc(impl_ctx->num_max_thread * sizeof(pthread_t) * nproc);
+    void *work_req_chunk = malloc(impl_ctx->num_max_thread * sizeof(uv_work_t) * nproc);
     void *pitem_chunk = malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
     void *nonce_ptr_chunk = malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
     void *nonce_chunk = malloc(impl_ctx->num_max_thread * NONCE_TRITS_LENGTH * nproc);
-    if (!threads_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) goto fail;
+    if (!work_req_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx[i].threads = (pthread_t *) (threads_chunk + i * sizeof(pthread_t) * nproc);
+        ctx[i].work_req = (uv_work_t *) (work_req_chunk + i * sizeof(uv_work_t) * nproc);
         ctx[i].pitem = (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
         ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
         for (int j = 0; j < nproc; j++)
@@ -339,14 +342,18 @@ static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
                                                 j * NONCE_TRITS_LENGTH);
         ctx[i].num_max_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
+        uv_loop_init(&ctx[i].loop);
     }
     impl_ctx->context = ctx;
     pthread_mutex_init(&impl_ctx->lock, NULL);
     return true;
 
 fail:
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        uv_loop_close(&ctx[i].loop);
+    }
     free(ctx);
-    free(threads_chunk);
+    free(work_req_chunk);
     free(pitem_chunk);
     free(nonce_ptr_chunk);
     free(nonce_chunk);
@@ -356,7 +363,10 @@ fail:
 static void PoWC_Context_Destroy(ImplContext *impl_ctx)
 {
     PoW_C_Context *ctx = (PoW_C_Context *) impl_ctx->context;
-    free(ctx[0].threads);
+    for (int i = 0; i < impl_ctx->num_max_thread; i++) {
+        uv_loop_close(&ctx[i].loop);
+    }
+    free(ctx[0].work_req);
     free(ctx[0].pitem);
     free(ctx[0].nonce_array[0]);
     free(ctx[0].nonce_array);

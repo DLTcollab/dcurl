@@ -1,0 +1,3 @@
+[submodule "deps/libtuv"]
+	path = deps/libtuv
+	url = https://github.com/DLTcollab/libtuv.git
