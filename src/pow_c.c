@@ -17,7 +17,7 @@
 
 void transform64(uint64_t *lmid, uint64_t *hmid)
 {
-    uint64_t alpha, beta, gamma, delta;
+    uint64_t alpha, beta, delta;
     uint64_t *lfrom = lmid, *hfrom = hmid;
     uint64_t *lto = lmid + STATE_TRITS_LENGTH, *hto = hmid + STATE_TRITS_LENGTH;
 
@@ -27,10 +27,9 @@ void transform64(uint64_t *lmid, uint64_t *hmid)
             int t2 = indices[j + 1];
             alpha = lfrom[t1];
             beta = hfrom[t1];
-            gamma = hfrom[t2];
-            delta = (alpha | (~gamma)) & (lfrom[t2] ^ beta);
-            lto[j] = ~delta;
-            hto[j] = (alpha ^ gamma) | delta;
+            delta = beta ^ lfrom[t2];
+            lto[j] = ~(delta & alpha);
+            hto[j] = delta | (alpha ^ hfrom[t2]);
         }
         uint64_t *lswap = lfrom, *hswap = hfrom;
         lfrom = lto;
@@ -44,10 +43,9 @@ void transform64(uint64_t *lmid, uint64_t *hmid)
         int t2 = indices[j + 1];
         alpha = lfrom[t1];
         beta = hfrom[t1];
-        gamma = hfrom[t2];
-        delta = (alpha | (~gamma)) & (lfrom[t2] ^ beta);
-        lto[j] = ~delta;  // 6
-        hto[j] = (alpha ^ gamma) | delta;
+        delta = beta ^ lfrom[t2];
+        lto[j] = ~(delta & alpha);
+        hto[j] = delta | (alpha ^ hfrom[t2]);
     }
 }
 
