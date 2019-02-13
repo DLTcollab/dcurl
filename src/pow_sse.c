@@ -19,7 +19,7 @@
 static void transform128(__m128i *lmid, __m128i *hmid)
 {
     int t1, t2;
-    __m128i alpha, beta, gamma, delta;
+    __m128i alpha, beta, delta;
     __m128i *lto = lmid + STATE_TRITS_LENGTH, *hto = hmid + STATE_TRITS_LENGTH;
     __m128i *lfrom = lmid, *hfrom = hmid;
 
@@ -29,10 +29,9 @@ static void transform128(__m128i *lmid, __m128i *hmid)
             t2 = indices[j + 1];
             alpha = lfrom[t1];
             beta = hfrom[t1];
-            gamma = hfrom[t2];
-            delta = (alpha | (~gamma)) & (lfrom[t2] ^ beta);
-            lto[j] = ~delta;
-            hto[j] = (alpha ^ gamma) | delta;
+            delta = beta ^ lfrom[t2];
+            lto[j] = ~(delta & alpha);
+            hto[j] = delta | (alpha ^ hfrom[t2]);
         }
         __m128i *lswap = lfrom, *hswap = hfrom;
         lfrom = lto;
@@ -45,10 +44,9 @@ static void transform128(__m128i *lmid, __m128i *hmid)
         t2 = indices[j + 1];
         alpha = lfrom[t1];
         beta = hfrom[t1];
-        gamma = hfrom[t2];
-        delta = (alpha | (~gamma)) & (lfrom[t2] ^ beta);
-        lto[j] = ~delta;
-        hto[j] = (alpha ^ gamma) | delta;
+        delta = beta ^ lfrom[t2];
+        lto[j] = ~(delta & alpha);
+        hto[j] = delta | (alpha ^ hfrom[t2]);
     }
 }
 

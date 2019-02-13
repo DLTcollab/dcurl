@@ -20,7 +20,7 @@ static void transform256(__m256i *lmid, __m256i *hmid)
 {
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     int t1, t2;
-    __m256i alpha, beta, gamma, delta, ngamma;
+    __m256i alpha, beta, delta;
     __m256i *lto = lmid + STATE_TRITS_LENGTH, *hto = hmid + STATE_TRITS_LENGTH;
     __m256i *lfrom = lmid, *hfrom = hmid;
 
@@ -31,18 +31,12 @@ static void transform256(__m256i *lmid, __m256i *hmid)
 
             alpha = lfrom[t1];
             beta = hfrom[t1];
-            gamma = hfrom[t2];
-            ngamma = _mm256_andnot_si256(gamma, one);
-            delta = _mm256_and_si256(
-                _mm256_or_si256(alpha, ngamma),
-                _mm256_xor_si256(
-                    lfrom[t2],
-                    beta)); /* (alpha | (~gamma)) & (lfrom[t2] ^ beta) */
+            delta = _mm256_xor_si256(lfrom[t2], beta); /* lfrom[t2] ^ beta */
 
-
-            lto[j] = _mm256_andnot_si256(delta, one); /* ~delta */
-            hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, gamma),
-                                     delta); /* (alpha ^ gamma) | delta */
+            lto[j] = _mm256_andnot_si256(
+                _mm256_and_si256(delta, alpha), one); /* ~(delta & alpha) */
+            hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, hfrom[t2]),
+                                     delta); /* (alpha ^ hfrom[t2]) | delta */
         }
         __m256i *lswap = lfrom, *hswap = hfrom;
         lfrom = lto;
@@ -55,15 +49,12 @@ static void transform256(__m256i *lmid, __m256i *hmid)
         t2 = indices[j + 1];
         alpha = lfrom[t1];
         beta = hfrom[t1];
-        gamma = hfrom[t2];
-        ngamma = _mm256_andnot_si256(gamma, one);
-        delta = _mm256_and_si256(
-            _mm256_or_si256(alpha, ngamma),
-            _mm256_xor_si256(
-                lfrom[t2], beta)); /* (alpha | (~gamma)) & (lfrom[t2] ^ beta) */
-        lto[j] = _mm256_andnot_si256(delta, one); /* ~delta */
-        hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, gamma),
-                                 delta); /* (alpha ^ gamma) | delta */
+        delta = _mm256_xor_si256(lfrom[t2], beta); /* lfrom[t2] ^ beta */
+
+        lto[j] = _mm256_andnot_si256(
+            _mm256_and_si256(delta, alpha), one); /* ~(delta & alpha) */
+        hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, hfrom[t2]),
+                                 delta); /* (alpha ^ hfrom[t2]) | delta */
     }
 }
 
@@ -215,7 +206,7 @@ void transform256(__m256d *lmid, __m256d *hmid)
 {
     __m256d one = _mm256_set_pd(HBITS, HBITS, HBITS, HBITS);
     int j, r, t1, t2;
-    __m256d alpha, beta, gamma, delta, ngamma;
+    __m256d alpha, beta, delta;
     __m256d *lto = lmid + STATE_TRITS_LENGTH, *hto = hmid + STATE_TRITS_LENGTH;
     __m256d *lfrom = lmid, *hfrom = hmid;
     for (r = 0; r < 80; r++) {
@@ -225,18 +216,12 @@ void transform256(__m256d *lmid, __m256d *hmid)
 
             alpha = lfrom[t1];
             beta = hfrom[t1];
-            gamma = hfrom[t2];
-            ngamma = _mm256_andnot_pd(gamma, one);
-            delta = _mm256_and_pd(
-                _mm256_or_pd(alpha, ngamma),
-                _mm256_xor_pd(
-                    lfrom[t2],
-                    beta));  //(alpha | (~gamma)) & (lfrom[t2] ^ beta);
+            delta = _mm256_xor_pd(lfrom[t2], beta); /* lfrom[t2] ^ beta */
 
-
-            lto[j] = _mm256_andnot_pd(delta, one);  //~delta;
-            hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, gamma),
-                                  delta);  //(alpha ^ gamma) | delta;
+            lto[j] = _mm256_andnot_pd(
+                _mm256_and_pd(delta, alpha), one); /* ~(delta & alpha) */
+            hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, hfrom[t2]),
+                                     delta); /* (alpha ^ hfrom[t2]) | delta */
         }
         __m256d *lswap = lfrom, *hswap = hfrom;
         lfrom = lto;
@@ -250,17 +235,12 @@ void transform256(__m256d *lmid, __m256d *hmid)
 
         alpha = lfrom[t1];
         beta = hfrom[t1];
-        gamma = hfrom[t2];
-        ngamma = _mm256_andnot_pd(gamma, one);
-        delta = _mm256_and_pd(
-            _mm256_or_pd(alpha, ngamma),
-            _mm256_xor_pd(lfrom[t2],
-                          beta));  //(alpha | (~gamma)) & (lfrom[t2] ^ beta);
+        delta = _mm256_xor_pd(lfrom[t2], beta); /* lfrom[t2] ^ beta */
 
-
-        lto[j] = _mm256_andnot_pd(delta, one);  //~delta;
-        hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, gamma),
-                              delta);  //(alpha ^ gamma) | delta;
+        lto[j] = _mm256_andnot_pd(
+            _mm256_and_pd(delta, alpha), one); /* ~(delta & alpha) */
+        hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, hfrom[t2]),
+                                 delta); /* (alpha ^ hfrom[t2]) | delta */
     }
 }
 

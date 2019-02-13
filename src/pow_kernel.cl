@@ -127,18 +127,16 @@ void transform(__global bc_trit_t* state_low, __global bc_trit_t* state_high,
                __private size_t id, __private size_t l_size,
                __private size_t n_trits) {
   __private size_t round, i, j, k;
-  __private bc_trit_t alpha, beta, gamma, delta, sp_low[3], sp_high[3];
+  __private bc_trit_t alpha, beta, delta, sp_low[3], sp_high[3];
   for (round = 0; round < NUMBER_OF_ROUNDS; round++) {
     for (i = 0; i < n_trits; i++) {
       j = id + i * l_size;
       k = j+1;
       alpha = state_low[INDEX[j]];
       beta = state_high[INDEX[j]];
-      gamma = state_high[INDEX[k]];
-      delta = (alpha | (~gamma)) & (state_low[INDEX[k]] ^ beta);
-
-      sp_low[i] = ~delta;
-      sp_high[i] = (alpha ^ gamma) | delta;
+      delta = beta ^ state_low[INDEX[k]];
+      sp_low[i] = ~(delta & alpha);
+      sp_high[i] = delta | (alpha ^ state_high[INDEX[k]]);
     }
     barrier(CLK_LOCAL_MEM_FENCE);
     for (i = 0; i < n_trits; i++) {
