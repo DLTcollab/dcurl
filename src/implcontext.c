@@ -14,10 +14,12 @@ bool registerImplContext(ImplContext *impl_ctx)
 bool initializeImplContext(ImplContext *impl_ctx)
 {
     bool res = impl_ctx->initialize(impl_ctx);
+#if defined(ENABLE_DEBUG)
     if (res) {
         printf(MSG_PREFIX "Implementation %s is initialized successfully\n",
                impl_ctx->description);
     }
+#endif
     return res;
 }
 

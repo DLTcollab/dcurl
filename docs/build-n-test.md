@@ -38,13 +38,11 @@ $ make BUILD_GPU=1 check
 *** Validating build/test-curl ***
         [ Verified ]
 *** Validating build/test-durl ***
-[dcurl] Implementation GPU (OpenCL) is initialized successfully
         [ Verified ]
 *** Validating build/test-multi_pow ***
         [ Verified ]
 *** Validating build/test-pow ***
 GPU - OpenCL
-[dcurl] Implementation GPU (OpenCL) is initialized successfully
 Success.
         [ Verified ]
 ```
@@ -61,13 +59,11 @@ $ make BUILD_AVX=1 check
 *** Validating build/test-curl ***
         [ Verified ]
 *** Validating build/test-dcurl ***
-[dcurl] Implementation CPU (Intel AVX) is initialized successfully
         [ Verified ]
 *** Validating build/test-multi_pow_cpu ***
         [ Verified ]
 *** Validating build/test-pow ***
 CPU - AVX
-[dcurl] Implementation CPU (Intel AVX) is initialized successfully
 Success.
         [ Verified ]
 ```
@@ -84,14 +80,11 @@ $ make BUILD_AVX=1 BUILD_STAT=1 check
 *** Validating build/test-curl ***
         [ Verified ]
 *** Validating build/test-dcurl ***
-[dcurl] Implementation CPU (Intel AVX) is initialized successfully
         [ Verified ]
 *** Validating build/test-multi-pow ***
-[dcurl] Implementation CPU (Intel AVX) is initialized successfully
         [ Verified ]
 *** Validating build/test-pow ***
 CPU - AVX
-[dcurl] Implementation CPU (Intel AVX) is initialized successfully
 Hash count: 3182602
 PoW execution time: 0.434 sec
 Hash rate: 7333.736 kH/sec
@@ -113,20 +106,16 @@ root@lampa:~/dcurl# make BUILD_STAT=1 BUILD_FPGA_ACCEL=1 check
 *** Validating build/test-curl ***
         [ Verified ]
 *** Validating build/test-dcurl ***
-[dcurl] Implementation CPU (Pure C) is initialized successfully
-[dcurl] Implementation FPGA is initialized successfully
         [ Verified ]
 *** Validating build/test-multi_pow ***
         [ Verified ]
 *** Validating build/test-pow ***
 CPU - pure C
-[dcurl] Implementation CPU (Pure C) is initialized successfully
 Hash count: 836032
 PoW execution time: 43.000 sec
 Hash rate: 19.443 kH/sec
 Success.
 FPGA
-[dcurl] Implementation FPGA is initialized successfully
 Hash count: 5125680
 PoW execution time: 0.152 sec
 Hash rate: 33734.938 kH/sec

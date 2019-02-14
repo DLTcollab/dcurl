@@ -18,7 +18,7 @@ endif
 -include $(OUT)/local.mk
 
 ifeq ("$(BUILD_DEBUG)","1")
-CFLAGS += -Og -g3
+CFLAGS += -Og -g3 -DENABLE_DEBUG
 else
 # Enable all the valid optimizations for standard programs in release build
 CFLAGS += -O3
