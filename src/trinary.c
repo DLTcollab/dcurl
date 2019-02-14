@@ -33,10 +33,14 @@ static bool validateTrits(Trobject_t *trits)
     if (trits->type != TYPE_TRITS)
         return false;
 
+#if defined(__SSE4_2__)
+    return validateTrits_sse42(trits);
+#else
     for (int i = 0; i < trits->len; i++)
         if (trits->data[i] < -1 || trits->data[i] > 1)
             return false;
     return true;
+#endif
 }
 
 static bool validateTrytes(Trobject_t *trytes)
