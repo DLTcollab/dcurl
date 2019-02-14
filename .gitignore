@@ -1,5 +1,6 @@
 # Generated files
 build/
+docs/html
 
 # Object files                                                                                                                                                
 *.o
