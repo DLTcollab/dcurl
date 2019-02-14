@@ -5,6 +5,9 @@
  */
 
 #include "trinary.h"
+#if defined(__SSE4_2__)
+#include "trinary_sse42.h"
+#endif
 #include <stdint.h>
 #include "constants.h"
 #include "curl.h"
@@ -41,11 +44,15 @@ static bool validateTrytes(Trobject_t *trytes)
     if (trytes->type != TYPE_TRYTES)
         return false;
 
+#if defined(__SSE4_2__)
+    return validateTrytes_sse42(trytes);
+#else
     for (int i = 0; i < trytes->len; i++)
         if ((trytes->data[i] < 'A' || trytes->data[i] > 'Z') &&
             trytes->data[i] != '9')
             return false;
     return true;
+#endif
 }
 
 Trobject_t *initTrits(int8_t *src, int len)
