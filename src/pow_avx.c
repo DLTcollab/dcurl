@@ -206,8 +206,10 @@ static int64_t pwork256(int8_t mid[],
 
     return loop256(lmid, hmid, mwm, nonce, stopPoW);
 }
-#else
-void transform256(__m256d *lmid, __m256d *hmid)
+
+#else /* AVX1 */
+
+static void transform256(__m256d *lmid, __m256d *hmid)
 {
     __m256d one = _mm256_set_pd(HBITS, HBITS, HBITS, HBITS);
     int j, r, t1, t2;
@@ -249,7 +251,7 @@ void transform256(__m256d *lmid, __m256d *hmid)
     }
 }
 
-int incr256(__m256d *mid_low, __m256d *mid_high)
+static int incr256(__m256d *mid_low, __m256d *mid_high)
 {
     int i;
     __m256d carry;
@@ -264,7 +266,7 @@ int incr256(__m256d *mid_low, __m256d *mid_high)
     return i == HASH_TRITS_LENGTH;
 }
 
-void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
+static void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
 {
     int i = 0, index = 0;
     if (n > 63 && n < 128) {
@@ -297,7 +299,7 @@ void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
     }
 }
 
-int check256(__m256d *l, __m256d *h, int m)
+static int check256(__m256d *l, __m256d *h, int m)
 {
     int i, j;  // omit init for speed
 
@@ -321,7 +323,7 @@ int check256(__m256d *l, __m256d *h, int m)
     return -2;
 }
 
-void para256(int8_t in[], __m256d l[], __m256d h[])
+static void para256(int8_t in[], __m256d l[], __m256d h[])
 {
     int i = 0;
     for (i = 0; i < STATE_TRITS_LENGTH; i++) {
@@ -342,7 +344,7 @@ void para256(int8_t in[], __m256d l[], __m256d h[])
     }
 }
 
-void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
+static void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
 {
     int i, j;
     for (j = 0; j < n; j++) {
@@ -358,7 +360,11 @@ void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
     }
 }
 
-int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce, int *stopPoW)
+static int loop256(__m256d *lmid,
+                   __m256d *hmid,
+                   int m,
+                   int8_t *nonce,
+                   int *stopPoW)
 {
     int i = 0, n = 0, j = 0;
 
@@ -378,11 +384,11 @@ int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce, int *stopPoW)
     return -i * 256 - 1;
 }
 
-long long int pwork256(int8_t mid[],
-                       int mwm,
-                       int8_t nonce[],
-                       int n,
-                       int *stopPoW)
+static long long int pwork256(int8_t mid[],
+                              int mwm,
+                              int8_t nonce[],
+                              int n,
+                              int *stopPoW)
 {
     __m256d lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
     int offset = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH;
@@ -403,7 +409,8 @@ long long int pwork256(int8_t mid[],
 
     return loop256(lmid, hmid, mwm, nonce, stopPoW);
 }
-#endif
+
+#endif /* __AVX2__ */
 
 static void work_cb(uv_work_t *req)
 {
