@@ -17,11 +17,14 @@ endif
 
 -include $(OUT)/local.mk
 
-ifeq ("$(BUILD_DEBUG)","1")
-CFLAGS += -Og -g3 -DENABLE_DEBUG
+ifneq ("$(BUILD_DEBUG)","0")
+    CFLAGS += -Og -g3 -DENABLE_DEBUG
+    ifneq ("$(BUILD_DEBUG)","1")
+        include mk/sanitizers.mk
+    endif
 else
-# Enable all the valid optimizations for standard programs in release build
-CFLAGS += -O3
+    # Enable all the valid optimizations for standard programs in release build
+    CFLAGS += -O3
 endif
 
 # Check specific CPU features available on build host

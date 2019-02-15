@@ -22,6 +22,7 @@
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
     - ``BUILD_STAT``: show the statistics of the PoW information.
     - ``BUILD_DEBUG``: dump verbose messages internally.
+                       Build with the corresponding Sanitizer to detect software potential bugs if the value is `address`, `undefined` or `thread`.
 * Alternatively, you can specify conditional build as following:
 ```shell
 $ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1
