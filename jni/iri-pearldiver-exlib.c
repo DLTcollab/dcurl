@@ -1,8 +1,8 @@
 #include "iri-pearldiver-exlib.h"
 #include <jni.h>
+#include <stdint.h>
 #include "../src/dcurl.h"
 #include "../src/trinary.h"
-#include <stdint.h>
 
 JNIEXPORT jboolean JNICALL
 Java_com_iota_iri_hash_PearlDiver_exlib_1init(JNIEnv *env, jclass clazz)

@@ -5,9 +5,9 @@
  */
 
 #include "dcurl.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <unistd.h>
 #if defined(ENABLE_OPENCL)
 #include "pow_cl.h"
@@ -15,8 +15,8 @@
 #if defined(ENABLE_FPGA_ACCEL)
 #include "pow_fpga_accel.h"
 #endif
-#include "trinary.h"
 #include "implcontext.h"
+#include "trinary.h"
 #if defined(ENABLE_AVX)
 #include "pow_avx.h"
 #elif defined(ENABLE_SSE)
@@ -91,7 +91,7 @@ void dcurl_destroy()
     ImplContext *impl = NULL;
     struct list_head *p;
 
-    list_for_each(p, &IMPL_LIST) {
+    list_for_each (p, &IMPL_LIST) {
         impl = list_entry(p, ImplContext, list);
         destroyImplContext(impl);
         list_del(p);
@@ -107,10 +107,11 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
     ImplContext *impl = NULL;
     struct list_head *p;
 
-    if (!isInitialized) return NULL;
+    if (!isInitialized)
+        return NULL;
 
     do {
-        list_for_each(p, &IMPL_LIST) {
+        list_for_each (p, &IMPL_LIST) {
             impl = list_entry(p, ImplContext, list);
             if (enterImplContext(impl)) {
                 pow_ctx = getPoWContext(impl, trytes, mwm, threads);

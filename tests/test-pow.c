@@ -21,7 +21,7 @@ extern ImplContext PoWCL_Context;
 extern ImplContext PoWFPGAAccel_Context;
 #endif
 
-const char *description[ ] = {
+const char *description[] = {
 #if defined(ENABLE_AVX)
     "CPU - AVX",
 #elif defined(ENABLE_SSE)
@@ -39,7 +39,8 @@ const char *description[ ] = {
 #endif
 };
 
-double getAvg(const double arr[], int arrLen) {
+double getAvg(const double arr[], int arrLen)
+{
     double avg, sum = 0;
 
     for (int idx = 0; idx < arrLen; idx++) {
@@ -50,7 +51,8 @@ double getAvg(const double arr[], int arrLen) {
     return avg;
 }
 
-double getStdDeviation(const double arr[], int arrLen) {
+double getStdDeviation(const double arr[], int arrLen)
+{
     double sigma, variance = 0;
     double avg = getAvg(arr, arrLen);
 
@@ -107,7 +109,7 @@ int main()
 
     int mwm = 14;
 
-    ImplContext ImplContextArr[ ] = {
+    ImplContext ImplContextArr[] = {
 #if defined(ENABLE_AVX)
         PoWAVX_Context,
 #elif defined(ENABLE_SSE)
@@ -132,14 +134,16 @@ int main()
 #endif
 
 
-    for (int idx = 0; idx < sizeof(ImplContextArr) / sizeof(ImplContext); idx++) {
+    for (int idx = 0; idx < sizeof(ImplContextArr) / sizeof(ImplContext);
+         idx++) {
         printf("%s\n", description[idx]);
 
         ImplContext *PoW_Context_ptr = &ImplContextArr[idx];
 
         /* test implementation with mwm = 14 */
         initializeImplContext(PoW_Context_ptr);
-        void *pow_ctx = getPoWContext(PoW_Context_ptr, (int8_t *) trytes, mwm, 0);
+        void *pow_ctx =
+            getPoWContext(PoW_Context_ptr, (int8_t *) trytes, mwm, 0);
         assert(pow_ctx);
 
         for (int count = 0; count < pow_total; count++) {
@@ -150,7 +154,8 @@ int main()
             PoW_Info pow_info = getPoWInfo(PoW_Context_ptr, pow_ctx);
 #endif
 
-            Trytes_t *trytes_t = initTrytes(ret_trytes, TRANSACTION_TRYTES_LENGTH);
+            Trytes_t *trytes_t =
+                initTrytes(ret_trytes, TRANSACTION_TRYTES_LENGTH);
             assert(trytes_t);
             Trytes_t *hash_trytes = hashTrytes(trytes_t);
             assert(hash_trytes);
@@ -158,7 +163,8 @@ int main()
             assert(ret_trits);
 
             /* Validation */
-            for (int i = HASH_TRITS_LENGTH - 1; i >= HASH_TRITS_LENGTH - mwm; i--) {
+            for (int i = HASH_TRITS_LENGTH - 1; i >= HASH_TRITS_LENGTH - mwm;
+                 i--) {
                 assert(ret_trits->data[i] == 0);
             }
 
@@ -177,8 +183,12 @@ int main()
 
         printf("PoW execution times: %d times.\n", pow_total);
 #if defined(ENABLE_STAT)
-        printf("Hash rate average value: %.3lf kH/sec,\n", getAvg(hashRateArr, pow_total) / 1000);
-        printf("with the range +- %.3lf kH/sec including 95%% of the hash rate values.\n", 2 * getStdDeviation(hashRateArr, pow_total) / 1000);
+        printf("Hash rate average value: %.3lf kH/sec,\n",
+               getAvg(hashRateArr, pow_total) / 1000);
+        printf(
+            "with the range +- %.3lf kH/sec including 95%% of the hash rate "
+            "values.\n",
+            2 * getStdDeviation(hashRateArr, pow_total) / 1000);
 #endif
         printf("Success.\n");
     }

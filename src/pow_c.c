@@ -66,7 +66,8 @@ int incr(uint64_t *mid_low, uint64_t *mid_high)
 
 void seri(uint64_t *l, uint64_t *h, int n, int8_t *r)
 {
-    for (int i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH; i++) {
+    for (int i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH;
+         i++) {
         int ll = (l[i] >> n) & 1;
         int hh = (h[i] >> n) & 1;
 
@@ -114,7 +115,8 @@ long long int loop_cpu(uint64_t *lmid,
         memcpy(lcpy, lmid, STATE_TRITS_LENGTH * sizeof(uint64_t));
         memcpy(hcpy, hmid, STATE_TRITS_LENGTH * sizeof(uint64_t));
         transform64(lcpy, hcpy);
-        if ((n = check(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH, m)) >= 0) {
+        if ((n = check(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
+                       m)) >= 0) {
             seri(lmid, hmid, n, nonce);
             return i * 64;
         }
@@ -155,8 +157,7 @@ void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
     }
 }
 
-static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n,
-                     int *stopPoW)
+static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n, int *stopPoW)
 {
     uint64_t lmid[STATE_TRITS_LENGTH] = {0}, hmid[STATE_TRITS_LENGTH] = {0};
     para(mid, lmid, hmid);
@@ -178,9 +179,8 @@ static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n,
 static void work_cb(uv_work_t *req)
 {
     Pwork_struct *pworkInfo = (Pwork_struct *) req->data;
-    pworkInfo->ret = pwork(pworkInfo->mid, pworkInfo->mwm,
-                           pworkInfo->nonce, pworkInfo->n,
-                           pworkInfo->stopPoW);
+    pworkInfo->ret = pwork(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
+                           pworkInfo->n, pworkInfo->stopPoW);
 
     pthread_mutex_lock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
@@ -199,25 +199,31 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
 
     Curl *c = initCurl();
     int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
-    if (!c || !c_state) goto fail;
+    if (!c || !c_state)
+        goto fail;
 
     /* Copy tx->data[:TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] to tyt */
     memcpy(tyt, tx->data, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
 
     inn = initTrytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
-    if (!inn) goto fail;
+    if (!inn)
+        goto fail;
 
     Absorb(c, inn);
 
     tr = trits_from_trytes(tx);
-    if (!tr) goto fail;
+    if (!tr)
+        goto fail;
 
-    /* Prepare an array storing tr[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH:] */
+    /* Prepare an array storing tr[TRANSACTION_TRITS_LENGTH -
+     * HASH_TRITS_LENGTH:] */
     memcpy(c_state, tr->data + TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH,
            tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
     memcpy(c_state + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
-           c->state->data + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
-           c->state->len - tr->len + (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
+           c->state->data + tr->len -
+               (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->len - tr->len +
+               (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
 
     freeTrobject(inn);
     freeTrobject(tr);
@@ -260,7 +266,8 @@ bool PowC(void *pow_ctx)
 
     /* Prepare the input trytes for algorithm */
     tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
-    if (!tx_tryte) return false;
+    if (!tx_tryte)
+        return false;
 
     int8_t *c_state = tx_to_cstate(tx_tryte);
     if (!c_state) {
@@ -288,7 +295,8 @@ bool PowC(void *pow_ctx)
     for (int i = 0; i < ctx->num_threads; i++) {
         if (pitem[i].n == -1)
             completedIndex = i;
-        ctx->pow_info.hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
+        ctx->pow_info.hash_count +=
+            (uint64_t)(pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
     clock_gettime(CLOCK_REALTIME, &end_time);
     ctx->pow_info.time = diff_in_second(start_time, end_time);
@@ -319,25 +327,37 @@ fail:
 static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
 {
     int nproc = get_avail_nprocs();
-    if (impl_ctx->num_max_thread <= 0 || nproc <= 0) return false;
+    if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
+        return false;
 
-    PoW_C_Context *ctx = (PoW_C_Context *) malloc(sizeof(PoW_C_Context) * impl_ctx->num_max_thread);
-    if (!ctx) return false;
+    PoW_C_Context *ctx = (PoW_C_Context *) malloc(sizeof(PoW_C_Context) *
+                                                  impl_ctx->num_max_thread);
+    if (!ctx)
+        return false;
 
     /* Pre-allocate Memory Chunk for each field */
-    void *work_req_chunk = malloc(impl_ctx->num_max_thread * sizeof(uv_work_t) * nproc);
-    void *pitem_chunk = malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
-    void *nonce_ptr_chunk = malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
-    void *nonce_chunk = malloc(impl_ctx->num_max_thread * NONCE_TRITS_LENGTH * nproc);
-    if (!work_req_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) goto fail;
+    void *work_req_chunk =
+        malloc(impl_ctx->num_max_thread * sizeof(uv_work_t) * nproc);
+    void *pitem_chunk =
+        malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
+    void *nonce_ptr_chunk =
+        malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
+    void *nonce_chunk =
+        malloc(impl_ctx->num_max_thread * NONCE_TRITS_LENGTH * nproc);
+    if (!work_req_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk)
+        goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx[i].work_req = (uv_work_t *) (work_req_chunk + i * sizeof(uv_work_t) * nproc);
-        ctx[i].pitem = (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
-        ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
+        ctx[i].work_req =
+            (uv_work_t *) (work_req_chunk + i * sizeof(uv_work_t) * nproc);
+        ctx[i].pitem =
+            (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
+        ctx[i].nonce_array =
+            (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
         for (int j = 0; j < nproc; j++)
-            ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
-                                                j * NONCE_TRITS_LENGTH);
+            ctx[i].nonce_array[j] =
+                (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
+                            j * NONCE_TRITS_LENGTH);
         ctx[i].num_max_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
         uv_loop_init(&ctx[i].loop);
@@ -371,7 +391,10 @@ static void PoWC_Context_Destroy(ImplContext *impl_ctx)
     free(ctx);
 }
 
-static void *PoWC_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm, int threads)
+static void *PoWC_getPoWContext(ImplContext *impl_ctx,
+                                int8_t *trytes,
+                                int mwm,
+                                int threads)
 {
     pthread_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
@@ -403,9 +426,12 @@ static bool PoWC_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWC_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
-    if (!ret) return NULL;
-    memcpy(ret, ((PoW_C_Context *) pow_ctx)->output_trytes, TRANSACTION_TRYTES_LENGTH);
+    int8_t *ret =
+        (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
+    if (!ret)
+        return NULL;
+    memcpy(ret, ((PoW_C_Context *) pow_ctx)->output_trytes,
+           TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 

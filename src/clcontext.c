@@ -6,10 +6,10 @@
  */
 
 #include "clcontext.h"
-#include <stdio.h>
 #include <stdbool.h>
-#include "pearl.cl.h"
+#include <stdio.h>
 #include "constants.h"
+#include "pearl.cl.h"
 
 static bool init_cl_devices(CLContext *ctx)
 {
@@ -120,14 +120,14 @@ static bool init_BufferInfo(CLContext *ctx)
 {
     ctx->kernel_info.buffer_info[INDEX_OF_TRIT_HASH] =
         (BufferInfo){sizeof(char) * HASH_TRITS_LENGTH, CL_MEM_WRITE_ONLY};
-    ctx->kernel_info.buffer_info[INDEX_OF_MID_LOW] =
-        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[INDEX_OF_MID_HIGH] =
-        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[INDEX_OF_STATE_LOW] =
-        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[INDEX_OF_STATE_HIGH] =
-        (BufferInfo){sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_LOW] = (BufferInfo){
+        sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_HIGH] = (BufferInfo){
+        sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_LOW] = (BufferInfo){
+        sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_HIGH] = (BufferInfo){
+        sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
     ctx->kernel_info.buffer_info[INDEX_OF_MWM] =
         (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
     ctx->kernel_info.buffer_info[INDEX_OF_FOUND] =
@@ -160,7 +160,8 @@ int init_clcontext(CLContext *ctx)
     /* Get the platform */
     clGetPlatformIDs(0, NULL, &num_platform);
     platform = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platform);
-    if (!platform) return 0;
+    if (!platform)
+        return 0;
     clGetPlatformIDs(num_platform, platform, NULL);
 
     cl_uint num_devices = 0;
@@ -170,8 +171,10 @@ int init_clcontext(CLContext *ctx)
     for (int i = 0; i < num_platform; i++) {
         clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
         devices = (cl_device_id *) malloc(sizeof(cl_device_id) * num_devices);
-        if (!devices) goto leave;
-        clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, num_devices, devices, NULL);
+        if (!devices)
+            goto leave;
+        clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, num_devices, devices,
+                       NULL);
         for (int j = 0; j < num_devices; j++, ctx_idx++) {
             int ret = 1;
             ret &= set_clcontext(&ctx[ctx_idx], devices[j]);

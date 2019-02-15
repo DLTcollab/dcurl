@@ -4,8 +4,8 @@
  * found in the LICENSE file.
  */
 
-#include <stdint.h>
 #include "trinary.h"
+#include <stdint.h>
 #include "constants.h"
 #include "curl.h"
 

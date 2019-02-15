@@ -33,8 +33,8 @@ static void transform256(__m256i *lmid, __m256i *hmid)
             beta = hfrom[t1];
             delta = _mm256_xor_si256(lfrom[t2], beta); /* lfrom[t2] ^ beta */
 
-            lto[j] = _mm256_andnot_si256(
-                _mm256_and_si256(delta, alpha), one); /* ~(delta & alpha) */
+            lto[j] = _mm256_andnot_si256(_mm256_and_si256(delta, alpha),
+                                         one); /* ~(delta & alpha) */
             hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, hfrom[t2]),
                                      delta); /* (alpha ^ hfrom[t2]) | delta */
         }
@@ -51,8 +51,8 @@ static void transform256(__m256i *lmid, __m256i *hmid)
         beta = hfrom[t1];
         delta = _mm256_xor_si256(lfrom[t2], beta); /* lfrom[t2] ^ beta */
 
-        lto[j] = _mm256_andnot_si256(
-            _mm256_and_si256(delta, alpha), one); /* ~(delta & alpha) */
+        lto[j] = _mm256_andnot_si256(_mm256_and_si256(delta, alpha),
+                                     one); /* ~(delta & alpha) */
         hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, hfrom[t2]),
                                  delta); /* (alpha ^ hfrom[t2]) | delta */
     }
@@ -79,7 +79,8 @@ static void seri256(__m256i *low, __m256i *high, int n, int8_t *r)
     int index = n >> 6;
     n = n % 64;
 
-    for (int i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH; i++) {
+    for (int i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH;
+         i++) {
         uint64_t ll = (low[i][index] >> n) & 1;
         uint64_t hh = (high[i][index] >> n) & 1;
         if (hh == 0 && ll == 1) {
@@ -171,7 +172,8 @@ static int loop256(__m256i *lmid,
             hcpy[j] = hmid[j];
         }
         transform256(lcpy, hcpy);
-        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH, m)) >= 0) {
+        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
+                          m)) >= 0) {
             seri256(lmid, hmid, n, nonce);
             return i * 256;
         }
@@ -179,7 +181,10 @@ static int loop256(__m256i *lmid,
     return -i * 256 - 1;
 }
 
-static int64_t pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
+static int64_t pwork256(int8_t mid[],
+                        int mwm,
+                        int8_t nonce[],
+                        int n,
                         int *stopPoW)
 {
     __m256i lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
@@ -218,10 +223,10 @@ void transform256(__m256d *lmid, __m256d *hmid)
             beta = hfrom[t1];
             delta = _mm256_xor_pd(lfrom[t2], beta); /* lfrom[t2] ^ beta */
 
-            lto[j] = _mm256_andnot_pd(
-                _mm256_and_pd(delta, alpha), one); /* ~(delta & alpha) */
+            lto[j] = _mm256_andnot_pd(_mm256_and_pd(delta, alpha),
+                                      one); /* ~(delta & alpha) */
             hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, hfrom[t2]),
-                                     delta); /* (alpha ^ hfrom[t2]) | delta */
+                                  delta); /* (alpha ^ hfrom[t2]) | delta */
         }
         __m256d *lswap = lfrom, *hswap = hfrom;
         lfrom = lto;
@@ -237,10 +242,10 @@ void transform256(__m256d *lmid, __m256d *hmid)
         beta = hfrom[t1];
         delta = _mm256_xor_pd(lfrom[t2], beta); /* lfrom[t2] ^ beta */
 
-        lto[j] = _mm256_andnot_pd(
-            _mm256_and_pd(delta, alpha), one); /* ~(delta & alpha) */
+        lto[j] = _mm256_andnot_pd(_mm256_and_pd(delta, alpha),
+                                  one); /* ~(delta & alpha) */
         hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, hfrom[t2]),
-                                 delta); /* (alpha ^ hfrom[t2]) | delta */
+                              delta); /* (alpha ^ hfrom[t2]) | delta */
     }
 }
 
@@ -274,7 +279,8 @@ void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
         n -= 192;
         index = 3;
     }
-    for (i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH; i++) {
+    for (i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH;
+         i++) {
         long long l = ((dl) low[i][index]).l;
         long long h = ((dl) high[i][index]).l;
         long ll = (l >> n) & 1;
@@ -352,8 +358,7 @@ void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
     }
 }
 
-int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
-            int *stopPoW)
+int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce, int *stopPoW)
 {
     int i = 0, n = 0, j = 0;
 
@@ -364,7 +369,8 @@ int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
             hcpy[j] = hmid[j];
         }
         transform256(lcpy, hcpy);
-        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH, m)) >= 0) {
+        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
+                          m)) >= 0) {
             seri256(lmid, hmid, n, nonce);
             return i * 256;
         }
@@ -372,7 +378,10 @@ int loop256(__m256d *lmid, __m256d *hmid, int m, int8_t *nonce,
     return -i * 256 - 1;
 }
 
-long long int pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
+long long int pwork256(int8_t mid[],
+                       int mwm,
+                       int8_t nonce[],
+                       int n,
                        int *stopPoW)
 {
     __m256d lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
@@ -399,9 +408,8 @@ long long int pwork256(int8_t mid[], int mwm, int8_t nonce[], int n,
 static void work_cb(uv_work_t *req)
 {
     Pwork_struct *pworkInfo = (Pwork_struct *) req->data;
-    pworkInfo->ret = pwork256(pworkInfo->mid, pworkInfo->mwm,
-                              pworkInfo->nonce, pworkInfo->n,
-                              pworkInfo->stopPoW);
+    pworkInfo->ret = pwork256(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
+                              pworkInfo->n, pworkInfo->stopPoW);
 
     pthread_mutex_lock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
@@ -420,25 +428,31 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
 
     Curl *c = initCurl();
     int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
-    if (!c || !c_state) goto fail;
+    if (!c || !c_state)
+        goto fail;
 
     /* Copy tx->data[:TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] to tyt */
     memcpy(tyt, tx->data, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
 
     inn = initTrytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
-    if (!inn) goto fail;
+    if (!inn)
+        goto fail;
 
     Absorb(c, inn);
 
     tr = trits_from_trytes(tx);
-    if (!tr) goto fail;
+    if (!tr)
+        goto fail;
 
-    /* Prepare an array storing tr[TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH:] */
+    /* Prepare an array storing tr[TRANSACTION_TRITS_LENGTH -
+     * HASH_TRITS_LENGTH:] */
     memcpy(c_state, tr->data + TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH,
            tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
     memcpy(c_state + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
-           c->state->data + tr->len - (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
-           c->state->len - tr->len + (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
+           c->state->data + tr->len -
+               (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH),
+           c->state->len - tr->len +
+               (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
 
     freeTrobject(inn);
     freeTrobject(tr);
@@ -481,7 +495,8 @@ bool PowAVX(void *pow_ctx)
 
     /* Prepare the input trytes for algorithm */
     tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
-    if (!tx_tryte) return false;
+    if (!tx_tryte)
+        return false;
 
     int8_t *c_state = tx_to_cstate(tx_tryte);
     if (!c_state) {
@@ -509,7 +524,8 @@ bool PowAVX(void *pow_ctx)
     for (int i = 0; i < ctx->num_threads; i++) {
         if (pitem[i].n == -1)
             completedIndex = i;
-        ctx->pow_info.hash_count += (uint64_t) (pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
+        ctx->pow_info.hash_count +=
+            (uint64_t)(pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
     clock_gettime(CLOCK_REALTIME, &end_time);
     ctx->pow_info.time = diff_in_second(start_time, end_time);
@@ -541,25 +557,37 @@ fail:
 static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
 {
     int nproc = get_avail_nprocs();
-    if (impl_ctx->num_max_thread <= 0 || nproc <= 0) return false;
+    if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
+        return false;
 
-    PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) * impl_ctx->num_max_thread);
-    if (!ctx) return false;
+    PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) *
+                                                      impl_ctx->num_max_thread);
+    if (!ctx)
+        return false;
 
     /* Pre-allocate Memory Chunk for each field */
-    void *work_req_chunk = malloc(impl_ctx->num_max_thread * sizeof(uv_work_t) * nproc);
-    void *pitem_chunk = malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
-    void *nonce_ptr_chunk = malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
-    void *nonce_chunk = malloc(impl_ctx->num_max_thread * NONCE_TRITS_LENGTH * nproc);
-    if (!work_req_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) goto fail;
+    void *work_req_chunk =
+        malloc(impl_ctx->num_max_thread * sizeof(uv_work_t) * nproc);
+    void *pitem_chunk =
+        malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
+    void *nonce_ptr_chunk =
+        malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
+    void *nonce_chunk =
+        malloc(impl_ctx->num_max_thread * NONCE_TRITS_LENGTH * nproc);
+    if (!work_req_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk)
+        goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx[i].work_req = (uv_work_t *) (work_req_chunk + i * sizeof(uv_work_t) * nproc);
-        ctx[i].pitem = (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
-        ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
+        ctx[i].work_req =
+            (uv_work_t *) (work_req_chunk + i * sizeof(uv_work_t) * nproc);
+        ctx[i].pitem =
+            (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
+        ctx[i].nonce_array =
+            (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
         for (int j = 0; j < nproc; j++)
-            ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
-                                                j * NONCE_TRITS_LENGTH);
+            ctx[i].nonce_array[j] =
+                (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
+                            j * NONCE_TRITS_LENGTH);
         ctx[i].num_max_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
         uv_loop_init(&ctx[i].loop);
@@ -593,14 +621,18 @@ static void PoWAVX_Context_Destroy(ImplContext *impl_ctx)
     free(ctx);
 }
 
-static void *PoWAVX_getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm, int threads)
+static void *PoWAVX_getPoWContext(ImplContext *impl_ctx,
+                                  int8_t *trytes,
+                                  int mwm,
+                                  int threads)
 {
     pthread_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
             pthread_mutex_unlock(&impl_ctx->lock);
-            PoW_AVX_Context *ctx = impl_ctx->context + sizeof(PoW_AVX_Context) * i;
+            PoW_AVX_Context *ctx =
+                impl_ctx->context + sizeof(PoW_AVX_Context) * i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;
@@ -625,9 +657,12 @@ static bool PoWAVX_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 
 static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
 {
-    int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
-    if (!ret) return NULL;
-    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes, TRANSACTION_TRYTES_LENGTH);
+    int8_t *ret =
+        (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
+    if (!ret)
+        return NULL;
+    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes,
+           TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 

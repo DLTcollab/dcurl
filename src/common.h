@@ -1,8 +1,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#include <time.h>
 #include <stdint.h>
+#include <time.h>
 
 double diff_in_second(struct timespec t1, struct timespec t2);
 

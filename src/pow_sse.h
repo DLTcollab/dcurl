@@ -1,13 +1,13 @@
 #ifndef POW_SSE_H_
 #define POW_SSE_H_
 
-#include "trinary.h"
-#include "common.h"
-#include "constants.h"
-#include <stdint.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <uv.h>
+#include "common.h"
+#include "constants.h"
+#include "trinary.h"
 
 typedef struct _pwork_struct Pwork_struct;
 
@@ -37,7 +37,7 @@ struct _pow_sse_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
-    int8_t input_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
+    int8_t input_trytes[TRANSACTION_TRYTES_LENGTH];  /* 2673 */
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
     /* PoW-related information */

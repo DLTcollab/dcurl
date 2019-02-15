@@ -1,11 +1,11 @@
 #ifndef TRINARY_H_
 #define TRINARY_H_
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
 
 #define TYPE_TRITS 1
 #define TYPE_TRYTES 2
