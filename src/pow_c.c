@@ -15,7 +15,7 @@
 #include "curl.h"
 #include "implcontext.h"
 
-void transform64(uint64_t *lmid, uint64_t *hmid)
+static void transform64(uint64_t *lmid, uint64_t *hmid)
 {
     uint64_t alpha, beta, delta;
     uint64_t *lfrom = lmid, *hfrom = hmid;
@@ -49,7 +49,7 @@ void transform64(uint64_t *lmid, uint64_t *hmid)
     }
 }
 
-int incr(uint64_t *mid_low, uint64_t *mid_high)
+static int incr(uint64_t *mid_low, uint64_t *mid_high)
 {
     int i;
     uint64_t carry = 1;
@@ -64,7 +64,7 @@ int incr(uint64_t *mid_low, uint64_t *mid_high)
     return i == HASH_TRITS_LENGTH;
 }
 
-void seri(uint64_t *l, uint64_t *h, int n, int8_t *r)
+static void seri(uint64_t *l, uint64_t *h, int n, int8_t *r)
 {
     for (int i = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH; i < HASH_TRITS_LENGTH;
          i++) {
@@ -83,7 +83,7 @@ void seri(uint64_t *l, uint64_t *h, int n, int8_t *r)
     }
 }
 
-int check(uint64_t *l, uint64_t *h, int m)
+static int check(uint64_t *l, uint64_t *h, int m)
 {
     uint64_t nonce_probe = HBITS;
 
@@ -101,11 +101,11 @@ int check(uint64_t *l, uint64_t *h, int m)
     return -1;
 }
 
-long long int loop_cpu(uint64_t *lmid,
-                       uint64_t *hmid,
-                       int m,
-                       int8_t *nonce,
-                       int *stopPoW)
+static long long int loop_cpu(uint64_t *lmid,
+                              uint64_t *hmid,
+                              int m,
+                              int8_t *nonce,
+                              int *stopPoW)
 {
     int n = 0;
     long long int i = 0;
@@ -124,7 +124,7 @@ long long int loop_cpu(uint64_t *lmid,
     return -i * 64 + 1;
 }
 
-void para(int8_t in[], uint64_t l[], uint64_t h[])
+static void para(int8_t in[], uint64_t l[], uint64_t h[])
 {
     for (int i = 0; i < STATE_TRITS_LENGTH; i++) {
         switch (in[i]) {
@@ -144,7 +144,7 @@ void para(int8_t in[], uint64_t l[], uint64_t h[])
     }
 }
 
-void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
+static void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
 {
     for (int j = 0; j < n; j++) {
         uint64_t carry = 1;
