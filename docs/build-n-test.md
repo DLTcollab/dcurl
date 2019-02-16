@@ -20,6 +20,7 @@
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
     - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
     - ``BUILD_STAT``: show the statistics of the PoW information.
+    - ``BUILD_DEBUG``: dump verbose messages internally.
 * Alternatively, you can specify conditional build as following:
 ```shell
 $ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1
