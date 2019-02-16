@@ -115,7 +115,7 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
             impl = list_entry(p, ImplContext, list);
             if (enterImplContext(impl)) {
                 pow_ctx = getPoWContext(impl, trytes, mwm, threads);
-                goto pow;
+                goto do_pow;
             }
         }
 #ifdef __APPLE__
@@ -123,9 +123,9 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
 #else
         sem_wait(&notify);
 #endif
-    } while ('z' > 'b');
+    } while (1);
 
-pow:
+do_pow:
     if (!doThePoW(impl, pow_ctx)) {
         res = NULL;
     } else {
