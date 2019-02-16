@@ -44,8 +44,6 @@ struct _pow_sse_context {
     PoW_Info pow_info;
 };
 
-bool PowSSE(void *pow_ctx);
-
 #ifdef _MSC_VER
 #include <intrin.h>
 #else

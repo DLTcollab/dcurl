@@ -44,8 +44,6 @@ struct _pow_avx_context {
     PoW_Info pow_info;
 };
 
-bool PowAVX(void *pow_ctx);
-
 #ifdef _MSC_VER
 #include <intrin.h>
 #else

@@ -267,7 +267,7 @@ static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
            rst_len - (tx->len - NONCE_TRYTES_LENGTH));
 }
 
-bool PowSSE(void *pow_ctx)
+static bool PowSSE(void *pow_ctx)
 {
     bool res = true;
     Trits_t *nonce_trit = NULL;

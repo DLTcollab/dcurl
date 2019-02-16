@@ -203,7 +203,7 @@ fail:
     return NULL;
 }
 
-bool PowCL(void *pow_ctx)
+static bool PowCL(void *pow_ctx)
 {
     bool res = true;
     int8_t *c_state = NULL, *pow_result = NULL;

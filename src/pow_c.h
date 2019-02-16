@@ -45,8 +45,6 @@ struct _pow_c_context {
     PoW_Info pow_info;
 };
 
-bool PowC(void *pow_ctx);
-
 #define HBITS 0xFFFFFFFFFFFFFFFFuLL
 #define LBITS 0x0000000000000000uLL
 #define INCR_START HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27

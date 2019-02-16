@@ -21,8 +21,6 @@ struct _pow_cl_context {
     PoW_Info pow_info;
 };
 
-bool PowCL(void *pow_ctx);
-
 /* Number of GPU devices supported */
 #define MAX_NUM_DEVICES 8
 
