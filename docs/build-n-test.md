@@ -95,9 +95,8 @@ Success.
 
 * Test with Arrow SoCKit board
 ```shell
-root@lampa:~# sh init_curl_pow.sh 
-root@lampa:~# cd dcurl
-root@lampa:~/dcurl# make BUILD_STAT=1 BUILD_FPGA_ACCEL=1 check
+$ sh init_curl_pow.sh # set up kernel module
+$ make BUILD_STAT=1 BUILD_FPGA_ACCEL=1 check
 ```
 
 * Expected Results
