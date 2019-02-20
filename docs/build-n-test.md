@@ -13,18 +13,23 @@
 ## Build Instructions
 * dcurl allows various combinations of build configurations to fit final use scenarios.
 * You can execute `make config` and then edit file `build/local.mk` for custom build options.
-    - ``BUILD_AVX``: build Intel AVX-accelerated Curl backend.
-    - ``BUILD_GPU``: build OpenCL-based GPU accelerations.
+    - ``BUILD_AVX``: build the Intel AVX-accelerated Curl backend.
+    - ``BUILD_SSE``: build the Intel SSE-accelerated Curl backend.
+    - ``BUILD_GPU``: build the OpenCL-based GPU accelerations.
+    - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
     - ``BUILD_JNI``: build a shared library for IRI. The build system would generate JNI header file
                      downloading from [latest JAVA source](https://github.com/DLTcollab/iri).
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
-    - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
     - ``BUILD_STAT``: show the statistics of the PoW information.
     - ``BUILD_DEBUG``: dump verbose messages internally.
 * Alternatively, you can specify conditional build as following:
 ```shell
 $ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1
 ```
+
+## Fallback Build Instructions
+* These instructions do not appear in the file `build/local.mk`.
+    - ``BUILD_GENERIC``: build the generic CPU Curl backend without acceleration.
 
 ## Testing and Validation
 * Test with GPU

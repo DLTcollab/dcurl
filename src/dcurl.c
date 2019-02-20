@@ -21,7 +21,7 @@
 #include "pow_avx.h"
 #elif defined(ENABLE_SSE)
 #include "pow_sse.h"
-#else
+#elif defined(ENABLE_GENERIC)
 #include "pow_c.h"
 #endif
 
@@ -46,7 +46,7 @@ LIST_HEAD(IMPL_LIST);
 extern ImplContext PoWAVX_Context;
 #elif defined(ENABLE_SSE)
 extern ImplContext PoWSSE_Context;
-#else
+#elif defined(ENABLE_GENERIC)
 extern ImplContext PoWC_Context;
 #endif
 
@@ -66,7 +66,7 @@ bool dcurl_init()
     ret &= registerImplContext(&PoWAVX_Context);
 #elif defined(ENABLE_SSE)
     ret &= registerImplContext(&PoWSSE_Context);
-#else
+#elif defined(ENABLE_GENERIC)
     ret &= registerImplContext(&PoWC_Context);
 #endif
 
