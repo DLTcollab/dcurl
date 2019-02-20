@@ -30,16 +30,29 @@ include mk/cpu-features.mk
 # Handle git submodule
 include mk/submodule.mk
 
+# Assign the hardware to CPU if no hardware is specified
+PLATFORMS := $(BUILD_AVX) $(BUILD_SSE) $(BUILD_GENERIC) $(BUILD_GPU) $(BUILD_FPGA_ACCEL)
+ENABLE_PLATFORMS := $(findstring 1,$(PLATFORMS))
+ifneq ("$(ENABLE_PLATFORMS)","1")
+    ifeq ("$(call cpu_feature,AVX)","1")
+        BUILD_AVX = 1
+    else ifeq ("$(call cpu_feature,SSE)","1")
+        BUILD_SSE = 1
+    else
+        BUILD_GENERIC = 1
+    endif
+endif
+
+
 ifeq ("$(BUILD_AVX)","1")
 CFLAGS += -mavx -DENABLE_AVX
 ifeq ("$(call cpu_feature,AVX2)","1")
 CFLAGS += -mavx2
 endif
-else
-BUILD_SSE := $(call cpu_feature,SSE)
-ifeq ("$(BUILD_SSE)","1")
+else ifeq ("$(BUILD_SSE)","1")
 CFLAGS += -msse2 -DENABLE_SSE
-endif
+else ifeq ("$(BUILD_GENERIC)","1")
+CFLAGS += -DENABLE_GENERIC
 endif
 
 ifeq ("$(BUILD_GPU)","1")
@@ -87,12 +100,10 @@ OBJS = \
 
 ifeq ("$(BUILD_AVX)","1")
 OBJS += pow_avx.o
-else
-ifeq ("$(BUILD_SSE)","1")
+else ifeq ("$(BUILD_SSE)","1")
 OBJS += pow_sse.o
-else
+else ifeq ("$(BUILD_GENERIC)","1")
 OBJS += pow_c.o
-endif
 endif
 
 ifeq ("$(BUILD_GPU)","1")
@@ -118,6 +129,14 @@ endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 
+# Add the libtuv PIC(position independent code) library into the object files
+# if the specified hardware is CPU
+CPU_PLATFORMS := $(BUILD_AVX) $(BUILD_SSE) $(BUILD_GENERIC)
+ENABLE_CPU_PLATFORMS := $(findstring 1,$(CPU_PLATFORMS))
+ifeq ("$(ENABLE_CPU_PLATFORMS)","1")
+    OBJS += $(LIBTUV_LIBRARY)
+endif
+
 $(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
@@ -126,11 +145,11 @@ $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_LIBRARY)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_LIBRARY)
+$(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 

@@ -9,7 +9,7 @@
 extern ImplContext PoWAVX_Context;
 #elif defined(ENABLE_SSE)
 extern ImplContext PoWSSE_Context;
-#else
+#elif defined(ENABLE_GENERIC)
 extern ImplContext PoWC_Context;
 #endif
 
@@ -26,7 +26,7 @@ const char *description[] = {
     "CPU - AVX",
 #elif defined(ENABLE_SSE)
     "CPU - SSE",
-#else
+#elif defined(ENABLE_GENERIC)
     "CPU - pure C",
 #endif
 
@@ -114,7 +114,7 @@ int main()
         PoWAVX_Context,
 #elif defined(ENABLE_SSE)
         PoWSSE_Context,
-#else
+#elif defined(ENABLE_GENERIC)
         PoWC_Context,
 #endif
 
