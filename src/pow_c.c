@@ -121,7 +121,7 @@ static long long int loop_cpu(uint64_t *lmid,
             return i * 64;
         }
     }
-    return -i * 64 + 1;
+    return -i * 64 - 1;
 }
 
 static void para(int8_t in[], uint64_t l[], uint64_t h[])
