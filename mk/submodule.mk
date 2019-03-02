@@ -21,3 +21,15 @@ $(LIBTUV_PATH)/include:
 
 $(LIBTUV_LIBRARY):
 	$(MAKE) -C $(LIBTUV_PATH) TUV_BUILD_TYPE=release TUV_CREATE_PIC_LIB=yes
+
+# librabbitmq related variables
+LIBRABBITMQ_PATH = deps/rabbitmq-c
+LIBRABBITMQ_INCLUDE := -I $(LIBRABBITMQ_PATH)/build/include
+LIBRABBITMQ_LIBRARY = $(LIBRABBITMQ_PATH)/build/librabbitmq/librabbitmq.a
+
+$(LIBRABBITMQ_PATH)/build/include:
+	git submodule update --init $(LIBRABBITMQ_PATH)
+	mkdir $(LIBRABBITMQ_PATH)/build
+	cd $(LIBRABBITMQ_PATH)/build && \
+         cmake -DCMAKE_INSTALL_PREFIX=. .. && \
+         cmake --build . --target install

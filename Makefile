@@ -80,12 +80,17 @@ TESTS = \
 	dcurl \
 	pow
 
+TESTS += remotedcurl-new-task
+TESTS += remotedcurl-get-result
+
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
 LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
-all: config $(TESTS) $(LIBS)
+REMOTEDCURL := $(OUT)/remotedcurl
+
+all: config $(TESTS) $(LIBS) $(REMOTEDCURL)
 .DEFAULT_GOAL := all
 
 OBJS = \
@@ -135,9 +140,9 @@ ifeq ("$(ENABLE_CPU_PLATFORMS)","1")
     OBJS += $(LIBTUV_LIBRARY)
 endif
 
-$(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
+$(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include $(LIBRABBITMQ_PATH)/build/include
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
 
 $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
@@ -145,11 +150,24 @@ $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 
 $(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBRABBITMQ_LIBRARY)
 
 $(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
+
+$(OUT)/test-%: tests/test-%.py $(OUT)/libdcurl.so
+	$(Q)echo "#!$(PYTHON)" > $@
+	$(call py_prepare_cmd)
+	$(Q)chmod +x $@
+
+$(OUT)/%.o: remotedcurl/%.c
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
+
+$(OUT)/remotedcurl: $(OUT)/remotedcurl.o
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(OUT)/remotedcurl.o $(OUT)/libdcurl.so $(LIBRABBITMQ_LIBRARY)
 
 include mk/common.mk
 

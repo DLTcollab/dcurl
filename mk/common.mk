@@ -37,5 +37,6 @@ $(OUT)/local.mk:
 
 clean:
 	$(RM) $(deps) $(TESTS) $(LIBS) $(OBJS)
+	$(RM) -r $(LIBRABBITMQ_PATH)/build
 distclean:
 	$(RM) -r $(OUT)
