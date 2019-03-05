@@ -78,12 +78,7 @@ TESTS = \
 	trinary \
 	curl \
 	dcurl \
-	multi-pow \
 	pow
-
-ifeq ("$(BUILD_COMPAT)", "1")
-TESTS += ccurl-multi_pow
-endif
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
@@ -156,12 +151,6 @@ $(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-$(OUT)/test-%: tests/test-%.py $(OUT)/libdcurl.so
-	$(Q)echo "#!$(PYTHON)" > $@
-	$(call py_prepare_cmd)
-	$(Q)chmod +x $@
-
 include mk/common.mk
-include mk/python.mk
 
 -include $(deps)
