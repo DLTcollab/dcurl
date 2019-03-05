@@ -1,4 +1,10 @@
-# Debug or release build
+# Debug, debug + Sanitizer or release build
+# Acceptable values
+# 0: release build
+# 1: debug build
+# address: debug build + address Sanitizer
+# undefined: debug build + undefined behavior Sanitizer
+# thread: debug build + thread Sanitizer
 BUILD_DEBUG ?= 0
 
 # Build AVX backend or not
