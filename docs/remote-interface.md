@@ -1,8 +1,33 @@
-# Remote dcurl
+# Remote interface
 
 ## Introduction
 
-Remote dcurl is inspired by [iotaledger's PoWbox](https://github.com/iotaledger/powbox). Remote dcurl supports asynchronous remote procedure call. We create two queues in RabbitMQ broker that manages queues and use [RabbitMQ C client](https://github.com/alanxz/rabbitmq-c) library to implement dcurl workers that do not compute accelerated PoW until users send new PoW tasks to the work queue (incomming queue) in RabbitMQ broker. In addition, dcurl worker-computed PoW result is sent to the queue (completed queue) in RabbitMQ broker and users can get PoW result from the queue. Users can see test-remotedcurl-new-task.c and test-remotedcurl-get-result.c to understand how to send a new PoW task and get a PoW result to/from work queues. By the way, It can surpport a scenario of a broker and many dcurl workers.
+```
+ +---------------------------------------------+
+ |                   Client                    |
+ |  +------------------+  +------------------+ |
+ |  |  send new work   |  |    get result    | |
+ |  +------------------+  +------------------+ |
+ |           |                     ^           |
+ +-----------|---------------------|-----------+
+ +-----------|---------------------|-----------+
+ |           v   RabbitMQ broker   |           |
+ |  +------------------+  +------------------+ |
+ |  | incommming queue |  | completed queue  | |
+ |  |                  |  |                  | |
+ |  | - trytes         |  | - PoW result     | |
+ |  | - mwm            |  |                  | |
+ |  |                  |  |                  | |
+ |  +------------------+  +------------------+ |
+ |           |                     ^           |
+ +-----------|---------------------|-----------+
+             v                     |
+ +---------------------------------------------+
+ |                 dcurl worker                |
+ +---------------------------------------------+
+```
+
+Remote interface is inspired by [iotaledger's PoWbox](https://github.com/iotaledger/powbox). Remote interface supports asynchronous remote procedure call. We create two queues (incomming queue, completed queue) in RabbitMQ broker that can manages queues. Dcurl worker-required data is stored in the incomming queue by sending remote call of new work from client. After dcurl worker computes accelerated PoW, it sends remote call to store the PoW result in the completed queue in RabbitMQ broker. Moreover, we use [RabbitMQ C client](https://github.com/alanxz/rabbitmq-c) library to implement dcurl workers that do not compute accelerated PoW until users send data of new PoW tasks to the incomming queue in RabbitMQ broker. On the other hand, Users can see test-remotedcurl-new-task.c and test-remotedcurl-get-result.c to understand how to send a new PoW task and get a PoW result to/from work queues. By the way, It can surpport a scenario of a broker and many dcurl workers.
 
 ## How to test remote dcurl in localhost
 
