@@ -134,9 +134,9 @@ void transform(__global bc_trit_t* state_low, __global bc_trit_t* state_high,
       k = j+1;
       alpha = state_low[INDEX[j]];
       beta = state_high[INDEX[j]];
-      delta = beta ^ state_low[INDEX[k]];
-      sp_low[i] = ~(delta & alpha);
-      sp_high[i] = delta | (alpha ^ state_high[INDEX[k]]);
+      delta = alpha & (beta ^ state_low[INDEX[k]]);
+      sp_low[i] = ~delta;
+      sp_high[i] = (alpha ^ state_high[INDEX[k]]) | delta;
     }
     barrier(CLK_LOCAL_MEM_FENCE);
     for (i = 0; i < n_trits; i++) {
