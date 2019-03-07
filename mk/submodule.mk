@@ -25,7 +25,7 @@ $(LIBTUV_LIBRARY):
 # librabbitmq related variables
 LIBRABBITMQ_PATH = deps/rabbitmq-c
 LIBRABBITMQ_INCLUDE := -I $(LIBRABBITMQ_PATH)/build/include
-LIBRABBITMQ_LIBRARY = $(LIBRABBITMQ_PATH)/build/librabbitmq/librabbitmq.a
+LIBRABBITMQ_DIR := $(LIBRABBITMQ_PATH)/build/librabbitmq/
 
 $(LIBRABBITMQ_PATH)/build/include:
 	git submodule update --init $(LIBRABBITMQ_PATH)

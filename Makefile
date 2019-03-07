@@ -140,6 +140,9 @@ ifeq ("$(ENABLE_CPU_PLATFORMS)","1")
     OBJS += $(LIBTUV_LIBRARY)
 endif
 
+# Link the librabbitmq library
+LDFLAGS += -L$(LIBRABBITMQ_DIR) -lrabbitmq
+
 $(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include $(LIBRABBITMQ_PATH)/build/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
@@ -150,7 +153,7 @@ $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 
 $(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBRABBITMQ_LIBRARY)
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
 $(OUT)/libdcurl.so: $(OBJS)
 	$(VECHO) "  LD\t$@\n"
@@ -165,9 +168,9 @@ $(OUT)/%.o: remotedcurl/%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/remotedcurl: $(OUT)/remotedcurl.o
+$(OUT)/remotedcurl: $(OUT)/remotedcurl.o $(OUT)/libdcurl.so
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(OUT)/remotedcurl.o $(OUT)/libdcurl.so $(LIBRABBITMQ_LIBRARY)
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
 include mk/common.mk
 
