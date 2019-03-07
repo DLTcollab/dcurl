@@ -1,6 +1,6 @@
 # dcurl - Multi-threaded Curl implementation
 
-[![Build Status](https://travis-ci.org/DLTcollab/dcurl.svg?branch=dev)](https://travis-ci.org/DLTcollab/dcurl)
+[![Build Status](https://travis-ci.org/DLTcollab/dcurl.svg?branch=develop)](https://travis-ci.org/DLTcollab/dcurl)
 ![Supported IRI version](https://img.shields.io/badge/Supported%20IRI%20Version-1.6.0-brightgreen.svg)
 ![Release version](https://img.shields.io/github/release-pre/DLTcollab/dcurl.svg)
 
@@ -23,7 +23,7 @@ After integrating dcurl into IRI, performance of [attachToTangle](https://iota.r
 * Each sampling is measured with 30 transaction trytes and total 200 samples are measured.
 * mwm = 14, 26 CPU threads to find nonce
 * Settings: enable 2 pow tasks in CPU, 1 pow tasks in GPU at the same time
-![](https://raw.githubusercontent.com/DLTcollab/dcurl/dev/docs/benchmark.png)
+![](https://raw.githubusercontent.com/DLTcollab/dcurl/develop/docs/benchmark.png)
 
 
 ## IRI Adaptation
