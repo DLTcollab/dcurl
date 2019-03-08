@@ -54,6 +54,6 @@ Terminal 4: Get result of remote dcurl and verify PoW result
 $./build/test-remotedcurl-get-result
 ```
 
-## Limitations
+## Requirements
 
 * Remote dcurl requires RabbitMQ broker
