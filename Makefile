@@ -80,17 +80,20 @@ TESTS = \
 	dcurl \
 	pow
 
-TESTS += remotedcurl-new-task
-TESTS += remotedcurl-get-result
-
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
+
+MANUNAL_TESTS = \
+	remote-new-task \
+	remote-get-result
+
+MANUNAL_TESTS := $(addprefix $(OUT)/manunal-test-, $(MANUNAL_TESTS))
 
 LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
 REMOTEDCURL := $(OUT)/remotedcurl
 
-all: config $(TESTS) $(LIBS) $(REMOTEDCURL)
+all: config $(TESTS) $(MANUNAL_TESTS) $(LIBS) $(REMOTEDCURL)
 .DEFAULT_GOAL := all
 
 OBJS = \
@@ -143,9 +146,9 @@ endif
 # Link the librabbitmq library
 LDFLAGS += -L$(LIBRABBITMQ_DIR) -lrabbitmq
 
-$(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include $(LIBRABBITMQ_PATH)/build/include
+$(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
 $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
@@ -163,6 +166,14 @@ $(OUT)/test-%: tests/test-%.py $(OUT)/libdcurl.so
 	$(Q)echo "#!$(PYTHON)" > $@
 	$(call py_prepare_cmd)
 	$(Q)chmod +x $@
+
+$(OUT)/manunal-test-%.o: tests/manunal-test-%.c $(LIBRABBITMQ_PATH)/build/include
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c $<
+
+$(OUT)/manunal-test-%: $(OUT)/manunal-test-%.o $(OBJS)
+	$(VECHO) "  LD\t$@\n"
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
 $(OUT)/%.o: remotedcurl/%.c
 	$(VECHO) "  CC\t$@\n"
