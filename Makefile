@@ -83,18 +83,18 @@ TESTS = \
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
-MANUNAL_TESTS = \
+TRIALS = \
 	remote-new-task \
 	remote-get-result
 
-MANUNAL_TESTS := $(addprefix $(OUT)/manunal-test-, $(MANUNAL_TESTS))
+TRIALS := $(addprefix $(OUT)/trial-, $(TRIALS))
 
 LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
 REMOTEDCURL := $(OUT)/remotedcurl
 
-all: config $(TESTS) $(MANUNAL_TESTS) $(LIBS) $(REMOTEDCURL)
+all: config $(TESTS) $(TRIALS) $(LIBS) $(REMOTEDCURL)
 .DEFAULT_GOAL := all
 
 OBJS = \
@@ -168,11 +168,11 @@ $(OUT)/test-%: tests/test-%.py $(OUT)/libdcurl.so
 	$(call py_prepare_cmd)
 	$(Q)chmod +x $@
 
-$(OUT)/manunal-test-%.o: tests/manunal-test-%.c $(LIBRABBITMQ_PATH)/build/include
+$(OUT)/trial-%.o: tests/trial-%.c $(LIBRABBITMQ_PATH)/build/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c $<
 
-$(OUT)/manunal-test-%: $(OUT)/manunal-test-%.o $(OBJS) $(LIBS)
+$(OUT)/trial-%: $(OUT)/trial-%.o $(OBJS) $(LIBS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
