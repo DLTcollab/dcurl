@@ -25,7 +25,7 @@ $(LIBTUV_LIBRARY):
 # librabbitmq related variables
 LIBRABBITMQ_PATH = deps/rabbitmq-c
 LIBRABBITMQ_INCLUDE := -I $(LIBRABBITMQ_PATH)/build/include
-LIBRABBITMQ_DIR := $(LIBRABBITMQ_PATH)/build/librabbitmq/
+LIBRABBITMQ_LIBRARY := $(LIBRABBITMQ_PATH)/build/librabbitmq/librabbitmq.a
 
 $(LIBRABBITMQ_PATH)/build/include:
 	git submodule update --init $(LIBRABBITMQ_PATH)
@@ -33,3 +33,5 @@ $(LIBRABBITMQ_PATH)/build/include:
 	cd $(LIBRABBITMQ_PATH)/build && \
          cmake -DCMAKE_INSTALL_PREFIX=. .. && \
          cmake --build . --target install
+
+$(LIBRABBITMQ_LIBRARY): $(LIBRABBITMQ_PATH)/build/include

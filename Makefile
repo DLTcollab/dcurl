@@ -12,7 +12,8 @@ ifneq ($(UNAME_S),Darwin)
 LDFLAGS += \
 	-Wl,--gc-sections \
 	-Wl,--as-needed \
-	-Wl,--version-script=./mk/libdcurl.version
+	-Wl,--version-script=./mk/libdcurl.version \
+	-Wl,--no-whole-archive
 endif
 
 -include $(OUT)/local.mk
@@ -143,8 +144,8 @@ ifeq ("$(ENABLE_CPU_PLATFORMS)","1")
     OBJS += $(LIBTUV_LIBRARY)
 endif
 
-# Link the librabbitmq library
-LDFLAGS += -L$(LIBRABBITMQ_DIR) -lrabbitmq
+# Add the librabbitmq library
+LIBS += $(LIBRABBITMQ_LIBRARY)
 
 $(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
@@ -171,7 +172,7 @@ $(OUT)/manunal-test-%.o: tests/manunal-test-%.c $(LIBRABBITMQ_PATH)/build/includ
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c $<
 
-$(OUT)/manunal-test-%: $(OUT)/manunal-test-%.o $(OBJS)
+$(OUT)/manunal-test-%: $(OUT)/manunal-test-%.o $(OBJS) $(LIBS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -179,7 +180,7 @@ $(OUT)/%.o: remotedcurl/%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/remotedcurl: $(OUT)/remotedcurl.o $(OUT)/libdcurl.so
+$(OUT)/remotedcurl: $(OUT)/remotedcurl.o $(LIBS)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
