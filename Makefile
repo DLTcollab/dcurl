@@ -1,6 +1,5 @@
 OUT ?= ./build
 SRC := src
-SRC += -I remotedcurl
 
 CFLAGS = -Wall -fPIC -std=gnu99
 LDFLAGS = \
@@ -93,9 +92,9 @@ TRIALS := $(addprefix $(OUT)/trial-, $(TRIALS))
 LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
-REMOTEDCURL := $(OUT)/remotedcurl
+REMOTEWORKER := $(OUT)/remote-worker
 
-all: config $(TESTS) $(TRIALS) $(LIBS) $(REMOTEDCURL)
+all: config $(TESTS) $(TRIALS) $(LIBS) $(REMOTEWORKER)
 .DEFAULT_GOAL := all
 
 OBJS = \
@@ -155,9 +154,9 @@ $(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
+$(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include $(LIBRABBITMQ_PATH)/build/include
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
 
 $(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
 	$(VECHO) "  LD\t$@\n"
@@ -180,11 +179,7 @@ $(OUT)/trial-%: $(OUT)/trial-%.o $(OBJS) $(LIBS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/%.o: remotedcurl/%.c
-	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
-
-$(OUT)/remotedcurl: $(OUT)/remotedcurl.o $(OBJS) $(LIBS)
+$(OUT)/remote-worker: $(OUT)/remote_worker.o $(OBJS) $(LIBS)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
