@@ -1,5 +1,6 @@
 OUT ?= ./build
 SRC := src
+SRC += -I remotedcurl
 
 CFLAGS = -Wall -fPIC -std=gnu99
 LDFLAGS = \
@@ -134,6 +135,9 @@ OBJS += \
 	pow_fpga_accel.o
 endif
 
+OBJS += \
+	remote_common.o
+
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 
 # Add the libtuv PIC(position independent code) library into the object files
@@ -180,7 +184,7 @@ $(OUT)/%.o: remotedcurl/%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/remotedcurl: $(OUT)/remotedcurl.o $(LIBS)
+$(OUT)/remotedcurl: $(OUT)/remotedcurl.o $(OBJS) $(LIBS)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
