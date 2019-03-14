@@ -30,21 +30,21 @@ void destroyImplContext(ImplContext *impl_ctx)
 
 bool enterImplContext(ImplContext *impl_ctx)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
+    uv_mutex_lock(&impl_ctx->lock);
     if (impl_ctx->num_working_thread >= impl_ctx->num_max_thread) {
-        pthread_mutex_unlock(&impl_ctx->lock);
+        uv_mutex_unlock(&impl_ctx->lock);
         return false; /* Access Failed */
     }
     impl_ctx->num_working_thread++;
-    pthread_mutex_unlock(&impl_ctx->lock);
+    uv_mutex_unlock(&impl_ctx->lock);
     return true; /* Access Success */
 }
 
 void exitImplContext(ImplContext *impl_ctx)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
+    uv_mutex_lock(&impl_ctx->lock);
     impl_ctx->num_working_thread--;
-    pthread_mutex_unlock(&impl_ctx->lock);
+    uv_mutex_unlock(&impl_ctx->lock);
 }
 
 void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm, int threads)

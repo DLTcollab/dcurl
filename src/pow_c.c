@@ -6,11 +6,9 @@
  */
 
 #include "pow_c.h"
-#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <uv.h>
 #include "cpu-utils.h"
 #include "curl.h"
 #include "implcontext.h"
@@ -374,7 +372,7 @@ static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
         uv_loop_init(&ctx[i].loop);
     }
     impl_ctx->context = ctx;
-    pthread_mutex_init(&impl_ctx->lock, NULL);
+    uv_mutex_init(&impl_ctx->lock);
     return true;
 
 fail:
@@ -407,11 +405,11 @@ static void *PoWC_getPoWContext(ImplContext *impl_ctx,
                                 int mwm,
                                 int threads)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
+    uv_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
-            pthread_mutex_unlock(&impl_ctx->lock);
+            uv_mutex_unlock(&impl_ctx->lock);
             PoW_C_Context *ctx = impl_ctx->context + sizeof(PoW_C_Context) * i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
@@ -423,15 +421,15 @@ static void *PoWC_getPoWContext(ImplContext *impl_ctx,
             return ctx;
         }
     }
-    pthread_mutex_unlock(&impl_ctx->lock);
+    uv_mutex_unlock(&impl_ctx->lock);
     return NULL; /* It should not happen */
 }
 
 static bool PoWC_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
+    uv_mutex_lock(&impl_ctx->lock);
     impl_ctx->bitmap |= 0x1 << ((PoW_C_Context *) pow_ctx)->indexOfContext;
-    pthread_mutex_unlock(&impl_ctx->lock);
+    uv_mutex_unlock(&impl_ctx->lock);
     return true;
 }
 
