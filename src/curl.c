@@ -20,7 +20,7 @@ static void _transform(int8_t state[])
         for (i = 0; i < STATE_TRITS_LENGTH; i++) {
             int aa = indices[i];
             int bb = indices[i + 1];
-            to[i] = truthTable[from[aa] + (from[bb] << 2) + 5];
+            to[i] = truthTable[from[aa] + (from[bb] * 4) + 5];
         }
         int8_t *tmp = from;
         from = to;
