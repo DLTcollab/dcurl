@@ -266,7 +266,7 @@ static bool PoWCL_Context_Initialize(ImplContext *impl_ctx)
     PoW_CL_Context *ctx = (PoW_CL_Context *) malloc(sizeof(PoW_CL_Context) *
                                                     impl_ctx->num_max_thread);
     if (!ctx)
-        return false;
+        goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].clctx = &_opencl_ctx[i];
