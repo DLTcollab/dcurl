@@ -58,6 +58,10 @@ else ifeq ("$(BUILD_GENERIC)","1")
 CFLAGS += -DENABLE_GENERIC
 endif
 
+ifeq ("$(call cpu_feature,SSE4_2)","1")
+    CFLAGS += -msse4.2
+endif
+
 ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
