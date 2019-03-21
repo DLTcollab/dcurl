@@ -16,7 +16,7 @@ struct _pwork_struct {
     int mwm;
     int8_t *nonce;
     int n;
-    pthread_mutex_t *lock;
+    uv_rwlock_t *lock;
     int *stopPoW;
     int64_t ret;
 };
@@ -25,7 +25,7 @@ typedef struct _pow_sse_context PoW_SSE_Context;
 
 struct _pow_sse_context {
     /* Resource of computing */
-    pthread_mutex_t lock;
+    uv_rwlock_t lock;
     /* Data type of libtuv */
     uv_loop_t loop;
     uv_work_t *work_req;
