@@ -105,13 +105,16 @@ static long long int loop_cpu(uint64_t *lmid,
                               uint64_t *hmid,
                               int m,
                               int8_t *nonce,
-                              int *stopPoW)
+                              int *stopPoW,
+                              uv_rwlock_t *lock)
 {
     int n = 0;
     long long int i = 0;
     uint64_t lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
 
+    uv_rwlock_rdlock(lock);
     for (i = 0; !incr(lmid, hmid) && !*stopPoW; i++) {
+        uv_rwlock_rdunlock(lock);
         memcpy(lcpy, lmid, STATE_TRITS_LENGTH * sizeof(uint64_t));
         memcpy(hcpy, hmid, STATE_TRITS_LENGTH * sizeof(uint64_t));
         transform64(lcpy, hcpy);
@@ -120,7 +123,9 @@ static long long int loop_cpu(uint64_t *lmid,
             seri(lmid, hmid, n, nonce);
             return i * 64;
         }
+        uv_rwlock_rdlock(lock);
     }
+    uv_rwlock_rdunlock(lock);
     return -i * 64 - 1;
 }
 
@@ -157,7 +162,12 @@ static void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
     }
 }
 
-static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n, int *stopPoW)
+static int64_t pwork(int8_t mid[],
+                     int mwm,
+                     int8_t nonce[],
+                     int n,
+                     int *stopPoW,
+                     uv_rwlock_t *lock)
 {
     uint64_t lmid[STATE_TRITS_LENGTH] = {0}, hmid[STATE_TRITS_LENGTH] = {0};
     para(mid, lmid, hmid);
@@ -173,22 +183,22 @@ static int64_t pwork(int8_t mid[], int mwm, int8_t nonce[], int n, int *stopPoW)
     hmid[offset + 3] = HIGH3;
     incrN(n, lmid, hmid);
 
-    return loop_cpu(lmid, hmid, mwm, nonce, stopPoW);
+    return loop_cpu(lmid, hmid, mwm, nonce, stopPoW, lock);
 }
 
 static void work_cb(uv_work_t *req)
 {
     Pwork_struct *pworkInfo = (Pwork_struct *) req->data;
     pworkInfo->ret = pwork(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
-                           pworkInfo->n, pworkInfo->stopPoW);
+                           pworkInfo->n, pworkInfo->stopPoW, pworkInfo->lock);
 
-    pthread_mutex_lock(pworkInfo->lock);
+    uv_rwlock_wrlock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
         *pworkInfo->stopPoW = 1;
         /* This means this thread got the result */
         pworkInfo->n = -1;
     }
-    pthread_mutex_unlock(pworkInfo->lock);
+    uv_rwlock_wrunlock(pworkInfo->lock);
 }
 
 static int8_t *tx_to_cstate(Trytes_t *tx)
@@ -258,7 +268,7 @@ bool PowC(void *pow_ctx)
     ctx->stopPoW = 0;
     ctx->pow_info.time = 0;
     ctx->pow_info.hash_count = 0;
-    pthread_mutex_init(&ctx->lock, NULL);
+    uv_rwlock_init(&ctx->lock);
     uv_loop_t *loop_ptr = &ctx->loop;
     uv_work_t *work_req = ctx->work_req;
     Pwork_struct *pitem = ctx->pitem;
@@ -316,7 +326,8 @@ bool PowC(void *pow_ctx)
     nonce_to_result(tx_tryte, nonce_tryte, ctx->output_trytes);
 
 fail:
-    /* Free memory */
+    /* Free resource */
+    uv_rwlock_destroy(&ctx->lock);
     free(c_state);
     freeTrobject(tx_tryte);
     freeTrobject(nonce_trit);
