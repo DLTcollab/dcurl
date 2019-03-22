@@ -133,6 +133,9 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
         return NULL;
     }
 
+#if defined(__SSE4_2__)
+    return trytes_from_trits_sse42(trits);
+#else
     Trobject_t *trytes = NULL;
     int8_t *src = (int8_t *) malloc(trits->len / 3);
 
@@ -150,6 +153,7 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
     free(src);
 
     return trytes;
+#endif
 }
 
 Trobject_t *trits_from_trytes(Trobject_t *trytes)
