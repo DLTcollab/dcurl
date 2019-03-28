@@ -1,11 +1,11 @@
 #ifndef IMPL_CTX_H_
 #define IMPL_CTX_H_
 
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include "common.h"
 #include "list.h"
+#include "uv.h"
 
 typedef struct _impl_context ImplContext;
 
@@ -14,7 +14,7 @@ struct _impl_context {
     char *description;
 
     /* Multi-thread Management */
-    pthread_mutex_t lock;
+    uv_mutex_t lock;
     int bitmap; /* Used to tell which slot is available */
     int num_max_thread;
     int num_working_thread;

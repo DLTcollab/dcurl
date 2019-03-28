@@ -7,11 +7,9 @@
 
 #include "pow_sse.h"
 #include <inttypes.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <uv.h>
 #include "cpu-utils.h"
 #include "curl.h"
 #include "implcontext.h"
@@ -29,9 +27,9 @@ static void transform128(__m128i *lmid, __m128i *hmid)
             t2 = indices[j + 1];
             alpha = lfrom[t1];
             beta = hfrom[t1];
-            delta = beta ^ lfrom[t2];
-            lto[j] = ~(delta & alpha);
-            hto[j] = delta | (alpha ^ hfrom[t2]);
+            delta = alpha & (beta ^ lfrom[t2]);
+            lto[j] = ~delta;
+            hto[j] = (alpha ^ hfrom[t2]) | delta;
         }
         __m128i *lswap = lfrom, *hswap = hfrom;
         lfrom = lto;
@@ -44,9 +42,9 @@ static void transform128(__m128i *lmid, __m128i *hmid)
         t2 = indices[j + 1];
         alpha = lfrom[t1];
         beta = hfrom[t1];
-        delta = beta ^ lfrom[t2];
-        lto[j] = ~(delta & alpha);
-        hto[j] = delta | (alpha ^ hfrom[t2]);
+        delta = alpha & (beta ^ lfrom[t2]);
+        lto[j] = ~delta;
+        hto[j] = (alpha ^ hfrom[t2]) | delta;
     }
 }
 
@@ -115,13 +113,16 @@ static int64_t loop128(__m128i *lmid,
                        __m128i *hmid,
                        int m,
                        int8_t *nonce,
-                       int *stopPoW)
+                       int *stopPoW,
+                       uv_rwlock_t *lock)
 {
     int n = 0;
     int64_t i = 0;
     __m128i lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
 
+    uv_rwlock_rdlock(lock);
     for (i = 0; !incr128(lmid, hmid) && !*stopPoW; i++) {
+        uv_rwlock_rdunlock(lock);
         for (int j = 0; j < STATE_TRITS_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
@@ -134,7 +135,9 @@ static int64_t loop128(__m128i *lmid,
             seri128(lmid, hmid, n, nonce);
             return i * 128;
         }
+        uv_rwlock_rdlock(lock);
     }
+    uv_rwlock_rdunlock(lock);
     return -i * 128 - 1;
 }
 
@@ -176,7 +179,8 @@ static int64_t pwork128(int8_t mid[],
                         int mwm,
                         int8_t nonce[],
                         int n,
-                        int *stopPoW)
+                        int *stopPoW,
+                        uv_rwlock_t *lock)
 {
     __m128i lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
     para128(mid, lmid, hmid);
@@ -194,22 +198,23 @@ static int64_t pwork128(int8_t mid[],
     hmid[offset + 4] = _mm_set_epi64x(HIGH40, HIGH41);
     incrN128(n, lmid, hmid);
 
-    return loop128(lmid, hmid, mwm, nonce, stopPoW);
+    return loop128(lmid, hmid, mwm, nonce, stopPoW, lock);
 }
 
 static void work_cb(uv_work_t *req)
 {
     Pwork_struct *pworkInfo = (Pwork_struct *) req->data;
-    pworkInfo->ret = pwork128(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
-                              pworkInfo->n, pworkInfo->stopPoW);
+    pworkInfo->ret =
+        pwork128(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce, pworkInfo->n,
+                 pworkInfo->stopPoW, pworkInfo->lock);
 
-    pthread_mutex_lock(pworkInfo->lock);
+    uv_rwlock_wrlock(pworkInfo->lock);
     if (pworkInfo->ret >= 0) {
         *pworkInfo->stopPoW = 1;
         /* This means this thread got the result */
         pworkInfo->n = -1;
     }
-    pthread_mutex_unlock(pworkInfo->lock);
+    uv_rwlock_wrunlock(pworkInfo->lock);
 }
 
 static int8_t *tx_to_cstate(Trytes_t *tx)
@@ -279,7 +284,7 @@ static bool PowSSE(void *pow_ctx)
     ctx->stopPoW = 0;
     ctx->pow_info.time = 0;
     ctx->pow_info.hash_count = 0;
-    pthread_mutex_init(&ctx->lock, NULL);
+    uv_rwlock_init(&ctx->lock);
     uv_loop_t *loop_ptr = &ctx->loop;
     uv_work_t *work_req = ctx->work_req;
     Pwork_struct *pitem = ctx->pitem;
@@ -337,7 +342,8 @@ static bool PowSSE(void *pow_ctx)
     nonce_to_result(tx_tryte, nonce_tryte, ctx->output_trytes);
 
 fail:
-    /* Free memory */
+    /* Free resource */
+    uv_rwlock_destroy(&ctx->lock);
     free(c_state);
     freeTrobject(tx_tryte);
     freeTrobject(nonce_trit);
@@ -384,7 +390,7 @@ static bool PoWSSE_Context_Initialize(ImplContext *impl_ctx)
         uv_loop_init(&ctx[i].loop);
     }
     impl_ctx->context = ctx;
-    pthread_mutex_init(&impl_ctx->lock, NULL);
+    uv_mutex_init(&impl_ctx->lock);
     return true;
 
 fail:
@@ -417,11 +423,11 @@ static void *PoWSSE_getPoWContext(ImplContext *impl_ctx,
                                   int mwm,
                                   int threads)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
+    uv_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
-            pthread_mutex_unlock(&impl_ctx->lock);
+            uv_mutex_unlock(&impl_ctx->lock);
             PoW_SSE_Context *ctx =
                 impl_ctx->context + sizeof(PoW_SSE_Context) * i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
@@ -434,15 +440,15 @@ static void *PoWSSE_getPoWContext(ImplContext *impl_ctx,
             return ctx;
         }
     }
-    pthread_mutex_unlock(&impl_ctx->lock);
+    uv_mutex_unlock(&impl_ctx->lock);
     return NULL; /* It should not happen */
 }
 
 static bool PoWSSE_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 {
-    pthread_mutex_lock(&impl_ctx->lock);
+    uv_mutex_lock(&impl_ctx->lock);
     impl_ctx->bitmap |= 0x1 << ((PoW_SSE_Context *) pow_ctx)->indexOfContext;
-    pthread_mutex_unlock(&impl_ctx->lock);
+    uv_mutex_unlock(&impl_ctx->lock);
     return true;
 }
 

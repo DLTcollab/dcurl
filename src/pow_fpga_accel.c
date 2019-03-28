@@ -163,7 +163,6 @@ static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
     ctx->cpow_map = (uint32_t *) (ctx->fpga_regs_map + CPOW_BASE);
 
     impl_ctx->context = ctx;
-    pthread_mutex_init(&impl_ctx->lock, NULL);
 
     return true;
 

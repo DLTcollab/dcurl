@@ -17,6 +17,7 @@
 #endif
 #include "implcontext.h"
 #include "trinary.h"
+#include "uv.h"
 #if defined(ENABLE_AVX)
 #include "pow_avx.h"
 #elif defined(ENABLE_SSE)
@@ -25,20 +26,9 @@
 #include "pow_c.h"
 #endif
 
-#ifdef __APPLE__
-#include <dispatch/dispatch.h>
-#else
-#include <semaphore.h>
-#endif
-
 /* check whether dcurl is initialized */
 static bool isInitialized = false;
-
-#ifdef __APPLE__
-static dispatch_semaphore_t notify;
-#else
-static sem_t notify;
-#endif
+static uv_sem_t notify;
 
 LIST_HEAD(IMPL_LIST);
 
@@ -78,11 +68,7 @@ bool dcurl_init()
     ret &= registerImplContext(&PoWFPGAAccel_Context);
 #endif
 
-#ifdef __APPLE__
-    notify = dispatch_semaphore_create(0);
-#else
-    sem_init(&notify, 0, 0);
-#endif
+    uv_sem_init(&notify, 0);
     return isInitialized = ret;
 }
 
@@ -118,11 +104,7 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
                 goto do_pow;
             }
         }
-#ifdef __APPLE__
-        dispatch_semaphore_wait(notify, DISPATCH_TIME_FOREVER);
-#else
-        sem_wait(&notify);
-#endif
+        uv_sem_wait(&notify);
     } while (1);
 
 do_pow:
@@ -133,10 +115,6 @@ do_pow:
     }
     freePoWContext(impl, pow_ctx);
     exitImplContext(impl);
-#ifdef __APPLE__
-    dispatch_semaphore_signal(notify);
-#else
-    sem_post(&notify);
-#endif
+    uv_sem_post(&notify);
     return res;
 }

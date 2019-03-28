@@ -1,13 +1,12 @@
 #ifndef POW_AVX_H_
 #define POW_AVX_H_
 
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <uv.h>
 #include "common.h"
 #include "constants.h"
 #include "trinary.h"
+#include "uv.h"
 
 typedef struct _pwork_struct Pwork_struct;
 
@@ -16,7 +15,7 @@ struct _pwork_struct {
     int mwm;
     int8_t *nonce;
     int n;
-    pthread_mutex_t *lock;
+    uv_rwlock_t *lock;
     int *stopPoW;
     int64_t ret;
 };
@@ -25,7 +24,7 @@ typedef struct _pow_avx_context PoW_AVX_Context;
 
 struct _pow_avx_context {
     /* Resource of computing */
-    pthread_mutex_t lock;
+    uv_rwlock_t lock;
     /* Data type of libtuv */
     uv_loop_t loop;
     uv_work_t *work_req;

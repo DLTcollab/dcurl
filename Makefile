@@ -58,6 +58,10 @@ else ifeq ("$(BUILD_GENERIC)","1")
 CFLAGS += -DENABLE_GENERIC
 endif
 
+ifeq ("$(call cpu_feature,SSE4_2)","1")
+    CFLAGS += -msse4.2
+endif
+
 ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
@@ -78,12 +82,7 @@ TESTS = \
 	trinary \
 	curl \
 	dcurl \
-	multi-pow \
 	pow
-
-ifeq ("$(BUILD_COMPAT)", "1")
-TESTS += ccurl-multi_pow
-endif
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
@@ -132,14 +131,6 @@ endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 
-# Add the libtuv PIC(position independent code) library into the object files
-# if the specified hardware is CPU
-CPU_PLATFORMS := $(BUILD_AVX) $(BUILD_SSE) $(BUILD_GENERIC)
-ENABLE_CPU_PLATFORMS := $(findstring 1,$(CPU_PLATFORMS))
-ifeq ("$(ENABLE_CPU_PLATFORMS)","1")
-    OBJS += $(LIBTUV_LIBRARY)
-endif
-
 $(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
@@ -148,20 +139,14 @@ $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libdcurl.so: $(OBJS)
+$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-$(OUT)/test-%: tests/test-%.py $(OUT)/libdcurl.so
-	$(Q)echo "#!$(PYTHON)" > $@
-	$(call py_prepare_cmd)
-	$(Q)chmod +x $@
-
 include mk/common.mk
-include mk/python.mk
 
 -include $(deps)
