@@ -23,6 +23,8 @@
     - ``BUILD_STAT``: show the statistics of the PoW information.
     - ``BUILD_DEBUG``: dump verbose messages internally.
                        Build with the corresponding Sanitizer to detect software potential bugs if the value is `address`, `undefined` or `thread`.
+    - ``BOARD``: specify the board which builds the source code.
+                 The supported boards are `de10nano` (DE10-nano board), `arrowsockit` (Arrow SoCKit board), `rpi2` and `rpi3` (Raspberry Pi 2/3 board).
 * Alternatively, you can specify conditional build as following:
 ```shell
 $ make BUILD_GPU=0 BUILD_JNI=1 BUILD_AVX=1

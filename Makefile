@@ -131,14 +131,6 @@ endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 
-# Add the libtuv PIC(position independent code) library into the object files
-# if the specified hardware is CPU
-CPU_PLATFORMS := $(BUILD_AVX) $(BUILD_SSE) $(BUILD_GENERIC)
-ENABLE_CPU_PLATFORMS := $(findstring 1,$(CPU_PLATFORMS))
-ifeq ("$(ENABLE_CPU_PLATFORMS)","1")
-    OBJS += $(LIBTUV_LIBRARY)
-endif
-
 $(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
@@ -147,11 +139,11 @@ $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/test-%: $(OUT)/test-%.o $(OBJS)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libdcurl.so: $(OBJS)
+$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
