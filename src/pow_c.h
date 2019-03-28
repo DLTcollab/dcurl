@@ -1,13 +1,12 @@
 #ifndef POW_C_H_
 #define POW_C_H_
 
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <uv.h>
 #include "common.h"
 #include "constants.h"
 #include "trinary.h"
+#include "uv.h"
 
 typedef struct _pwork_struct Pwork_struct;
 
