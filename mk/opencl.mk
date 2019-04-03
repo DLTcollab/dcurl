@@ -1,16 +1,17 @@
-# Default the path to the NVIDIA Run time Library
-OPENCL_LIB_PATH ?= /usr/local/cuda/lib64
-OPENCL_LIB_DIR := $(shell test -d $(OPENCL_LIB_PATH); echo $$?)
-
-ifneq ($(OPENCL_LIB_DIR),0)
-$(error "Please specify the path to OpenCL library.")
-endif
-
-OPENCL_LIB_AVAIL := $(shell ls $(OPENCL_LIB_PATH) | grep -oi libOpenCL.so > /dev/null; echo $$?)
+# The auto-detected path of the OpenCL library
+OPENCL_LIB_PATH := $(shell pkg-config --variable=libdir OpenCL 2> /dev/null)
+OPENCL_LIB_AVAIL := $(shell test -e $(OPENCL_LIB_PATH)/libOpenCL.so; echo $$?)
+UNAME_S := $(shell uname -s)
 
 ifneq ($(OPENCL_LIB_AVAIL),0)
-$(error "Please check installation of OpenCL dynamic library in $(OPENCL_LIB_PATH)")
+$(error "Please install the OpenCL library correctly.")
 endif
 
 CFLAGS += -DENABLE_OPENCL
-LDFLAGS += -L$(OPENCL_LIB_PATH) -lOpenCL
+ifeq ($(UNAME_S),Darwin)
+    # macOS
+    LDFLAGS += -F$(OPENCL_LIB_PATH) -framework OpenCL
+else
+    # Default to Linux
+    LDFLAGS += -L$(OPENCL_LIB_PATH) -lOpenCL
+endif
