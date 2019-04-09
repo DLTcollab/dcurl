@@ -1,6 +1,6 @@
 # dcurl - Multi-threaded Curl implementation
 
-[![Build Status](https://travis-ci.org/DLTcollab/dcurl.svg?branch=develop)](https://travis-ci.org/DLTcollab/dcurl)
+[![Build Status](https://badge.buildkite.com/46ec07b122bde13f984c241fe8b38e64698c5c0d816ee6c7e4.svg)](https://buildkite.com/dltcollab/dcurl-test)
 ![Supported IRI version](https://img.shields.io/badge/Supported%20IRI%20Version-1.6.0-brightgreen.svg)
 ![Release version](https://img.shields.io/github/release-pre/DLTcollab/dcurl.svg)
 
