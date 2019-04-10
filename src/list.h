@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2018 National Cheng Kung University, Taiwan.
+ * Copyright (C) 2018 dcurl Developers.
  * Use of this source code is governed by MIT license that can be
  * found in the LICENSE file.
  */
 
 /* Linux-like double-linked list implementation */
 
-#ifndef SYSPROG21_LIST_H
-#define SYSPROG21_LIST_H
+#ifndef LIST_UTIL_H
+#define LIST_UTIL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -441,4 +441,4 @@ static inline void list_move_tail(struct list_head *node,
 }
 #endif
 
-#endif /* SYSPROG21_LIST_H */
+#endif /* LIST_UTIL_H */
