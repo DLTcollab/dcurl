@@ -15,6 +15,11 @@ extern "C" {
 
 #include <stddef.h>
 
+/* suppress compilation warnings on macOS */
+#ifdef LIST_HEAD
+#undef LIST_HEAD
+#endif
+
 /* "typeof" is a GNU extension.
  * Reference: https://gcc.gnu.org/onlinedocs/gcc/Typeof.html
  */
