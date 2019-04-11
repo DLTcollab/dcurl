@@ -1,9 +1,9 @@
 # Building and Testing
 
 ## Prerequisites
-* You need to configure paths and flags of OpenCL installation in `mk/opencl.mk`.
 * Check JDK installation and set environment variable `JAVA_HOME` if you wish to specify.
 * If target platform lacks of Intel SSE instructions, multi-threaded pure C implementation would be used as the fallback.
+* Install the OpenCL and GPU driver before calculating the PoW with GPU.
 * For FPGA-based hardware accelerator, [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) is taken as the basis.
      - File `soc_system.rbf` is only valid for DE10-nano board, and you have to synthesize to get appropriate `soc_system.rbf` for Arrow SoCKit board.
      - [RBF file](https://github.com/ajblane/dcurl/releases/tag/v1.0-SoCKit) can be downloaded from our release.
