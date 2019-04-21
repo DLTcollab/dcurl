@@ -5,7 +5,7 @@
 #include "../src/trinary.h"
 
 JNIEXPORT jboolean JNICALL
-Java_com_iota_iri_hash_PearlDiver_exlib_1init(JNIEnv *env, jclass clazz)
+Java_com_iota_iri_crypto_PearlDiver_exlibInit(JNIEnv *env, jclass clazz)
 {
     if (!dcurl_init())
         return JNI_FALSE;
@@ -13,7 +13,7 @@ Java_com_iota_iri_hash_PearlDiver_exlib_1init(JNIEnv *env, jclass clazz)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
+Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
                                                 jclass clazz,
                                                 jbyteArray trits,
                                                 jint mwm,
@@ -48,13 +48,13 @@ Java_com_iota_iri_hash_PearlDiver_exlib_1search(JNIEnv *env,
 }
 
 JNIEXPORT void JNICALL
-Java_com_iota_iri_hash_PearlDiver_exlib_1cancel(JNIEnv *env, jclass clazz)
+Java_com_iota_iri_crypto_PearlDiver_exlibCancel(JNIEnv *env, jclass clazz)
 {
     /* Do nothing */
 }
 
 JNIEXPORT void JNICALL
-Java_com_iota_iri_hash_PearlDiver_exlib_1destroy(JNIEnv *env, jclass clazz)
+Java_com_iota_iri_crypto_PearlDiver_exlibDestroy(JNIEnv *env, jclass clazz)
 {
     dcurl_destroy();
 }
