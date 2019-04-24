@@ -15,6 +15,9 @@
 #if defined(ENABLE_FPGA_ACCEL)
 #include "pow_fpga_accel.h"
 #endif
+#if defined(ENABLE_REMOTE)
+#include "remote_interface.h"
+#endif
 #include "implcontext.h"
 #include "trinary.h"
 #include "uv.h"
@@ -48,6 +51,11 @@ extern ImplContext PoWCL_Context;
 extern ImplContext PoWFPGAAccel_Context;
 #endif
 
+#if defined(ENABLE_REMOTE)
+extern RemoteImplContext Remote_Context;
+static uv_sem_t notify_remote;
+#endif
+
 bool dcurl_init()
 {
     bool ret = true;
@@ -68,6 +76,11 @@ bool dcurl_init()
     ret &= registerImplContext(&PoWFPGAAccel_Context);
 #endif
 
+#if defined(ENABLE_REMOTE)
+    ret &= initializeRemoteContext(&Remote_Context);
+    uv_sem_init(&notify_remote, 0);
+#endif
+
     uv_sem_init(&notify, 0);
     return isInitialized = ret;
 }
@@ -76,6 +89,10 @@ void dcurl_destroy()
 {
     ImplContext *impl = NULL;
     struct list_head *p;
+
+#if defined(ENABLE_REMOTE)
+    destroyRemoteContext(&Remote_Context);
+#endif
 
     list_for_each (p, &IMPL_LIST) {
         impl = list_entry(p, ImplContext, list);
@@ -96,6 +113,28 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
     if (!isInitialized)
         return NULL;
 
+#if defined(ENABLE_REMOTE)
+    do {
+        if (enterRemoteContext(&Remote_Context)) {
+            pow_ctx = getRemoteContext(&Remote_Context, trytes, mwm);
+            goto remote_pow;
+        }
+        uv_sem_wait(&notify_remote);
+    } while (1);
+
+remote_pow:
+    if (!doRemoteContext(&Remote_Context, pow_ctx)) {
+        goto local_pow;
+    } else {
+        res = getRemoteResult(&Remote_Context, pow_ctx);
+    }
+    freeRemoteContext(&Remote_Context, pow_ctx);
+    exitRemoteContext(&Remote_Context);
+    uv_sem_post(&notify_remote);
+    return res;
+
+local_pow:
+#endif
     do {
         list_for_each (p, &IMPL_LIST) {
             impl = list_entry(p, ImplContext, list);

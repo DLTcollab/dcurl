@@ -1,3 +1,6 @@
 [submodule "deps/libtuv"]
 	path = deps/libtuv
 	url = https://github.com/DLTcollab/libtuv.git
+[submodule "deps/rabbitmq-c"]
+	path = deps/rabbitmq-c
+	url = https://github.com/alanxz/rabbitmq-c.git
