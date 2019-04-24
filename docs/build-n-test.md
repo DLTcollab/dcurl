@@ -17,7 +17,7 @@
     - ``BUILD_SSE``: build the Intel SSE-accelerated Curl backend.
     - ``BUILD_GPU``: build the OpenCL-based GPU accelerations.
     - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
-    - ``BUILD_JNI``: build a shared library for IRI. The build system would generate JNI header file
+    - ``BUILD_JNI``: build a JAR file including the shared library and the JAVA bytecode for IRI. The build system would generate JNI header file
                      downloading from [latest JAVA source](https://github.com/DLTcollab/iri).
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
     - ``BUILD_STAT``: show the statistics of the PoW information.
