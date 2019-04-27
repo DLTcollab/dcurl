@@ -7,7 +7,7 @@ CODEABI_1.0 {
         ccurl_*;
 
         /* JNI */
-        Java_com_iota_iri_hash_PearlDiver*;
+        Java_com_iota_iri_crypto_PearlDiver*;
 
     local: *;
 };

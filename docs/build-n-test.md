@@ -1,12 +1,12 @@
 # Building and Testing
 
 ## Prerequisites
-* You need to configure paths and flags of OpenCL installation in `mk/opencl.mk`.
 * Check JDK installation and set environment variable `JAVA_HOME` if you wish to specify.
 * If target platform lacks of Intel SSE instructions, multi-threaded pure C implementation would be used as the fallback.
+* Install the OpenCL and GPU driver before calculating the PoW with GPU.
 * For FPGA-based hardware accelerator, [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) is taken as the basis.
      - File `soc_system.rbf` is only valid for DE10-nano board, and you have to synthesize to get appropriate `soc_system.rbf` for Arrow SoCKit board.
-     - [RBF file](https://github.com/ajblane/dcurl/releases/tag/v1.0-SoCKit) can be downloaded from our release.
+     - [RBF file](https://github.com/DLTcollab/iota_fpga/releases/tag/v0.3-sockit) can be downloaded from our release.
      - Moreover, you need to download [Lampa Lab-provided Linux image](https://github.com/LampaLab/iota_fpga/releases/tag/v0.1) to flash into the micro-SD card. The root password is `123456`.
 
 
@@ -17,7 +17,7 @@
     - ``BUILD_SSE``: build the Intel SSE-accelerated Curl backend.
     - ``BUILD_GPU``: build the OpenCL-based GPU accelerations.
     - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
-    - ``BUILD_JNI``: build a shared library for IRI. The build system would generate JNI header file
+    - ``BUILD_JNI``: build a JAR file including the shared library and the JAVA bytecode for IRI. The build system would generate JNI header file
                      downloading from [latest JAVA source](https://github.com/DLTcollab/iri).
     - ``BUILD_COMPAT``: build extra cCurl compatible interface.
     - ``BUILD_STAT``: show the statistics of the PoW information.

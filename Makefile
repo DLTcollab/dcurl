@@ -1,3 +1,5 @@
+VERSION = 0.3.0
+
 OUT ?= ./build
 SRC := src
 
@@ -89,7 +91,15 @@ TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 LIBS = libdcurl.so
 LIBS := $(addprefix $(OUT)/, $(LIBS))
 
-all: config $(TESTS) $(LIBS)
+JARS := dcurljni-$(VERSION).jar
+JARS := $(addprefix $(OUT)/, $(JARS))
+
+PREQ := config $(TESTS) $(LIBS)
+ifeq ("$(BUILD_JNI)","1")
+PREQ += $(JARS)
+endif
+
+all: $(PREQ)
 .DEFAULT_GOAL := all
 
 OBJS = \

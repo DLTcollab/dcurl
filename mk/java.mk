@@ -1,16 +1,17 @@
 UNAME_S := $(shell uname -s)
 
+JAVAC := $(shell which javac)
+ifndef JAVAC
+$(error "javac is not available. Please check JDK installation")
+endif
+
 # if JAVA_HOME is not set, guess it according to system configurations
 ifndef JAVA_HOME
 ifeq ($(UNAME_S),Darwin)
     # macOS
     JAVA_HOME := $(shell /usr/libexec/java_home)
 else
-# Default to Linux
-    JAVAC := $(shell which javac)
-    ifndef JAVAC
-    $(error "javac is not available. Please check JDK installation")
-    endif
+    # Default to Linux
     JAVA_HOME := $(shell readlink -f $(JAVAC) | sed "s:bin/javac::")
 endif
 endif # JAVA_HOME
@@ -60,3 +61,12 @@ jni/iri-pearldiver-exlib.c: $(OUT)/jni/iri-pearldiver-exlib.h
 $(OUT)/jni/%.o: jni/%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(CFLAGS_JNI) -c -MMD -MF $@.d $<
+
+java/org/dltcollab/%.class: java/org/dltcollab/%.java
+	$(VECHO) "  JAVAC\t$@\n"
+	$(Q)$(JAVAC) $<
+
+$(OUT)/dcurljni-$(VERSION).jar: $(OUT)/libdcurl.so java/org/dltcollab/Dcurl.class
+	$(VECHO) "  JAR\t$@\n"
+	$(Q)jar -cf $@ -C $(OUT) libdcurl.so
+	$(Q)jar -uf $@ -C java org/dltcollab/Dcurl.class

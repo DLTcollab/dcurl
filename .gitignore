@@ -8,7 +8,7 @@ docs/html
 *.obj
 *.elf
 
-# Precompiled Headers
+# Precompiled headers
 *.gch
 *.pch
 
@@ -23,3 +23,6 @@ docs/html
 *.so
 *.so.*
 *.dylib
+
+# Java bytecode
+*.class
