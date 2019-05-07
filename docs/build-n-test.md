@@ -1,7 +1,7 @@
 # Building and Testing
 
 ## Prerequisites
-* Check JDK installation and set environment variable `JAVA_HOME` if you wish to specify.
+* Check JDK 8 installation and set environment variable `JAVA_HOME` if you wish to specify.
 * If target platform lacks of Intel SSE instructions, multi-threaded pure C implementation would be used as the fallback.
 * Install the OpenCL and GPU driver before calculating the PoW with GPU.
 * For FPGA-based hardware accelerator, [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) is taken as the basis.
