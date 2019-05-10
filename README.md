@@ -63,8 +63,6 @@ pull requests to dcurl.
   it faciliates dcurl to perform hardware-accelerated PoW operations on
   edge devices.
 
-5. [remotepow](https://github.com/tylerw1369/remotepow/tree/Dcurl): delegate PoW to remote servers
-
 
 ## Licensing
 `dcurl` is freely redistributable under the MIT License.
