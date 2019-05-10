@@ -8,7 +8,7 @@
      - File `soc_system.rbf` is only valid for DE10-nano board, and you have to synthesize to get appropriate `soc_system.rbf` for Arrow SoCKit board.
      - [RBF file](https://github.com/DLTcollab/iota_fpga/releases/tag/v0.3-sockit) can be downloaded from our release.
      - Moreover, you need to download [Lampa Lab-provided Linux image](https://github.com/LampaLab/iota_fpga/releases/tag/v0.1) to flash into the micro-SD card. The root password is `123456`.
-
+* Install `CMake` for building git submodules.
 
 ## Build Instructions
 * dcurl allows various combinations of build configurations to fit final use scenarios.
