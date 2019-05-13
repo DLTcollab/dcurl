@@ -17,7 +17,7 @@ endif
 LIBTUV_PATH = deps/libtuv
 LIBTUV_INCLUDE := -I $(LIBTUV_PATH)/include
 LIBTUV_PLATFORM := $(UNAME_M)-$(UNAME_S)
-LIBTUV_BOARD := $(BUILD_BOARD)
+LIBTUV_BOARD := $(BOARD)
 # PIC (Position-Independent-Code) library
 LIBTUV_LIBRARY := $(LIBTUV_PATH)/build/$(LIBTUV_PLATFORM)/release/lib/libtuv.o
 
