@@ -247,4 +247,201 @@ static inline Trobject_t *trytes_from_trits_sse42(Trobject_t *trits)
     return trytes;
 }
 
+static inline Trobject_t *trits_from_trytes_sse42(Trobject_t *trytes)
+{
+    Trobject_t *trits = NULL;
+    int8_t *src = (int8_t *) malloc(trytes->len * 3);
+
+    const int block_8bit = BLOCK_8BIT(__m128i);
+    /* For setting the most significant bit of a byte */
+    const int8_t setMSB = 0x80;
+    static int8_t TrytesToTritsMappings[][3] = {
+        {0, 0, 0},   {1, 0, 0},   {-1, 1, 0},  {0, 1, 0},   {1, 1, 0},
+        {-1, -1, 1}, {0, -1, 1},  {1, -1, 1},  {-1, 0, 1},  {0, 0, 1},
+        {1, 0, 1},   {-1, 1, 1},  {0, 1, 1},   {1, 1, 1},   {-1, -1, -1},
+        {0, -1, -1}, {1, -1, -1}, {-1, 0, -1}, {0, 0, -1},  {1, 0, -1},
+        {-1, 1, -1}, {0, 1, -1},  {1, 1, -1},  {-1, -1, 0}, {0, -1, 0},
+        {1, -1, 0},  {-1, 0, 0}};
+    /* The set and range for indicating the trits value (0, 1, -1)
+     * of the corresponding trytes */
+    /* '9', 'C', 'F', 'I', 'L', 'O', 'R', 'U', 'X' */
+    const char *setLowTrit0 = "9CFILORUX";
+    /* 'A', 'D', 'G', 'J', 'M', 'P', 'S', 'V', 'Y' */
+    const char *setLowTritP1 = "ADGJMPSVY";
+    /* 'B', 'E', 'H', 'K', 'N', 'Q', 'T', 'W', 'Z' */
+    const char *setLowTritN1 = "BEHKNQTWZ";
+    /* '9', 'A', 'H', 'I', 'J', 'Q', 'R', 'S', 'Z' */
+    const char *rangeMidTrit0 = "99AAHJQSZZ";
+    /* 'B', 'C', 'D', 'K', 'L', 'M', 'T', 'U', 'V' */
+    const char *rangeMidTritP1 = "BDKMTV";
+    /* 'E', 'F', 'G', 'N', 'O', 'P', 'W', 'X', 'Y' */
+    const char *rangeMidTritN1 = "EGNPWY";
+    /* '9', 'A', 'B', 'C', 'D', 'W', 'X', 'Y', 'Z' */
+    const char *rangeHighTrit0 = "99ADWZ";
+    /* 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M' */
+    const char *rangeHighTritP1 = "EM";
+    /* 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V' */
+    const char *rangeHighTritN1 = "NV";
+    /* Convert the char array to the 128-bit data */
+    const __m128i patternLowTrit0 = _mm_loadu_si128((__m128i *) (setLowTrit0));
+    const __m128i patternLowTritP1 =
+        _mm_loadu_si128((__m128i *) (setLowTritP1));
+    const __m128i patternLowTritN1 =
+        _mm_loadu_si128((__m128i *) (setLowTritN1));
+    const __m128i patternMidTrit0 =
+        _mm_loadu_si128((__m128i *) (rangeMidTrit0));
+    const __m128i patternMidTritP1 =
+        _mm_loadu_si128((__m128i *) (rangeMidTritP1));
+    const __m128i patternMidTritN1 =
+        _mm_loadu_si128((__m128i *) (rangeMidTritN1));
+    const __m128i patternHighTrit0 =
+        _mm_loadu_si128((__m128i *) (rangeHighTrit0));
+    const __m128i patternHighTritP1 =
+        _mm_loadu_si128((__m128i *) (rangeHighTritP1));
+    const __m128i patternHighTritN1 =
+        _mm_loadu_si128((__m128i *) (rangeHighTritN1));
+    /* The 128-bit data with the repeated same bytes */
+    const __m128i posOne = _mm_set1_epi8(1);
+    const __m128i negOne = _mm_set1_epi8(-1);
+    const __m128i zero = _mm_set1_epi8(0);
+    /* For shuffling the bytes of the trits transformed from the input trytes */
+    const __m128i shuffleFirst[3] = {
+        _mm_setr_epi8(0x00, REPEAT2(setMSB), 0x01, REPEAT2(setMSB), 0x02,
+                      REPEAT2(setMSB), 0x03, REPEAT2(setMSB), 0x04,
+                      REPEAT2(setMSB), 0x05),
+        _mm_setr_epi8(REPEAT1(setMSB), 0x00, REPEAT2(setMSB), 0x01,
+                      REPEAT2(setMSB), 0x02, REPEAT2(setMSB), 0x03,
+                      REPEAT2(setMSB), 0x04, REPEAT2(setMSB)),
+        _mm_setr_epi8(REPEAT2(setMSB), 0x00, REPEAT2(setMSB), 0x01,
+                      REPEAT2(setMSB), 0x02, REPEAT2(setMSB), 0x03,
+                      REPEAT2(setMSB), 0x04, REPEAT1(setMSB))};
+    const __m128i shuffleMid[3] = {
+        _mm_setr_epi8(REPEAT2(setMSB), 0x06, REPEAT2(setMSB), 0x07,
+                      REPEAT2(setMSB), 0x08, REPEAT2(setMSB), 0x09,
+                      REPEAT2(setMSB), 0x0A, REPEAT1(setMSB)),
+        _mm_setr_epi8(0x05, REPEAT2(setMSB), 0x06, REPEAT2(setMSB), 0x07,
+                      REPEAT2(setMSB), 0x08, REPEAT2(setMSB), 0x09,
+                      REPEAT2(setMSB), 0x0A),
+        _mm_setr_epi8(REPEAT1(setMSB), 0x05, REPEAT2(setMSB), 0x06,
+                      REPEAT2(setMSB), 0x07, REPEAT2(setMSB), 0x08,
+                      REPEAT2(setMSB), 0x09, REPEAT2(setMSB))};
+    const __m128i shuffleLast[3] = {
+        _mm_setr_epi8(REPEAT1(setMSB), 0x0B, REPEAT2(setMSB), 0x0C,
+                      REPEAT2(setMSB), 0x0D, REPEAT2(setMSB), 0x0E,
+                      REPEAT2(setMSB), 0x0F, REPEAT2(setMSB)),
+        _mm_setr_epi8(REPEAT2(setMSB), 0x0B, REPEAT2(setMSB), 0x0C,
+                      REPEAT2(setMSB), 0x0D, REPEAT2(setMSB), 0x0E,
+                      REPEAT2(setMSB), 0x0F, REPEAT1(setMSB)),
+        _mm_setr_epi8(0x0A, REPEAT2(setMSB), 0x0B, REPEAT2(setMSB), 0x0C,
+                      REPEAT2(setMSB), 0x0D, REPEAT2(setMSB), 0x0E,
+                      REPEAT2(setMSB), 0x0F)};
+
+    /* Start converting */
+    /* The for loop handles the group of the 128-bit characters without the
+     * end-of-string */
+    for (int i = 0; i < (trytes->len) / block_8bit; i++) {
+        /* Get tryte data */
+        __m128i data = _mm_loadu_si128((__m128i *) (trytes->data) + i);
+
+        /* The masks for setting the corresponding trits */
+        __m128i maskLowTrit0 = _mm_cmpistrm(
+            patternLowTrit0, data,
+            /* Signed byte comparison */
+            _SIDD_SBYTE_OPS |
+                /* Compare with the character set */
+                _SIDD_CMP_EQUAL_ANY |
+                /* Expand the corrsponding bit result to byte unit */
+                _SIDD_UNIT_MASK);
+        __m128i maskLowTritP1 = _mm_cmpistrm(
+            patternLowTritP1, data,
+            _SIDD_SBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_UNIT_MASK);
+        __m128i maskLowTritN1 = _mm_cmpistrm(
+            patternLowTritN1, data,
+            _SIDD_SBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_UNIT_MASK);
+        __m128i maskMidTrit0 = _mm_cmpistrm(
+            patternMidTrit0, data,
+            /* Signed byte comparison */
+            _SIDD_SBYTE_OPS |
+                /* Compare with the character range */
+                _SIDD_CMP_RANGES |
+                /* Expand the corrsponding bit result to byte unit */
+                _SIDD_UNIT_MASK);
+        __m128i maskMidTritP1 =
+            _mm_cmpistrm(patternMidTritP1, data,
+                         _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
+        __m128i maskMidTritN1 =
+            _mm_cmpistrm(patternMidTritN1, data,
+                         _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
+        __m128i maskHighTrit0 =
+            _mm_cmpistrm(patternHighTrit0, data,
+                         _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
+        __m128i maskHighTritP1 =
+            _mm_cmpistrm(patternHighTritP1, data,
+                         _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
+        __m128i maskHighTritN1 =
+            _mm_cmpistrm(patternHighTritN1, data,
+                         _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
+
+        /*
+         * Each block represents a trit.
+         *                                        shuffle
+         *            ------     ------     ------                   ----------------        ------ 
+         * lowTrit  = | a1 | ... | f1 | ... | p1 |       dataFirst = | a1 | a2 | a3 | ...... | f1 |    
+         *            ------     ------     ------                   ----------------        ------    
+         *            ------     ------     ------                   ----------------        ------    
+         * midTrit  = | a2 | ... | f2 | ... | p2 |   =>  dataMid   = | f2 | f3 | g1 | ...... | k2 |    
+         *            ------     ------     ------                   ----------------        ------    
+         *            ------     ------     ------                   ----------------        ------    
+         * highTrit = | a3 | ... | f3 | ... | p3 |       dataLast  = | k3 | l1 | l2 | ...... | p3 |    
+         *            ------     ------     ------                   ----------------        ------    
+         */
+        __m128i lowTrit =
+            _mm_or_si128(_mm_and_si128(maskLowTrit0, zero),
+                         _mm_or_si128(_mm_and_si128(maskLowTritP1, posOne),
+                                      _mm_and_si128(maskLowTritN1, negOne)));
+        __m128i midTrit =
+            _mm_or_si128(_mm_and_si128(maskMidTrit0, zero),
+                         _mm_or_si128(_mm_and_si128(maskMidTritP1, posOne),
+                                      _mm_and_si128(maskMidTritN1, negOne)));
+        __m128i highTrit =
+            _mm_or_si128(_mm_and_si128(maskHighTrit0, zero),
+                         _mm_or_si128(_mm_and_si128(maskHighTritP1, posOne),
+                                      _mm_and_si128(maskHighTritN1, negOne)));
+        /* Initialize with 0 */
+        __m128i dataFirst = _mm_set1_epi8(0);
+        __m128i dataMid = _mm_set1_epi8(0);
+        __m128i dataLast = _mm_set1_epi8(0);
+        dataFirst = _mm_or_si128(
+            _mm_shuffle_epi8(lowTrit, shuffleFirst[0]),
+            _mm_or_si128(_mm_shuffle_epi8(midTrit, shuffleFirst[1]),
+                         _mm_shuffle_epi8(highTrit, shuffleFirst[2])));
+        dataMid = _mm_or_si128(
+            _mm_shuffle_epi8(lowTrit, shuffleMid[0]),
+            _mm_or_si128(_mm_shuffle_epi8(midTrit, shuffleMid[1]),
+                         _mm_shuffle_epi8(highTrit, shuffleMid[2])));
+        dataLast = _mm_or_si128(
+            _mm_shuffle_epi8(lowTrit, shuffleLast[0]),
+            _mm_or_si128(_mm_shuffle_epi8(midTrit, shuffleLast[1]),
+                         _mm_shuffle_epi8(highTrit, shuffleLast[2])));
+
+        /* Store the 3 * 128-bit trits converted from trytes */
+        _mm_store_si128((__m128i *) (src + (3 * i) * block_8bit), dataFirst);
+        _mm_store_si128((__m128i *) (src + (3 * i + 1) * block_8bit), dataMid);
+        _mm_store_si128((__m128i *) (src + (3 * i + 2) * block_8bit), dataLast);
+    }
+    /* The rest of the trytes */
+    for (int i = (trytes->len / block_8bit) * block_8bit; i < trytes->len;
+         i++) {
+        int idx = (trytes->data[i] == '9') ? 0 : trytes->data[i] - 'A' + 1;
+        for (int j = 0; j < 3; j++) {
+            src[i * 3 + j] = TrytesToTritsMappings[idx][j];
+        }
+    }
+
+    trits = initTrits(src, trytes->len * 3);
+    free(src);
+
+    return trits;
+}
+
 #endif
