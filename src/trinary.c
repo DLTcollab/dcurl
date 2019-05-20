@@ -163,6 +163,9 @@ Trobject_t *trits_from_trytes(Trobject_t *trytes)
         return NULL;
     }
 
+#if defined(__SSE4_2__)
+    return trits_from_trytes_sse42(trytes);
+#endif
     Trobject_t *trits = NULL;
     int8_t *src = (int8_t *) malloc(trytes->len * 3);
 
