@@ -371,6 +371,7 @@ static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
         uv_loop_init(&ctx[i].loop);
     }
+    uv_set_threadpool_size(nproc);
     impl_ctx->context = ctx;
     uv_mutex_init(&impl_ctx->lock);
     return true;
