@@ -84,7 +84,8 @@ TESTS = \
 	trinary \
 	curl \
 	dcurl \
-	pow
+	pow \
+	multi-pow
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
