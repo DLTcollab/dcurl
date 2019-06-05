@@ -17,5 +17,8 @@ ifeq ("$(LOWER_VER)","$(SANITIZER_MIN_GCC_VER)")
     ifneq ("$(SANITIZER)","")
         CFLAGS += -fsanitize=$(SANITIZER)
         LDFLAGS += -fsanitize=$(SANITIZER)
+        ifeq ("$(SANITIZER)","undefined")
+            CFLAGS += -fno-sanitize-recover
+        endif
     endif
 endif
