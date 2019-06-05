@@ -7,6 +7,7 @@
 #include "remote_common.h"
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 #include "common.h"
 
 bool die_on_amqp_error(amqp_rpc_reply_t x, char const *context)
@@ -186,7 +187,12 @@ bool wait_response_message(amqp_connection_state_t *conn,
      * AMQP_FRAME_BODY*/
     for (;;) {
         amqp_maybe_release_buffers(*conn);
-        amqp_simple_wait_frame(*conn, &frame);
+
+        struct timeval t = {10, 0}; /* RPC timeout: 10s*/
+        if (!die_on_error(amqp_simple_wait_frame_noblock(*conn, &frame, &t),
+                          "RPC timeout"))
+            return false;
+
         if (!die_on_amqp_error(amqp_get_rpc_reply(*conn), "Wait method frame"))
             return false;
 
@@ -209,7 +215,11 @@ bool wait_response_message(amqp_connection_state_t *conn,
 #endif
 
         amqp_maybe_release_buffers(*conn);
-        amqp_simple_wait_frame(*conn, &frame);
+
+        if (!die_on_error(amqp_simple_wait_frame_noblock(*conn, &frame, &t),
+                          "RPC timeout"))
+            return false;
+
         if (!die_on_amqp_error(amqp_get_rpc_reply(*conn), "Wait header frame"))
             return false;
 
@@ -230,7 +240,10 @@ bool wait_response_message(amqp_connection_state_t *conn,
         body_target = (size_t) frame.payload.properties.body_size;
         body_received = 0;
         while (body_received < body_target) {
-            amqp_simple_wait_frame(*conn, &frame);
+            if (!die_on_error(amqp_simple_wait_frame_noblock(*conn, &frame, &t),
+                          "RPC timeout"))
+                return false;
+
             if (!die_on_amqp_error(amqp_get_rpc_reply(*conn),
                                    "Wait body frame"))
                 return false;
