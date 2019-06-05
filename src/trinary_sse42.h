@@ -5,6 +5,7 @@
 #include "constants.h"
 
 #define BLOCK_8BIT(type) (sizeof(type) / sizeof(int8_t))
+#define BYTE_OF_128BIT 16
 #define COMMA0
 #define COMMA1 ,
 #define COMMA(x) COMMA##x
@@ -61,7 +62,7 @@ static inline bool validateTrytes_sse42(Trobject_t *trytes)
 {
     const int block_8bit = BLOCK_8BIT(__m128i);
     /* Characters from 'A' to 'Z' and '9' to '9' */
-    const char *range = "AZ99";
+    const char range[BYTE_OF_128BIT] = "AZ99";
     __m128i pattern = _mm_loadu_si128((__m128i *) (range));
     /* The for loop handles the group of the 128-bit characters without the
      * end-of-string */
@@ -265,23 +266,23 @@ static inline Trobject_t *trits_from_trytes_sse42(Trobject_t *trytes)
     /* The set and range for indicating the trits value (0, 1, -1)
      * of the corresponding trytes */
     /* '9', 'C', 'F', 'I', 'L', 'O', 'R', 'U', 'X' */
-    const char *setLowTrit0 = "9CFILORUX";
+    const char setLowTrit0[BYTE_OF_128BIT] = "9CFILORUX";
     /* 'A', 'D', 'G', 'J', 'M', 'P', 'S', 'V', 'Y' */
-    const char *setLowTritP1 = "ADGJMPSVY";
+    const char setLowTritP1[BYTE_OF_128BIT] = "ADGJMPSVY";
     /* 'B', 'E', 'H', 'K', 'N', 'Q', 'T', 'W', 'Z' */
-    const char *setLowTritN1 = "BEHKNQTWZ";
+    const char setLowTritN1[BYTE_OF_128BIT] = "BEHKNQTWZ";
     /* '9', 'A', 'H', 'I', 'J', 'Q', 'R', 'S', 'Z' */
-    const char *rangeMidTrit0 = "99AAHJQSZZ";
+    const char rangeMidTrit0[BYTE_OF_128BIT] = "99AAHJQSZZ";
     /* 'B', 'C', 'D', 'K', 'L', 'M', 'T', 'U', 'V' */
-    const char *rangeMidTritP1 = "BDKMTV";
+    const char rangeMidTritP1[BYTE_OF_128BIT] = "BDKMTV";
     /* 'E', 'F', 'G', 'N', 'O', 'P', 'W', 'X', 'Y' */
-    const char *rangeMidTritN1 = "EGNPWY";
+    const char rangeMidTritN1[BYTE_OF_128BIT] = "EGNPWY";
     /* '9', 'A', 'B', 'C', 'D', 'W', 'X', 'Y', 'Z' */
-    const char *rangeHighTrit0 = "99ADWZ";
+    const char rangeHighTrit0[BYTE_OF_128BIT] = "99ADWZ";
     /* 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M' */
-    const char *rangeHighTritP1 = "EM";
+    const char rangeHighTritP1[BYTE_OF_128BIT] = "EM";
     /* 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V' */
-    const char *rangeHighTritN1 = "NV";
+    const char rangeHighTritN1[BYTE_OF_128BIT] = "NV";
     /* Convert the char array to the 128-bit data */
     const __m128i patternLowTrit0 = _mm_loadu_si128((__m128i *) (setLowTrit0));
     const __m128i patternLowTritP1 =
