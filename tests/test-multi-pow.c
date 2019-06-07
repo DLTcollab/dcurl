@@ -17,7 +17,7 @@ void *dcurl_entry_cb(void *arg)
     dcurl_item *item = (dcurl_item *) arg;
     /* test dcurl Implementation with mwm = 14 */
     int8_t *ret_trytes =
-        dcurl_entry(item->input_trytes, item->mwm, 0);
+        dcurl_entry(item->input_trytes, item->mwm, 8);
     assert(ret_trytes && "dcurl_entry() failed");
     memcpy(item->output_trytes, ret_trytes, TRANSACTION_TRYTES_LENGTH);
     free(ret_trytes);
