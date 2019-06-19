@@ -1,4 +1,4 @@
-VERSION = 0.3.0
+VERSION = 0.4.0
 
 OUT ?= ./build
 SRC := src
@@ -72,6 +72,10 @@ ifeq ("$(BUILD_FPGA_ACCEL)","1")
 CFLAGS += -DENABLE_FPGA_ACCEL
 endif
 
+ifeq ("$(BUILD_REMOTE)","1")
+CFLAGS += -DENABLE_REMOTE
+endif
+
 ifeq ("$(BUILD_JNI)","1")
 include mk/java.mk
 endif
@@ -84,7 +88,8 @@ TESTS = \
 	trinary \
 	curl \
 	dcurl \
-	pow
+	pow \
+	multi-pow
 
 TESTS := $(addprefix $(OUT)/test-, $(TESTS))
 
@@ -97,6 +102,9 @@ JARS := $(addprefix $(OUT)/, $(JARS))
 PREQ := config $(TESTS) $(LIBS)
 ifeq ("$(BUILD_JNI)","1")
 PREQ += $(JARS)
+endif
+ifeq ("$(BUILD_REMOTE)", "1")
+PREQ += $(OUT)/remote-worker
 endif
 
 all: $(PREQ)
@@ -139,23 +147,36 @@ OBJS += \
 	pow_fpga_accel.o
 endif
 
+ifeq ("$(BUILD_REMOTE)", "1")
+OBJS += \
+	remote_common.o \
+	remote_interface.o
+
+WORKER_OBJS := $(addprefix $(OUT)/worker-,$(filter-out remote_interface.o, $(OBJS)))
+WORKER_CFLAGS := $(filter-out -DENABLE_REMOTE, $(CFLAGS))
+endif
+
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 
 $(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include
+$(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include $(LIBRABBITMQ_PATH)/build/include
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_LIBRARY)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_LIBRARY) $(LIBRABBITMQ_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBRABBITMQ_LINK)
 
-$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_LIBRARY)
+$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_LIBRARY) $(LIBRABBITMQ_LIBRARY)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
+	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS) $(LIBRABBITMQ_LINK)
+
+ifeq ("$(BUILD_REMOTE)", "1")
+include mk/remote.mk
+endif
 
 include mk/common.mk
 

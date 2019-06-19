@@ -30,15 +30,10 @@ After integrating dcurl into IRI, performance of [attachToTangle](https://iota.r
 [Modified IRI accepting external PoW Library](https://github.com/DLTcollab/iri)
 Supported IRI version: 1.7.0
 
-* ```$ cd ~/iri && mvn compile && mvn package```
+Load the external dcurl shared library from the installed JAR file
+
+* ```$ cd ~/iri && make check```
 * ```$ java -jar target/iri.jar -p <port> --pearldiver-exlib dcurl```
-
-or with the **deprecated** commands
-
-* ```$ cd ~/iri && mvn compile && mvn package```
-* ```$ cp ~/dcurl/build/libdcurl.so ~/iri```
-* ```$ cd ~/iri && java -Djava.library.path=./ -jar target/iri.jar -p <port> --pearldiver-exlib dcurl```
-
 
 ## Adoptions
 Here is a partial list of open source projects that have adopted dcurl. If you
@@ -67,8 +62,6 @@ pull requests to dcurl.
 * As an intermediate server accelerateing interactions with the Tangle,
   it faciliates dcurl to perform hardware-accelerated PoW operations on
   edge devices.
-
-5. [remotepow](https://github.com/tylerw1369/remotepow/tree/Dcurl): delegate PoW to remote servers
 
 
 ## Licensing

@@ -35,12 +35,11 @@ static bool validateTrits(Trobject_t *trits)
 
 #if defined(__SSE4_2__)
     return validateTrits_sse42(trits);
-#else
+#endif
     for (int i = 0; i < trits->len; i++)
         if (trits->data[i] < -1 || trits->data[i] > 1)
             return false;
     return true;
-#endif
 }
 
 static bool validateTrytes(Trobject_t *trytes)
@@ -50,13 +49,12 @@ static bool validateTrytes(Trobject_t *trytes)
 
 #if defined(__SSE4_2__)
     return validateTrytes_sse42(trytes);
-#else
+#endif
     for (int i = 0; i < trytes->len; i++)
         if ((trytes->data[i] < 'A' || trytes->data[i] > 'Z') &&
             trytes->data[i] != '9')
             return false;
     return true;
-#endif
 }
 
 Trobject_t *initTrits(int8_t *src, int len)
@@ -133,6 +131,9 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
         return NULL;
     }
 
+#if defined(__SSE4_2__)
+    return trytes_from_trits_sse42(trits);
+#endif
     Trobject_t *trytes = NULL;
     int8_t *src = (int8_t *) malloc(trits->len / 3);
 
@@ -162,6 +163,9 @@ Trobject_t *trits_from_trytes(Trobject_t *trytes)
         return NULL;
     }
 
+#if defined(__SSE4_2__)
+    return trits_from_trytes_sse42(trytes);
+#endif
     Trobject_t *trits = NULL;
     int8_t *src = (int8_t *) malloc(trytes->len * 3);
 

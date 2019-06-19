@@ -19,6 +19,9 @@ BUILD_GPU ?= 0
 # Build FPGA backend or not
 BUILD_FPGA_ACCEL ?= 0
 
+# Build facilities of remote procedure calls
+BUILD_REMOTE ?= 0
+
 # Build JNI glue as the bridge between dcurl and IRI
 BUILD_JNI ?= 0
 

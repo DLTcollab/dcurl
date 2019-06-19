@@ -1,8 +1,29 @@
-/* Test program for dcurl */
+/* Test program for thread-safe dcurl */
+#include <pthread.h>
 #include "common.h"
 #include "dcurl.h"
 
-#define LOOP_MAX 5
+#define THREAD_MAX 10
+
+typedef struct _dcurl_item dcurl_item;
+struct _dcurl_item {
+    int mwm;
+    int8_t input_trytes[TRANSACTION_TRYTES_LENGTH];  /* 2673 */
+    int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
+};
+
+void *dcurl_entry_cb(void *arg)
+{
+    dcurl_item *item = (dcurl_item *) arg;
+    /* test dcurl Implementation with mwm = 14 */
+    int8_t *ret_trytes =
+        dcurl_entry(item->input_trytes, item->mwm, 8);
+    assert(ret_trytes && "dcurl_entry() failed");
+    memcpy(item->output_trytes, ret_trytes, TRANSACTION_TRYTES_LENGTH);
+    free(ret_trytes);
+
+    pthread_exit(NULL);
+}
 
 int main()
 {
@@ -48,30 +69,40 @@ int main()
         "9999999999999";
 
     int mwm = 14;
+    pthread_t threads[THREAD_MAX];
+    dcurl_item items[THREAD_MAX];
 
-    for (int loop_count = 0; loop_count < LOOP_MAX; loop_count++) {
-        /* test dcurl Implementation with mwm = 14 */
-        dcurl_init();
-        int8_t *ret_trytes = dcurl_entry((int8_t *) trytes, mwm, 8);
-        assert(ret_trytes);
-        dcurl_destroy();
+    dcurl_init();
 
-        Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
-        assert(trytes_t);
+    for (int i = 0; i < THREAD_MAX; i++) {
+        memcpy(items[i].input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
+        items[i].mwm = mwm;
+        pthread_create(&threads[i], NULL, dcurl_entry_cb,
+                       (void *) &items[i]);
+    }
+
+    for (int i = 0; i < THREAD_MAX; i++)
+        pthread_join(threads[i], NULL);
+
+    for (int i = 0; i < THREAD_MAX; i++) {
+        Trytes_t *trytes_t =
+            initTrytes(items[i].output_trytes, TRANSACTION_TRYTES_LENGTH);
+        assert(trytes_t && "initTrytes() failed");
         Trytes_t *hash_trytes = hashTrytes(trytes_t);
-        assert(hash_trytes);
+        assert(hash_trytes && "hashTrytes() failed");
 
         /* Validation */
         Trits_t *ret_trits = trits_from_trytes(hash_trytes);
-        for (int i = 243 - 1; i >= 243 - mwm; i--) {
-            assert(ret_trits->data[i] == 0);
+        for (int j = 243 - 1; j >= 243 - items[i].mwm; j--) {
+            assert(ret_trits->data[j] == 0 && "Validation failed");
         }
 
-        free(ret_trytes);
         freeTrobject(trytes_t);
         freeTrobject(hash_trytes);
         freeTrobject(ret_trits);
     }
+
+    dcurl_destroy();
 
     return 0;
 }

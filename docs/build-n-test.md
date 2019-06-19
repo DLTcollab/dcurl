@@ -1,14 +1,14 @@
 # Building and Testing
 
 ## Prerequisites
-* Check JDK installation and set environment variable `JAVA_HOME` if you wish to specify.
+* Check JDK 8 installation and set environment variable `JAVA_HOME` if you wish to specify.
 * If target platform lacks of Intel SSE instructions, multi-threaded pure C implementation would be used as the fallback.
 * Install the OpenCL and GPU driver before calculating the PoW with GPU.
 * For FPGA-based hardware accelerator, [Lampa Lab's Cyclone V FPGA PoW](https://github.com/LampaLab/iota_fpga) is taken as the basis.
      - File `soc_system.rbf` is only valid for DE10-nano board, and you have to synthesize to get appropriate `soc_system.rbf` for Arrow SoCKit board.
      - [RBF file](https://github.com/DLTcollab/iota_fpga/releases/tag/v0.3-sockit) can be downloaded from our release.
      - Moreover, you need to download [Lampa Lab-provided Linux image](https://github.com/LampaLab/iota_fpga/releases/tag/v0.1) to flash into the micro-SD card. The root password is `123456`.
-
+* Install `CMake` for building git submodules.
 
 ## Build Instructions
 * dcurl allows various combinations of build configurations to fit final use scenarios.
