@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 2019 BiiLabs Co., Ltd. and Contributors
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
+ */
+
 /* Test program for thread-safe dcurl */
 #include <pthread.h>
 #include "common.h"
@@ -16,8 +24,7 @@ void *dcurl_entry_cb(void *arg)
 {
     dcurl_item *item = (dcurl_item *) arg;
     /* test dcurl Implementation with mwm = 14 */
-    int8_t *ret_trytes =
-        dcurl_entry(item->input_trytes, item->mwm, 8);
+    int8_t *ret_trytes = dcurl_entry(item->input_trytes, item->mwm, 8);
     assert(ret_trytes && "dcurl_entry() failed");
     memcpy(item->output_trytes, ret_trytes, TRANSACTION_TRYTES_LENGTH);
     free(ret_trytes);
@@ -77,8 +84,7 @@ int main()
     for (int i = 0; i < THREAD_MAX; i++) {
         memcpy(items[i].input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
         items[i].mwm = mwm;
-        pthread_create(&threads[i], NULL, dcurl_entry_cb,
-                       (void *) &items[i]);
+        pthread_create(&threads[i], NULL, dcurl_entry_cb, (void *) &items[i]);
     }
 
     for (int i = 0; i < THREAD_MAX; i++)

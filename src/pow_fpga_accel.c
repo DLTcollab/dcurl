@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2018 dcurl Developers.
- * Copyright (c) 2018 Ievgen Korokyi.
- * Use of this source code is governed by MIT license that can be
- * found in the LICENSE file.
+ * Copyright (C) 2018-2019 BiiLabs Co., Ltd. and Contributors
+ * Copyright (c) 2018 Ievgen Korokyi
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
  */
 
 #include "pow_fpga_accel.h"

@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2019 dcurl Developers.
- * Use of this source code is governed by MIT license that can be
- * found in the LICENSE file.
+ * Copyright (C) 2019 BiiLabs Co., Ltd. and Contributors
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
  */
 
 #include "remote_interface.h"
@@ -13,7 +15,7 @@ bool initializeRemoteContext(RemoteImplContext *remote_ctx)
     bool res = remote_ctx->initialize(remote_ctx);
     if (res) {
         ddprintf(MSG_PREFIX "Implementation %s is initialized successfully\n",
-               remote_ctx->description);
+                 remote_ctx->description);
     }
     return res;
 }
@@ -109,16 +111,17 @@ static bool Remote_doPoW(RemoteImplContext *remote_ctx, void *pow_ctx)
     sprintf(buf, "%d", ctx->mwm);
     memcpy(messagebody + TRANSACTION_TRYTES_LENGTH, buf, 4);
 
-    if (!declare_callback_queue(&remote_ctx->conn[ctx->indexOfContext], 1, &reply_to_queue))
+    if (!declare_callback_queue(&remote_ctx->conn[ctx->indexOfContext], 1,
+                                &reply_to_queue))
         goto fail;
 
-    if (!publish_message_with_reply_to(&remote_ctx->conn[ctx->indexOfContext], 1,
-                                       "incoming_queue", reply_to_queue,
+    if (!publish_message_with_reply_to(&remote_ctx->conn[ctx->indexOfContext],
+                                       1, "incoming_queue", reply_to_queue,
                                        messagebody))
         goto fail;
 
-    if (!wait_response_message(&remote_ctx->conn[ctx->indexOfContext], 1, reply_to_queue,
-                               (char *) (ctx->output_trytes),
+    if (!wait_response_message(&remote_ctx->conn[ctx->indexOfContext], 1,
+                               reply_to_queue, (char *) (ctx->output_trytes),
                                TRANSACTION_TRYTES_LENGTH))
         goto fail;
 
@@ -142,8 +145,7 @@ static bool Remote_init(RemoteImplContext *remote_ctx)
 
     memset(remote_ctx->slots, 0, remote_ctx->num_max_thread * sizeof(bool));
 
-    for(int i = 0 ; i < CONN_MAX; i++)
-    {
+    for (int i = 0; i < CONN_MAX; i++) {
         if (!connect_broker(&remote_ctx->conn[i]))
             goto fail_to_init;
     }
@@ -164,7 +166,7 @@ static void Remote_destroy(RemoteImplContext *remote_ctx)
 {
     PoW_Remote_Context *ctx = (PoW_Remote_Context *) remote_ctx->context;
 
-    for(int i = 0; i < CONN_MAX; i++)
+    for (int i = 0; i < CONN_MAX; i++)
         disconnect_broker(&remote_ctx->conn[i]);
 
     free(ctx);
