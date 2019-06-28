@@ -152,7 +152,11 @@ OBJS += \
 	remote_common.o \
 	remote_interface.o
 
-WORKER_OBJS := $(addprefix $(OUT)/worker-,$(filter-out remote_interface.o, $(OBJS)))
+WORKER_EXCLUDE_OBJS := remote_interface.o
+ifeq ("$(BUILD_JNI)", "1")
+WORKER_EXCLUDE_OBJS += jni/iri-pearldiver-exlib.o
+endif
+WORKER_OBJS := $(addprefix $(OUT)/worker-,$(filter-out $(WORKER_EXCLUDE_OBJS), $(OBJS)))
 WORKER_CFLAGS := $(filter-out -DENABLE_REMOTE, $(CFLAGS))
 endif
 
