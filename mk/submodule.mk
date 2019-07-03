@@ -18,27 +18,19 @@ LIBTUV_PATH = deps/libtuv
 LIBTUV_INCLUDE := -I $(LIBTUV_PATH)/include
 LIBTUV_PLATFORM := $(UNAME_M)-$(UNAME_S)
 LIBTUV_BOARD := $(BOARD)
-# PIC (Position-Independent-Code) library
-LIBTUV_LIBRARY := $(LIBTUV_PATH)/build/$(LIBTUV_PLATFORM)/release/lib/libtuv.o
+# PIC (Position-Independent-Code) object file
+LIBTUV_OBJS := $(LIBTUV_PATH)/build/$(LIBTUV_PLATFORM)/release/lib/libtuv.o
 
 $(LIBTUV_PATH)/include:
 	git submodule update --init $(LIBTUV_PATH)
 
-$(LIBTUV_LIBRARY):
+$(LIBTUV_OBJS):
 	$(MAKE) -C $(LIBTUV_PATH) TUV_BUILD_TYPE=release TUV_CREATE_PIC_LIB=yes TUV_PLATFORM=$(LIBTUV_PLATFORM) TUV_BOARD=$(LIBTUV_BOARD)
 
 # librabbitmq related variables
 LIBRABBITMQ_PATH = deps/rabbitmq-c
 LIBRABBITMQ_INCLUDE := -I $(LIBRABBITMQ_PATH)/build/include
-LIBRABBITMQ_LIB_PATH := $(LIBRABBITMQ_PATH)/build/librabbitmq/
-ifeq ($(UNAME_S),darwin)
-    # macOS
-    LIBRABBITMQ_LINK := -Wl,-rpath,$(LIBRABBITMQ_LIB_PATH) -L$(LIBRABBITMQ_LIB_PATH) -lrabbitmq
-    LIBRABBITMQ_LIBRARY := $(LIBRABBITMQ_LIB_PATH)/librabbitmq.dylib
-else
-    LIBRABBITMQ_LINK := -Wl,-rpath=$(LIBRABBITMQ_LIB_PATH) -L$(LIBRABBITMQ_LIB_PATH) -lrabbitmq
-    LIBRABBITMQ_LIBRARY := $(LIBRABBITMQ_LIB_PATH)/librabbitmq.so
-endif
+LIBRABBITMQ_OBJS := $(LIBRABBITMQ_PATH)/build/librabbitmq/CMakeFiles/rabbitmq.dir/*.o
 
 $(LIBRABBITMQ_PATH)/build/include:
 	git submodule update --init $(LIBRABBITMQ_PATH)
@@ -54,6 +46,6 @@ else
          cmake --build . --target install
 endif
 
-$(LIBRABBITMQ_LIBRARY):
+$(LIBRABBITMQ_OBJS):
 	cd $(LIBRABBITMQ_PATH)/build && \
          cmake --build .
