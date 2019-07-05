@@ -170,13 +170,13 @@ $(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include $(LIBRABBITMQ_PATH)/build/include
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_LIBRARY) $(LIBRABBITMQ_LIBRARY)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_OBJS) $(LIBRABBITMQ_OBJS)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) -o $@ $^ $(LDFLAGS) $(LIBRABBITMQ_LINK)
+	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_LIBRARY) $(LIBRABBITMQ_LIBRARY)
+$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_OBJS) $(LIBRABBITMQ_OBJS)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS) $(LIBRABBITMQ_LINK)
+	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 ifeq ("$(BUILD_REMOTE)", "1")
 include mk/remote.mk
