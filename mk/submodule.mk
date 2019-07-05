@@ -31,6 +31,10 @@ $(LIBTUV_OBJS):
 LIBRABBITMQ_PATH = deps/rabbitmq-c
 LIBRABBITMQ_INCLUDE := -I $(LIBRABBITMQ_PATH)/build/include
 LIBRABBITMQ_OBJS := $(LIBRABBITMQ_PATH)/build/librabbitmq/CMakeFiles/rabbitmq.dir/*.o
+ifeq ($(UNAME_S),darwin)
+    OPENSSL_PATH := /usr/local/opt/openssl
+    LDFLAGS += -L$(OPENSSL_PATH)/lib -lcrypto -lssl
+endif
 
 $(LIBRABBITMQ_PATH)/build/include:
 	git submodule update --init $(LIBRABBITMQ_PATH)
@@ -38,7 +42,7 @@ $(LIBRABBITMQ_PATH)/build/include:
 ifeq ($(UNAME_S),darwin)
 	# macOS
 	cd $(LIBRABBITMQ_PATH)/build && \
-         cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ -DCMAKE_INSTALL_PREFIX=. .. && \
+         cmake -DOPENSSL_ROOT_DIR=$(OPENSSL_PATH) -DCMAKE_INSTALL_PREFIX=. .. && \
          cmake --build . --target install
 else
 	cd $(LIBRABBITMQ_PATH)/build && \
