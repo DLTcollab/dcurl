@@ -99,7 +99,7 @@ LIBS := $(addprefix $(OUT)/, $(LIBS))
 JARS := dcurljni-$(VERSION).jar
 JARS := $(addprefix $(OUT)/, $(JARS))
 
-PREQ := config $(TESTS) $(LIBS)
+PREQ := $(SUBS) config $(TESTS) $(LIBS)
 ifeq ("$(BUILD_JNI)","1")
 PREQ += $(JARS)
 endif
@@ -162,19 +162,19 @@ endif
 
 OBJS := $(addprefix $(OUT)/, $(OBJS))
 
-$(OUT)/test-%.o: tests/test-%.c $(LIBTUV_PATH)/include
+$(OUT)/test-%.o: tests/test-%.c
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(LIBTUV_INCLUDE) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) -I $(SRC) $(SUB_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/%.o: $(SRC)/%.c $(LIBTUV_PATH)/include $(LIBRABBITMQ_PATH)/build/include
+$(OUT)/%.o: $(SRC)/%.c $(SUB_OBJS)
 	$(VECHO) "  CC\t$@\n"
-	$(Q)$(CC) -o $@ $(CFLAGS) $(LIBTUV_INCLUDE) $(LIBRABBITMQ_INCLUDE) -c -MMD -MF $@.d $<
+	$(Q)$(CC) -o $@ $(CFLAGS) $(SUB_INCLUDE) -c -MMD -MF $@.d $<
 
-$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(LIBTUV_OBJS) $(LIBRABBITMQ_OBJS)
+$(OUT)/test-%: $(OUT)/test-%.o $(OBJS) $(SUB_OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -o $@ $^ $(LDFLAGS)
 
-$(OUT)/libdcurl.so: $(OBJS) $(LIBTUV_OBJS) $(LIBRABBITMQ_OBJS)
+$(OUT)/libdcurl.so: $(OBJS) $(SUB_OBJS)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) -shared -o $@ $^ $(LDFLAGS)
 

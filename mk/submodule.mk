@@ -36,9 +36,11 @@ ifeq ($(UNAME_S),darwin)
     LDFLAGS += -L$(OPENSSL_PATH)/lib -lcrypto -lssl
 endif
 
-$(LIBRABBITMQ_PATH)/build/include:
+$(LIBRABBITMQ_PATH)/librabbitmq:
 	git submodule update --init $(LIBRABBITMQ_PATH)
-	mkdir $(LIBRABBITMQ_PATH)/build
+
+$(LIBRABBITMQ_OBJS):
+	mkdir -p $(LIBRABBITMQ_PATH)/build
 ifeq ($(UNAME_S),darwin)
 	# macOS
 	cd $(LIBRABBITMQ_PATH)/build && \
@@ -49,7 +51,21 @@ else
          cmake -DCMAKE_INSTALL_PREFIX=. .. && \
          cmake --build . --target install
 endif
-
-$(LIBRABBITMQ_OBJS):
 	cd $(LIBRABBITMQ_PATH)/build && \
          cmake --build .
+
+# Submodules
+SUBS := $(LIBTUV_PATH)/include
+ifeq ($(BUILD_REMOTE),1)
+    SUBS += $(LIBRABBITMQ_PATH)/librabbitmq
+endif
+# Submodule related objects
+SUB_OBJS := $(LIBTUV_OBJS)
+ifeq ($(BUILD_REMOTE),1)
+    SUB_OBJS += $(LIBRABBITMQ_OBJS)
+endif
+# Submodule C flags for including header files
+SUB_INCLUDE := $(LIBTUV_INCLUDE)
+ifeq ($(BUILD_REMOTE),1)
+    SUB_INCLUDE += $(LIBRABBITMQ_INCLUDE)
+endif
