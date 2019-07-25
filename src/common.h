@@ -27,6 +27,7 @@ static inline void ddprintf(const char *format, ...)
     va_start(ap, format);
     vprintf(format, ap);
     va_end(ap);
+    fflush(stdout);
 #endif
 }
 
