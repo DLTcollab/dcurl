@@ -226,7 +226,7 @@ bool wait_response_message(amqp_connection_state_t *conn,
             return false;
 
         if (frame.frame_type != AMQP_FRAME_HEADER) {
-            ddprintf("Unexpected header!");
+            ddprintf("Unexpected header!\n");
             return false;
         }
 
@@ -251,23 +251,24 @@ bool wait_response_message(amqp_connection_state_t *conn,
                 return false;
 
             if (frame.frame_type != AMQP_FRAME_BODY) {
-                ddprintf("Unexpected body");
+                ddprintf("Unexpected body\n");
                 return false;
             }
 
             body_received += frame.payload.body_fragment.len;
         }
         if (body_received != body_target) {
-            ddprintf("Received body is small than body target");
+            ddprintf("Received body is small than body target\n");
             return false;
         }
 
         memcpy(frame_body, (char *) frame.payload.body_fragment.bytes,
                body_len);
 
-        ddprintf(MSG_PREFIX "PoW result: %.*s",
+        ddprintf(MSG_PREFIX "PoW result: %.*s\n",
                  (int) frame.payload.body_fragment.len,
                  (char *) frame.payload.body_fragment.bytes);
+        ddprintf("---\n");
 
         /* everything was fine, we can quit now because we received the reply */
         return true;
