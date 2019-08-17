@@ -31,14 +31,14 @@ bool die_on_amqp_error(amqp_rpc_reply_t x, char const *context)
         case AMQP_CONNECTION_CLOSE_METHOD: {
             amqp_connection_close_t *m =
                 (amqp_connection_close_t *) x.reply.decoded;
-            ddprintf("%s: server connection error %uh, message: %.*s\n",
+            ddprintf("%s: server connection error %u, message: %.*s\n",
                      context, m->reply_code, (int) m->reply_text.len,
                      (char *) m->reply_text.bytes);
             break;
         }
         case AMQP_CHANNEL_CLOSE_METHOD: {
             amqp_channel_close_t *m = (amqp_channel_close_t *) x.reply.decoded;
-            ddprintf("%s: server channel error %uh, message: %.*s\n", context,
+            ddprintf("%s: server channel error %u, message: %.*s\n", context,
                      m->reply_code, (int) m->reply_text.len,
                      (char *) m->reply_text.bytes);
             break;
