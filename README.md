@@ -13,10 +13,8 @@ In addition, dcurl supports FPGA-accelerated PoW, described in [docs/fpga-accele
 dcurl can be regarded as the drop-in replacement for [ccurl](https://github.com/iotaledger/ccurl).
 IOTA Reference Implementation (IRI) adaptation is available to benefit from hardware-accelerated PoW.
 
-
 ## Build Instructions
 Check [docs/build-n-test.md](docs/build-n-test.md) for details.
-
 
 ## Performance
 After integrating dcurl into IRI, performance of [attachToTangle](https://iota.readme.io/reference#attachtotangle) is measured as following.
@@ -24,7 +22,6 @@ After integrating dcurl into IRI, performance of [attachToTangle](https://iota.r
 * mwm = 14, 26 CPU threads to find nonce
 * Settings: enable 2 pow tasks in CPU, 1 pow tasks in GPU at the same time
 ![](https://raw.githubusercontent.com/DLTcollab/dcurl/develop/docs/benchmark.png)
-
 
 ## IRI Adaptation
 [Modified IRI accepting external PoW Library](https://github.com/DLTcollab/iri)
@@ -63,6 +60,27 @@ pull requests to dcurl.
   it faciliates dcurl to perform hardware-accelerated PoW operations on
   edge devices.
 
+## FAQ
+- What is **binary encoded ternary**?
+
+  It is a skill to transform the ternary trit value to two separate bits value.\
+  Hence multiple trits can be compressed to two separate data of the same data type and fully utilize the space.
+
+- Can the project [Batch Binary Encoded Ternary Curl](https://github.com/luca-moser/bct_curl) be applied to dcurl?
+
+  The answer is no.\
+  They both use the same skill, **binary encoded ternary**.\
+  However, their purpose are totally different.
+  - **bct_curl**:
+
+    Focus on hashing the multiple data of the same length at the same time.\
+    It ends when the hashing is finished.
+
+  - **dcurl**:
+
+    Focus on trying the different values of one transaction at the same time to find the nonce value.\
+    The procedure of finding the nonce value also does the hashing.\
+    However, it ends when the nonce value is found, which means one of the values is acceptable.
 
 ## Licensing
 `dcurl` is freely redistributable under the MIT License.
