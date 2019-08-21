@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2019 dcurl Developers.
- * Use of this source code is governed by MIT license that can be
- * found in the LICENSE file.
+ * Copyright (C) 2019 BiiLabs Co., Ltd. and Contributors
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
  */
 
 #include "remote_common.h"
@@ -21,8 +23,7 @@ bool die_on_amqp_error(amqp_rpc_reply_t x, char const *context)
         break;
 
     case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-        ddprintf("%s: %s\n", context,
-                amqp_error_string2(x.library_error));
+        ddprintf("%s: %s\n", context, amqp_error_string2(x.library_error));
         break;
 
     case AMQP_RESPONSE_SERVER_EXCEPTION:
@@ -30,21 +31,21 @@ bool die_on_amqp_error(amqp_rpc_reply_t x, char const *context)
         case AMQP_CONNECTION_CLOSE_METHOD: {
             amqp_connection_close_t *m =
                 (amqp_connection_close_t *) x.reply.decoded;
-            ddprintf("%s: server connection error %uh, message: %.*s\n",
-                    context, m->reply_code, (int) m->reply_text.len,
-                    (char *) m->reply_text.bytes);
+            ddprintf("%s: server connection error %u, message: %.*s\n",
+                     context, m->reply_code, (int) m->reply_text.len,
+                     (char *) m->reply_text.bytes);
             break;
         }
         case AMQP_CHANNEL_CLOSE_METHOD: {
             amqp_channel_close_t *m = (amqp_channel_close_t *) x.reply.decoded;
-            ddprintf("%s: server channel error %uh, message: %.*s\n",
-                    context, m->reply_code, (int) m->reply_text.len,
-                    (char *) m->reply_text.bytes);
+            ddprintf("%s: server channel error %u, message: %.*s\n", context,
+                     m->reply_code, (int) m->reply_text.len,
+                     (char *) m->reply_text.bytes);
             break;
         }
         default:
-            ddprintf("%s: unknown server error, method id 0x%08X\n",
-                    context, x.reply.id);
+            ddprintf("%s: unknown server error, method id 0x%08X\n", context,
+                     x.reply.id);
             break;
         }
         break;
@@ -84,8 +85,7 @@ bool connect_broker(amqp_connection_state_t *conn)
 
     /* Open the channel in the rabbitmq broker */
     amqp_channel_open(*conn, 1);
-    if (!(die_on_amqp_error(amqp_get_rpc_reply(*conn),
-                                "Opennng the channel")))
+    if (!(die_on_amqp_error(amqp_get_rpc_reply(*conn), "Opennng the channel")))
         goto channel_close;
 
     return true;
@@ -196,12 +196,14 @@ bool wait_response_message(amqp_connection_state_t *conn,
         if (!die_on_amqp_error(amqp_get_rpc_reply(*conn), "Wait method frame"))
             return false;
 
-        ddprintf(MSG_PREFIX "Frame type: %u channel: %u\n", frame.frame_type, frame.channel);
+        ddprintf(MSG_PREFIX "Frame type: %u channel: %u\n", frame.frame_type,
+                 frame.channel);
 
         if (frame.frame_type != AMQP_FRAME_METHOD)
             continue;
 
-        ddprintf(MSG_PREFIX "Method: %s\n", amqp_method_name(frame.payload.method.id));
+        ddprintf(MSG_PREFIX "Method: %s\n",
+                 amqp_method_name(frame.payload.method.id));
 
         if (frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD)
             continue;
@@ -209,9 +211,9 @@ bool wait_response_message(amqp_connection_state_t *conn,
 #if defined(ENABLE_DEBUG)
         d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
         ddprintf(MSG_PREFIX "Delivery: %u exchange: %.*s routingkey: %.*s\n",
-               (unsigned) d->delivery_tag, (int) d->exchange.len,
-               (char *) d->exchange.bytes, (int) d->routing_key.len,
-               (char *) d->routing_key.bytes);
+                 (unsigned) d->delivery_tag, (int) d->exchange.len,
+                 (char *) d->exchange.bytes, (int) d->routing_key.len,
+                 (char *) d->routing_key.bytes);
 #endif
 
         amqp_maybe_release_buffers(*conn);
@@ -224,15 +226,15 @@ bool wait_response_message(amqp_connection_state_t *conn,
             return false;
 
         if (frame.frame_type != AMQP_FRAME_HEADER) {
-            ddprintf("Unexpected header!");
+            ddprintf("Unexpected header!\n");
             return false;
         }
 
 #if defined(ENABLE_DEBUG)
         p = (amqp_basic_properties_t *) frame.payload.properties.decoded;
         if (p->_flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
-            ddprintf(MSG_PREFIX "Content-type: %.*s\n", (int) p->content_type.len,
-                   (char *) p->content_type.bytes);
+            ddprintf(MSG_PREFIX "Content-type: %.*s\n",
+                     (int) p->content_type.len, (char *) p->content_type.bytes);
         }
 #endif
         ddprintf("---\n");
@@ -241,7 +243,7 @@ bool wait_response_message(amqp_connection_state_t *conn,
         body_received = 0;
         while (body_received < body_target) {
             if (!die_on_error(amqp_simple_wait_frame_noblock(*conn, &frame, &t),
-                          "RPC timeout"))
+                              "RPC timeout"))
                 return false;
 
             if (!die_on_amqp_error(amqp_get_rpc_reply(*conn),
@@ -249,22 +251,24 @@ bool wait_response_message(amqp_connection_state_t *conn,
                 return false;
 
             if (frame.frame_type != AMQP_FRAME_BODY) {
-                ddprintf("Unexpected body");
+                ddprintf("Unexpected body\n");
                 return false;
             }
 
             body_received += frame.payload.body_fragment.len;
         }
         if (body_received != body_target) {
-            ddprintf("Received body is small than body target");
+            ddprintf("Received body is small than body target\n");
             return false;
         }
 
         memcpy(frame_body, (char *) frame.payload.body_fragment.bytes,
                body_len);
 
-        ddprintf(MSG_PREFIX "PoW result: %.*s", (int) frame.payload.body_fragment.len,
-               (char *) frame.payload.body_fragment.bytes);
+        ddprintf(MSG_PREFIX "PoW result: %.*s\n",
+                 (int) frame.payload.body_fragment.len,
+                 (char *) frame.payload.body_fragment.bytes);
+        ddprintf("---\n");
 
         /* everything was fine, we can quit now because we received the reply */
         return true;

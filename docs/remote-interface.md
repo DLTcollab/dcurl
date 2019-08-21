@@ -4,7 +4,7 @@
 ```
  +-----------------------------------------------+
  |               remote interface                |
- |    +----------------------------------------+ | 
+ |    +----------------------------------------+ |
  |   +----------------------------------------+| |
  |  +----------------------------------------+|+ |
  |  |     RabbitMQ-provided RPC              |+  |
@@ -32,7 +32,9 @@
  |                  remote worker              |+
  +---------------------------------------------+
 ```
-To support asynchronous remote procedure call, remote interface in dcurl provides an interface named as `Remote_ImplContext` to implement it. dcurl currently uses RabbitMQ C client to implement asynchronous RPC in remote interface. Remote interface provides thread management to support an asynchronous RPC per thread.
+To support asynchronous remote procedure call, remote interface in dcurl provides an interface named as `Remote_ImplContext` to implement it.\
+dcurl currently uses RabbitMQ C client to implement asynchronous RPC in remote interface.\
+Remote interface provides thread management to support an asynchronous RPC per thread.
 
 Here are detailed implementations of the RabbitMQ-provided RPC pattern as follows:
 * Asynchronous RPC requests are inserted into the message queue, `incoming_queue`, in RabbitMQ broker
@@ -44,22 +46,29 @@ Here are detailed implementations of the RabbitMQ-provided RPC pattern as follow
 ## How to test remote interface in localhost
 You need to open three terminals
 
-Terminal 1: Run the RabbitMQ broker You can quickly use docker to run the RabbitMQ broker, rabbitmq
+**Terminal 1:**\
+Run the RabbitMQ broker\
+You can quickly use docker to run the RabbitMQ broker, rabbitmq
 ```
-$ sudo docker run -d rabbitmq
+$ sudo docker run -d -p 5672:5672 rabbitmq
 ```
 
-Terminal 2: Run remote workers
+---
+
+**Terminal 2:**\
+Build and run the remote worker
 ```
+$ cd dcurl
+$ make BUILD_REMOTE=1 BUILD_DEBUG=1
 $ ./build/remote-worker
 ```
-How to build remote worker on FPGA board
-```
-$ make BUILD_REMOTE=1 BUILD_FPGA_ACCEL=1 BOARD=de10nano
-```
 
-Terminal 3: Run check
+---
+
+**Terminal 3:**\
+Run the tests to send requests to remote worker
 ```
+$ cd dcurl
 $ make BUILD_REMOTE=1 BUILD_DEBUG=1 check
 ```
 

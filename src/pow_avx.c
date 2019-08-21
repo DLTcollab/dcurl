@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2018 dcurl Developers.
- * Copyright (C) 2016 Shinya Yagyu.
- * Use of this source code is governed by MIT license that can be
- * found in the LICENSE file.
+ * Copyright (C) 2018-2019 BiiLabs Co., Ltd. and Contributors
+ * Copyright (C) 2016 Shinya Yagyu
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
  */
 
 #include "pow_avx.h"
@@ -29,8 +31,8 @@ static void transform256(__m256i *lmid, __m256i *hmid)
 
             alpha = lfrom[t1];
             beta = hfrom[t1];
-            delta = _mm256_and_si256( alpha, _mm256_xor_si256(lfrom[t2], beta));
-                    /* alpha & (lfrom[t2] ^ beta) */
+            delta = _mm256_and_si256(alpha, _mm256_xor_si256(lfrom[t2], beta));
+            /* alpha & (lfrom[t2] ^ beta) */
             lto[j] = _mm256_andnot_si256(delta, one); /* ~delta */
             hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, hfrom[t2]),
                                      delta); /* (alpha ^ hfrom[t2]) | delta */
@@ -46,8 +48,8 @@ static void transform256(__m256i *lmid, __m256i *hmid)
         t2 = indices[j + 1];
         alpha = lfrom[t1];
         beta = hfrom[t1];
-        delta = _mm256_and_si256( alpha, _mm256_xor_si256(lfrom[t2], beta));
-                /* alpha & (lfrom[t2] ^ beta) */
+        delta = _mm256_and_si256(alpha, _mm256_xor_si256(lfrom[t2], beta));
+        /* alpha & (lfrom[t2] ^ beta) */
         lto[j] = _mm256_andnot_si256(delta, one); /* ~delta */
         hto[j] = _mm256_or_si256(_mm256_xor_si256(alpha, hfrom[t2]),
                                  delta); /* (alpha ^ hfrom[t2]) | delta */
@@ -226,7 +228,7 @@ static void transform256(__m256d *lmid, __m256d *hmid)
             alpha = lfrom[t1];
             beta = hfrom[t1];
             delta = _mm256_and_pd(alpha, _mm256_xor_pd(lfrom[t2], beta));
-                    /* alpha & (lfrom[t2] ^ beta) */
+            /* alpha & (lfrom[t2] ^ beta) */
             lto[j] = _mm256_andnot_pd(delta, one); /* ~delta */
             hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, hfrom[t2]),
                                   delta); /* (alpha ^ hfrom[t2]) | delta */
@@ -244,7 +246,7 @@ static void transform256(__m256d *lmid, __m256d *hmid)
         alpha = lfrom[t1];
         beta = hfrom[t1];
         delta = _mm256_and_pd(alpha, _mm256_xor_pd(lfrom[t2], beta));
-                /* alpha & (lfrom[t2] ^ beta) */
+        /* alpha & (lfrom[t2] ^ beta) */
         lto[j] = _mm256_andnot_pd(delta, one); /* ~delta */
         hto[j] = _mm256_or_pd(_mm256_xor_pd(alpha, hfrom[t2]),
                               delta); /* (alpha ^ hfrom[t2]) | delta */

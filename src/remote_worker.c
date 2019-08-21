@@ -1,13 +1,15 @@
 /*
- * Copyright (C) 2019 dcurl Developers.
- * Use of this source code is governed by MIT license that can be
- * found in the LICENSE file.
+ * Copyright (C) 2019 BiiLabs Co., Ltd. and Contributors
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
  */
 
+#include "common.h"
 #include "constants.h"
 #include "dcurl.h"
 #include "remote_common.h"
-#include "common.h"
 
 int main(int argc, char const *const *argv)
 {
@@ -30,7 +32,9 @@ int main(int argc, char const *const *argv)
         if (!consume_message(&conn, 1, &envelope))
             goto fail;
 
-        ddprintf(MSG_PREFIX "Delivery %u, exchange %.*s, routingkey %.*s, callback queue: %s "
+        ddprintf(
+            MSG_PREFIX
+            "Delivery %u, exchange %.*s, routingkey %.*s, callback queue: %s "
             "\n",
             (unsigned) envelope.delivery_tag, (int) envelope.exchange.len,
             (char *) envelope.exchange.bytes, (int) envelope.routing_key.len,
@@ -38,8 +42,8 @@ int main(int argc, char const *const *argv)
             (char *) envelope.message.properties.reply_to.bytes);
         if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
             ddprintf(MSG_PREFIX "Content-type: %.*s\n",
-                   (int) envelope.message.properties.content_type.len,
-                   (char *) envelope.message.properties.content_type.bytes);
+                     (int) envelope.message.properties.content_type.len,
+                     (char *) envelope.message.properties.content_type.bytes);
         }
 
         /* Message body format: transacton | mwm */
@@ -59,14 +63,14 @@ int main(int argc, char const *const *argv)
 
         /* Publish a message of remote PoW result */
         if (!publish_message(
-                &conn, 1,
-                (char *) envelope.message.properties.reply_to.bytes,
+                &conn, 1, (char *) envelope.message.properties.reply_to.bytes,
                 (char *) ret_trytes))
             goto fail;
 
         free(ret_trytes);
         amqp_destroy_envelope(&envelope);
-        ddprintf(MSG_PREFIX "Publishing PoW result to callback queue is done\n");
+        ddprintf(MSG_PREFIX
+                 "Publishing PoW result to callback queue is done\n");
         ddprintf(MSG_PREFIX "---\n");
     }
 

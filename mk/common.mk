@@ -26,7 +26,7 @@ NO_COLOR = \e[0m
 $(OUT)/test-%.done: $(OUT)/test-%
 	$(Q)$(PRINTF) "*** Validating $< ***\n"
 	$(Q)./$< && $(PRINTF) "\t$(PASS_COLOR)[ Verified ]$(NO_COLOR)\n"
-check: $(addsuffix .done, $(TESTS))
+check: $(SUBS) $(addsuffix .done, $(TESTS))
 
 config: $(OUT)/config-timestamp
 

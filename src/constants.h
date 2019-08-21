@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 2018-2019 BiiLabs Co., Ltd. and Contributors
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
+ */
+
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
@@ -19,53 +27,56 @@
 
 #define SignatureMessageFragmentTrinaryOffset 0
 #define SignatureMessageFragmentTrinarySize 6561
-#define AddressTrinaryOffset \
-    SignatureMessageFragmentTrinaryOffset + SignatureMessageFragmentTrinarySize
+#define AddressTrinaryOffset                 \
+    (SignatureMessageFragmentTrinaryOffset + \
+     SignatureMessageFragmentTrinarySize)
 #define AddressTrinarySize 243
-#define ValueTrinaryOffset AddressTrinaryOffset + AddressTrinarySize
+#define ValueTrinaryOffset (AddressTrinaryOffset + AddressTrinarySize)
 #define ValueTrinarySize 81
-#define ObsoleteTagTrinaryOffset ValueTrinaryOffset + ValueTrinarySize
+#define ObsoleteTagTrinaryOffset (ValueTrinaryOffset + ValueTrinarySize)
 #define ObsoleteTagTrinarySize 81
-#define TimestampTrinaryOffset ObsoleteTagTrinaryOffset + ObsoleteTagTrinarySize
+#define TimestampTrinaryOffset \
+    (ObsoleteTagTrinaryOffset + ObsoleteTagTrinarySize)
 #define TimestampTrinarySize 27
-#define CurrentIndexTrinaryOffset TimestampTrinaryOffset + TimestampTrinarySize
+#define CurrentIndexTrinaryOffset \
+    (TimestampTrinaryOffset + TimestampTrinarySize)
 #define CurrentIndexTrinarySize 27
 #define LastIndexTrinaryOffset \
-    CurrentIndexTrinaryOffset + CurrentIndexTrinarySize
+    (CurrentIndexTrinaryOffset + CurrentIndexTrinarySize)
 #define LastIndexTrinarySize 27
-#define BundleTrinaryOffset LastIndexTrinaryOffset + LastIndexTrinarySize
+#define BundleTrinaryOffset (LastIndexTrinaryOffset + LastIndexTrinarySize)
 #define BundleTrinarySize 243
-#define TrunkTransactionTrinaryOffset BundleTrinaryOffset + BundleTrinarySize
+#define TrunkTransactionTrinaryOffset (BundleTrinaryOffset + BundleTrinarySize)
 #define TrunkTransactionTrinarySize 243
 #define BranchTransactionTrinaryOffset \
-    TrunkTransactionTrinaryOffset + TrunkTransactionTrinarySize
+    (TrunkTransactionTrinaryOffset + TrunkTransactionTrinarySize)
 #define BranchTransactionTrinarySize 243
 #define TagTrinaryOffset \
-    BranchTransactionTrinaryOffset + BranchTransactionTrinarySize
+    (BranchTransactionTrinaryOffset + BranchTransactionTrinarySize)
 #define TagTrinarySize 81
-#define AttachmentTimestampTrinaryOffset TagTrinaryOffset + TagTrinarySize
+#define AttachmentTimestampTrinaryOffset (TagTrinaryOffset + TagTrinarySize)
 #define AttachmentTimestampTrinarySize 27
 
 #define AttachmentTimestampLowerBoundTrinaryOffset \
-    AttachmentTimestampTrinaryOffset + AttachmentTimestampTrinarySize
+    (AttachmentTimestampTrinaryOffset + AttachmentTimestampTrinarySize)
 #define AttachmentTimestampLowerBoundTrinarySize 27
 #define AttachmentTimestampUpperBoundTrinaryOffset \
-    AttachmentTimestampLowerBoundTrinaryOffset +   \
-        AttachmentTimestampLowerBoundTrinarySize
+    (AttachmentTimestampLowerBoundTrinaryOffset +  \
+     AttachmentTimestampLowerBoundTrinarySize)
 #define AttachmentTimestampUpperBoundTrinarySize 27
-#define NonceTrinaryOffset                       \
-    AttachmentTimestampUpperBoundTrinaryOffset + \
-        AttachmentTimestampUpperBoundTrinarySize
+#define NonceTrinaryOffset                        \
+    (AttachmentTimestampUpperBoundTrinaryOffset + \
+     AttachmentTimestampUpperBoundTrinarySize)
 #define NonceTrinarySize 81
 
-#define transactionTrinarySize                                               \
-    SignatureMessageFragmentTrinarySize + AddressTrinarySize +               \
-        ValueTrinarySize + ObsoleteTagTrinarySize + TimestampTrinarySize +   \
-        CurrentIndexTrinarySize + LastIndexTrinarySize + BundleTrinarySize + \
-        TrunkTransactionTrinarySize + BranchTransactionTrinarySize +         \
-        TagTrinarySize + AttachmentTimestampTrinarySize +                    \
-        AttachmentTimestampLowerBoundTrinarySize +                           \
-        AttachmentTimestampUpperBoundTrinarySize + NonceTrinarySize
+#define transactionTrinarySize                                            \
+    (SignatureMessageFragmentTrinarySize + AddressTrinarySize +           \
+     ValueTrinarySize + ObsoleteTagTrinarySize + TimestampTrinarySize +   \
+     CurrentIndexTrinarySize + LastIndexTrinarySize + BundleTrinarySize + \
+     TrunkTransactionTrinarySize + BranchTransactionTrinarySize +         \
+     TagTrinarySize + AttachmentTimestampTrinarySize +                    \
+     AttachmentTimestampLowerBoundTrinarySize +                           \
+     AttachmentTimestampUpperBoundTrinarySize + NonceTrinarySize)
 
 extern char TryteAlphabet[];
 extern const int indices[];

@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2018 dcurl Developers.
- * Copyright (C) 2017 IOTA AS, IOTA Foundation and Developers.
- * Use of this source code is governed by MIT license that can be
- * found in the LICENSE file.
+ * Copyright (C) 2018-2019 BiiLabs Co., Ltd. and Contributors
+ * Copyright (C) 2017 IOTA AS, IOTA Foundation and Developers
+ * All Rights Reserved.
+ * This is free software; you can redistribute it and/or modify it under the
+ * terms of the MIT license. A copy of the license can be found in the file
+ * "LICENSE" at the root of this distribution.
  */
 
 #include "pow_cl.h"
@@ -264,7 +266,7 @@ static bool PoWCL_Context_Initialize(ImplContext *impl_ctx)
     PoW_CL_Context *ctx = (PoW_CL_Context *) malloc(sizeof(PoW_CL_Context) *
                                                     impl_ctx->num_max_thread);
     if (!ctx)
-        return false;
+        goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].clctx = &_opencl_ctx[i];
