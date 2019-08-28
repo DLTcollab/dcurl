@@ -14,10 +14,9 @@
 #include "amqp.h"
 #include "amqp_tcp_socket.h"
 
-#define HOSTNAME "localhost"
 #define MSG_PREFIX "[dcurl-remote] "
 
-bool connect_broker(amqp_connection_state_t *conn);
+bool connect_broker(amqp_connection_state_t *conn, const char *hostName);
 
 bool declare_queue(amqp_connection_state_t *conn,
                    amqp_channel_t channel,

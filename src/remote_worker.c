@@ -22,7 +22,7 @@ int main(int argc, char const *const *argv)
 
     dcurl_init();
 
-    if (!connect_broker(&conn))
+    if (!connect_broker(&conn, NULL))
         goto fail;
 
     if (!set_consuming_queue(&conn, 1, "incoming_queue"))

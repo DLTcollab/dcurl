@@ -64,14 +64,15 @@ bool die_on_error(int x, char const *context)
     return true;
 }
 
-bool connect_broker(amqp_connection_state_t *conn)
+bool connect_broker(amqp_connection_state_t *conn, const char *hostName)
 {
     amqp_socket_t *socket = NULL;
+    const char *host = (hostName != NULL) ? hostName : "localhost";
 
     /* Connect to the rabbitmq broker */
     *conn = amqp_new_connection();
     socket = amqp_tcp_socket_new(*conn);
-    if (amqp_socket_open(socket, HOSTNAME, 5672) != AMQP_STATUS_OK) {
+    if (amqp_socket_open(socket, host, 5672) != AMQP_STATUS_OK) {
         ddprintf("%s\n", "The rabbitmq broker is closed");
         goto destroy_connection;
     }
