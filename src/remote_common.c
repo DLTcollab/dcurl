@@ -64,15 +64,16 @@ bool die_on_error(int x, char const *context)
     return true;
 }
 
-bool connect_broker(amqp_connection_state_t *conn)
+bool connect_broker(amqp_connection_state_t *conn, const char *hostName)
 {
     amqp_socket_t *socket = NULL;
+    const char *host = (hostName != NULL) ? hostName : "localhost";
 
     /* Connect to the rabbitmq broker */
     *conn = amqp_new_connection();
     socket = amqp_tcp_socket_new(*conn);
-    if (amqp_socket_open(socket, HOSTNAME, 5672) != AMQP_STATUS_OK) {
-        ddprintf("%s\n", "The rabbitmq broker is closed");
+    if (amqp_socket_open(socket, host, 5672) != AMQP_STATUS_OK) {
+        ddprintf("The rabbitmq broker of %s is closed\n", host);
         goto destroy_connection;
     }
 
@@ -85,7 +86,7 @@ bool connect_broker(amqp_connection_state_t *conn)
 
     /* Open the channel in the rabbitmq broker */
     amqp_channel_open(*conn, 1);
-    if (!(die_on_amqp_error(amqp_get_rpc_reply(*conn), "Opennng the channel")))
+    if (!(die_on_amqp_error(amqp_get_rpc_reply(*conn), "Opening the channel")))
         goto channel_close;
 
     return true;
@@ -258,7 +259,7 @@ bool wait_response_message(amqp_connection_state_t *conn,
             body_received += frame.payload.body_fragment.len;
         }
         if (body_received != body_target) {
-            ddprintf("Received body is small than body target\n");
+            ddprintf("Received body is smaller than body target\n");
             return false;
         }
 
