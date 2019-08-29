@@ -1,0 +1,4 @@
+{
+  "template": "changelog.hbs",
+  "issuePattern": "fix.*:"
+}
