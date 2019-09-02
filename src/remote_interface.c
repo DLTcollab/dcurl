@@ -108,7 +108,7 @@ static bool Remote_doPoW(RemoteImplContext *remote_ctx, void *pow_ctx)
 
     /* Message body format: transacton | mwm */
     memcpy(messagebody, ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
-    sprintf(buf, "%d", ctx->mwm);
+    snprintf(buf, sizeof(buf), "%d", ctx->mwm);
     memcpy(messagebody + TRANSACTION_TRYTES_LENGTH, buf, 4);
 
     if (!declare_callback_queue(&remote_ctx->conn[ctx->indexOfContext], 1,
