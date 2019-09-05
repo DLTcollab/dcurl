@@ -1,0 +1,19 @@
+{{#with releases.[0]}}
+
+  ## {{title}} {{#if niceDate}}({{niceDate}}){{/if}}
+
+  ### :tada: New Features
+
+  {{#commit-list merges heading="" message='feat.*: '}}
+    - {{{message}}} ({{commit.shorthash}})
+  {{/commit-list}}
+
+  {{#commit-list commits heading="" message='feat.*: '}}
+    - {{{subject}}} ({{shorthash}})
+  {{/commit-list}}
+
+  {{#commit-list fixes heading='### :bug: Bug Fixes'}}
+    - {{commit.subject}} ({{commit.shorthash}})
+  {{/commit-list}}
+
+{{/with}}

@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "before:github:release": [
+      "make BUILD_REMOTE=1 BUILD_DEBUG=1 BOARD=de10nano BUILD_FPGA_ACCEL=1",
+      "tar zcvf remote-worker.tar.gz --directory=build remote-worker"
+    ]
+  },
+  "git": {
+    "changelog": "npx auto-changelog --stdout",
+    "requireUpstream": false,
+    "commit": false,
+    "tag": true,
+    "tagName": "v${version}",
+    "push": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "v${version}",
+    "preRelease": true,
+    "draft": true,
+    "tokenRef": "GITHUB_TOKEN",
+    "assets": [
+      "remote-worker.tar.gz"
+    ]
+  }
+}
