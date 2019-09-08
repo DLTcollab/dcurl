@@ -2,12 +2,9 @@
 In `dcurl`, it calls the APIs provided by the `libtuv` submodule to use the threads and thread pool.
 
 ## Thread pool size
-The thread pool size initialization is written in the function `init_once()`.\
-The environment variable `UV_THREADPOOL_SIZE` can be used to overwrite the default pool size.\
+The thread pool size can be set with the function `uv_set_threadpool_size()`.\
 Default pool size: 4\
 Maximum pool size: 128
-
-The current `dcurl` implementation can not affect the thread pool size. 
 
 ## Thread pool mechanism
 The thread pool and the work request queue are global.\
