@@ -126,6 +126,14 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
 
 remote_pow:
     if (!doRemoteContext(&Remote_Context, pow_ctx)) {
+        /* The remote interface can not work without activated RabbitMQ broker
+         * and remote worker. If it is not working, the PoW would be calculated
+         * by the local machine. And the remote interface resource should be
+         * released.
+         */
+        freeRemoteContext(&Remote_Context, pow_ctx);
+        exitRemoteContext(&Remote_Context);
+        uv_sem_post(&notify_remote);
         goto local_pow;
     } else {
         res = getRemoteResult(&Remote_Context, pow_ctx);
