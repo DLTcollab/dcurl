@@ -43,6 +43,9 @@ Here are detailed implementations of the RabbitMQ-provided RPC pattern as follow
 * An asynchronous RPC uses a connection to RabbitMQ broker
 * Remote workers can obtain requests from `incoming_queue` by default exchange of RabbitMQ broker
 
+The remote worker can be executed on the different hardwares and do the PoW.\
+For executing it on DE10-Nano board, please read the [docs/board-de10-nano.md](board-de10-nano.md).
+
 ## How to test remote interface in localhost
 You need to open three terminals
 
