@@ -9,8 +9,16 @@
 #ifndef TRINARY_SSE42_H_
 #define TRINARY_SSE42_H_
 
+#if defined(__SSE4_2__)
 #include <nmmintrin.h>
+#endif
 #include "constants.h"
+#if defined(__ARM_NEON)
+#include "sse2neon.h"
+#endif
+#if !defined(__SSE4_2__) && !defined(__ARM_NEON)
+#error "The hardware architecture should support SSE4.2 or NEON instruction."
+#endif
 
 #define BLOCK_8BIT(type) (sizeof(type) / sizeof(int8_t))
 #define BYTE_OF_128BIT 16
@@ -66,6 +74,7 @@ static inline bool validateTrits_sse42(Trobject_t *trits)
     return true;
 }
 
+#if defined(__SSE4_2__)
 static inline bool validateTrytes_sse42(Trobject_t *trytes)
 {
     const int block_8bit = BLOCK_8BIT(__m128i);
@@ -452,5 +461,6 @@ static inline Trobject_t *trits_from_trytes_sse42(Trobject_t *trytes)
 
     return trits;
 }
+#endif  // #if defined(__SSE4_2__)
 
 #endif
