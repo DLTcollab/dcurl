@@ -7,7 +7,7 @@
  */
 
 #include "trinary.h"
-#if defined(__SSE4_2__)
+#if defined(__SSE4_2__) || defined(__ARM_NEON)
 #include "trinary_sse42.h"
 #endif
 #include <stdint.h>
@@ -35,7 +35,7 @@ static bool validateTrits(Trobject_t *trits)
     if (trits->type != TYPE_TRITS)
         return false;
 
-#if defined(__SSE4_2__)
+#if defined(__SSE4_2__) || defined(__ARM_NEON)
     return validateTrits_sse42(trits);
 #endif
     for (int i = 0; i < trits->len; i++)
