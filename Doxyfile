@@ -17,6 +17,7 @@ INPUT                  = . \
                          src
 FILE_PATTERNS          = dcurl.c \
                          dcurl.h \
+                         cpu-utils.h \
                          *.md
 USE_MDFILE_AS_MAINPAGE = README.md
 #---------------------------------------------------------------------------
@@ -26,6 +27,10 @@ SOURCE_BROWSER         = YES
 INLINE_SOURCES         = YES
 REFERENCED_BY_RELATION = YES
 REFERENCES_RELATION    = YES
+#---------------------------------------------------------------------------
+# Build related configuration options
+#---------------------------------------------------------------------------
+EXTRACT_STATIC         = YES
 #---------------------------------------------------------------------------
 # Configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
