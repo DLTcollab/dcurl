@@ -573,7 +573,8 @@ fail:
 
 static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
 {
-    int nproc = get_avail_nprocs();
+    impl_ctx->num_max_thread = get_nthds_per_physic_proc();
+    int nproc = get_avail_logic_nprocs() / impl_ctx->num_max_thread;
     if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
         return false;
 
@@ -609,7 +610,7 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
         uv_loop_init(&ctx[i].loop);
     }
-    uv_set_threadpool_size(nproc);
+    uv_set_threadpool_size(impl_ctx->num_max_thread * nproc);
     impl_ctx->context = ctx;
     uv_mutex_init(&impl_ctx->lock);
     return true;
@@ -693,7 +694,7 @@ ImplContext PoWAVX_Context = {
     .context = NULL,
     .description = "CPU (Intel AVX)",
     .bitmap = 0,
-    .num_max_thread = 2,
+    .num_max_thread = 0,
     .num_working_thread = 0,
     .initialize = PoWAVX_Context_Initialize,
     .destroy = PoWAVX_Context_Destroy,
