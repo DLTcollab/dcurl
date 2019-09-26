@@ -83,6 +83,7 @@ bool dcurl_init()
     uv_sem_init(&notify_remote, 0);
 #endif
 
+    printf("init result: %d\n", ret);
     uv_sem_init(&notify, 0);
     return isInitialized = ret;
 }
