@@ -576,8 +576,12 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
     impl_ctx->num_max_thread = get_nthds_per_physic_proc();
     printf("thread: %d\n", impl_ctx->num_max_thread);
     int nproc = get_avail_logic_nprocs() / impl_ctx->num_max_thread;
-    if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
-        return false;
+    if (impl_ctx->num_max_thread <= 0 || nproc <= 0) {
+    printf("thread: %d\n", impl_ctx->num_max_thread);
+    printf("nproc: %d\n", nproc);
+    printf("avail_logic_nprocs: %d\n", get_avail_logic_nprocs());
+printf("fail0\n");
+        return false;}
 
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) *
                                                       impl_ctx->num_max_thread);
