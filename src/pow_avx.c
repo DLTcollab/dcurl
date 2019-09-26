@@ -581,8 +581,9 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
 
     PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) *
                                                       impl_ctx->num_max_thread);
-    if (!ctx)
-        return false;
+    if (!ctx) {
+printf("fail1\n");
+        return false;}
 
     /* Pre-allocate Memory Chunk for each field */
     void *work_req_chunk =
@@ -593,8 +594,10 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
         malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
     void *nonce_chunk =
         malloc(impl_ctx->num_max_thread * NONCE_TRITS_LENGTH * nproc);
-    if (!work_req_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk)
+    if (!work_req_chunk || !pitem_chunk || !nonce_ptr_chunk || !nonce_chunk) {
+printf("fail2\n");
         goto fail;
+}
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].work_req =
