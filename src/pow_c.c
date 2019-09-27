@@ -338,7 +338,7 @@ fail:
 static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
 {
     impl_ctx->num_max_thread = get_nthds_per_physic_proc();
-    int nproc = get_avail_logic_nprocs() / impl_ctx->num_max_thread;
+    int nproc = get_avail_physic_nprocs();
     if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
         return false;
 
