@@ -44,7 +44,7 @@ static unsigned int get_nprocs_conf()
  * @retval 2 Hyperthreading enabled.
  * @retval -1 Unexpected error.
  */
-static inline int get_nthds_per_physic_proc()
+static inline int get_nthds_per_phys_proc()
 {
     FILE *fd;
     int nthread;
@@ -63,7 +63,7 @@ static inline int get_nthds_per_physic_proc()
     }
 #elif defined(__APPLE__)
     char p_proc[4], l_proc[4];
-    int physic_proc, logic_proc;
+    int phys_proc, logic_proc;
 
     fd = popen("sysctl hw.physicalcpu | awk '{printf $2}'", "r");
     if (fd == NULL)
@@ -75,8 +75,8 @@ static inline int get_nthds_per_physic_proc()
         return -1;
     if (fgets(l_proc, sizeof(l_proc), fd) == NULL)
         return -1;
-    physic_proc = (int) strtol(p_proc, NULL, 10);
-    if (errno == ERANGE || physic_proc == 0) {
+    phys_proc = (int) strtol(p_proc, NULL, 10);
+    if (errno == ERANGE || phys_proc == 0) {
         return -1;
     }
     logic_proc = (int) strtol(l_proc, NULL, 10);
@@ -84,7 +84,7 @@ static inline int get_nthds_per_physic_proc()
         return -1;
     }
 
-    nthread = logic_proc / physic_proc;
+    nthread = logic_proc / phys_proc;
 #endif
 
     if (pclose(fd) == -1)
@@ -104,12 +104,12 @@ static inline int get_nthds_per_physic_proc()
  * variable **DCURL_NUM_CPU** is not set. The minimum value would be 1.
  * @retval -1 Unexpected error.
  */
-static inline int get_avail_physic_nprocs()
+static inline int get_avail_phys_nprocs()
 {
     int nthd;
     size_t nproc;
 
-    nthd = get_nthds_per_physic_proc();
+    nthd = get_nthds_per_phys_proc();
     if (nthd <= 0)
         return -1;
     else
