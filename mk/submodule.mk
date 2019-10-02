@@ -54,10 +54,20 @@ endif
 	cd $(LIBRABBITMQ_PATH)/build && \
          cmake --build .
 
+# sse2neon related variables
+SSE2NEON_PATH = deps/sse2neon
+SSE2NEON_INCLUDE := -I $(SSE2NEON_PATH)
+
+$(SSE2NEON_PATH)/sse2neon.h:
+	git submodule update --init $(SSE2NEON_PATH)
+
 # Submodules
 SUBS := $(LIBTUV_PATH)/include
 ifeq ($(BUILD_REMOTE),1)
     SUBS += $(LIBRABBITMQ_PATH)/librabbitmq
+endif
+ifeq ($(UNAME_M),$(filter $(UNAME_M),arm aarch64))
+    SUBS += $(SSE2NEON_PATH)/sse2neon.h
 endif
 # Submodule related objects
 SUB_OBJS := $(LIBTUV_OBJS)
@@ -68,4 +78,7 @@ endif
 SUB_INCLUDE := $(LIBTUV_INCLUDE)
 ifeq ($(BUILD_REMOTE),1)
     SUB_INCLUDE += $(LIBRABBITMQ_INCLUDE)
+endif
+ifeq ($(UNAME_M),$(filter $(UNAME_M),arm aarch64))
+    SUB_INCLUDE += $(SSE2NEON_INCLUDE)
 endif

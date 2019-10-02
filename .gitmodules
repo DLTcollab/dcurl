@@ -4,3 +4,6 @@
 [submodule "deps/rabbitmq-c"]
 	path = deps/rabbitmq-c
 	url = https://github.com/alanxz/rabbitmq-c.git
+[submodule "deps/sse2neon"]
+	path = deps/sse2neon
+	url = https://github.com/DLTcollab/sse2neon.git
