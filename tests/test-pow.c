@@ -144,7 +144,7 @@ int main()
 
     for (int idx = 0; idx < sizeof(ImplContextArr) / sizeof(ImplContext);
          idx++) {
-        printf("%s\n", description[idx]);
+        log_info(0, "%s\n", description[idx]);
 
         ImplContext *PoW_Context_ptr = &ImplContextArr[idx];
 
@@ -189,16 +189,17 @@ int main()
         freePoWContext(PoW_Context_ptr, pow_ctx);
         destroyImplContext(PoW_Context_ptr);
 
-        printf("PoW execution times: %d times.\n", pow_total);
+        log_info(0, "PoW execution times: %d times.\n", pow_total);
 #if defined(ENABLE_STAT)
-        printf("Hash rate average value: %.3lf kH/sec,\n",
-               getAvg(hashRateArr, pow_total) / 1000);
-        printf(
+        log_info(0, "Hash rate average value: %.3lf kH/sec,\n",
+                 getAvg(hashRateArr, pow_total) / 1000);
+        log_info(
+            0,
             "with the range +- %.3lf kH/sec including 95%% of the hash rate "
             "values.\n",
             2 * getStdDeviation(hashRateArr, pow_total) / 1000);
 #endif
-        printf("Success.\n");
+        log_info(0, "Success.\n");
     }
 
     return 0;
