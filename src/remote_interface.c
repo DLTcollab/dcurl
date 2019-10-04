@@ -14,8 +14,9 @@ bool initializeRemoteContext(RemoteImplContext *remote_ctx)
 {
     bool res = remote_ctx->initialize(remote_ctx);
     if (res) {
-        ddprintf(MSG_PREFIX "Implementation %s is initialized successfully\n",
-                 remote_ctx->description);
+        log_debug(0,
+                  MSG_PREFIX "Implementation %s is initialized successfully\n",
+                  remote_ctx->description);
     }
     return res;
 }
@@ -68,20 +69,20 @@ bool PoWValidation(int8_t *output_trytes, int mwm)
 {
     Trytes_t *trytes_t = initTrytes(output_trytes, TRANSACTION_TRYTES_LENGTH);
     if (!trytes_t) {
-        ddprintf("PoW Validation: Initialization of Trytes fails\n");
+        log_debug(0, "PoW Validation: Initialization of Trytes fails\n");
         goto fail_to_inittrytes;
     }
 
     Trytes_t *hash_trytes = hashTrytes(trytes_t);
     if (!hash_trytes) {
-        ddprintf("PoW Validation: Hashing trytes fails\n");
+        log_debug(0, "PoW Validation: Hashing trytes fails\n");
         goto fail_to_hashtrytes;
     }
 
     Trits_t *ret_trits = trits_from_trytes(hash_trytes);
     for (int i = 243 - 1; i >= 243 - mwm; i--) {
         if (ret_trits->data[i] != 0) {
-            ddprintf("PoW Validation fails\n");
+            log_debug(0, "PoW Validation fails\n");
             goto fail_to_validation;
         }
     }

@@ -23,8 +23,9 @@ bool initializeImplContext(ImplContext *impl_ctx)
 {
     bool res = impl_ctx->initialize(impl_ctx);
     if (res) {
-        ddprintf(MSG_PREFIX "Implementation %s is initialized successfully\n",
-                 impl_ctx->description);
+        log_debug(0,
+                  MSG_PREFIX "Implementation %s is initialized successfully\n",
+                  impl_ctx->description);
     }
     return res;
 }
