@@ -118,13 +118,13 @@ static int64_t loop128(__m128i *lmid,
                        int *stopPoW,
                        uv_rwlock_t *lock)
 {
-    int n = 0;
     int64_t i = 0;
     __m128i lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
 
     uv_rwlock_rdlock(lock);
     for (i = 0; !incr128(lmid, hmid) && !*stopPoW; i++) {
         uv_rwlock_rdunlock(lock);
+        int n;
         for (int j = 0; j < STATE_TRITS_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
@@ -378,16 +378,13 @@ static bool PoWSSE_Context_Initialize(ImplContext *impl_ctx)
         goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx[i].work_req =
-            (uv_work_t *) (work_req_chunk + i * sizeof(uv_work_t) * nproc);
-        ctx[i].pitem =
-            (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
-        ctx[i].nonce_array =
-            (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
+        ctx[i].work_req = (uv_work_t *) (work_req_chunk) + i * nproc;
+        ctx[i].pitem = (Pwork_struct *) (pitem_chunk) + i * nproc;
+        ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk) + i * nproc;
         for (int j = 0; j < nproc; j++)
-            ctx[i].nonce_array[j] =
-                (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
-                            j * NONCE_TRITS_LENGTH);
+            ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk) +
+                                    i * NONCE_TRITS_LENGTH * nproc +
+                                    j * NONCE_TRITS_LENGTH;
         ctx[i].num_max_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
         uv_loop_init(&ctx[i].loop);
@@ -432,8 +429,7 @@ static void *PoWSSE_getPoWContext(ImplContext *impl_ctx,
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
             uv_mutex_unlock(&impl_ctx->lock);
-            PoW_SSE_Context *ctx =
-                impl_ctx->context + sizeof(PoW_SSE_Context) * i;
+            PoW_SSE_Context *ctx = (PoW_SSE_Context *) impl_ctx->context + i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;

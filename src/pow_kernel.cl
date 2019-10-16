@@ -103,8 +103,8 @@ void increment(__global bc_trit_t* mid_low, __global bc_trit_t* mid_high,
                __private size_t from_index, __private size_t to_index) {
   size_t i;
   bc_trit_t carry = 1;
-  bc_trit_t low, hi;
   for (i = from_index; i < to_index && carry != 0; i++) {
+    bc_trit_t low, hi;
     low = mid_low[i];
     hi = mid_high[i];
     mid_low[i] = hi ^ low;
@@ -117,8 +117,9 @@ void copy_mid_to_state(__global bc_trit_t* mid_low, __global bc_trit_t* mid_high
                        __global bc_trit_t* state_low, __global bc_trit_t* state_high,
                        __private size_t id, __private size_t l_size,
                        __private size_t n_trits) {
-  size_t i, j;
+  size_t i;
   for (i = 0; i < n_trits; i++) {
+    size_t j;
     j = id + i * l_size;
     state_low[j] = mid_low[j];
     state_high[j] = mid_high[j];

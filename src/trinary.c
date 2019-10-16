@@ -14,7 +14,7 @@
 #include "constants.h"
 #include "curl.h"
 
-static int8_t TrytesToTritsMappings[][3] = {
+int8_t TrytesToTritsMappings[][3] = {
     {0, 0, 0},  {1, 0, 0},  {-1, 1, 0},   {0, 1, 0},   {1, 1, 0},   {-1, -1, 1},
     {0, -1, 1}, {1, -1, 1}, {-1, 0, 1},   {0, 0, 1},   {1, 0, 1},   {-1, 1, 1},
     {0, 1, 1},  {1, 1, 1},  {-1, -1, -1}, {0, -1, -1}, {1, -1, -1}, {-1, 0, -1},
@@ -61,7 +61,7 @@ static bool validateTrytes(Trobject_t *trytes)
 
 Trobject_t *initTrits(int8_t *src, int len)
 {
-    Trobject_t *trits = NULL;
+    Trobject_t *trits;
 
     trits = (Trobject_t *) malloc(sizeof(Trobject_t));
     if (!trits)
@@ -92,7 +92,7 @@ Trobject_t *initTrits(int8_t *src, int len)
 
 Trobject_t *initTrytes(int8_t *src, int len)
 {
-    Trobject_t *trytes = NULL;
+    Trobject_t *trytes;
 
     trytes = (Trobject_t *) malloc(sizeof(Trobject_t));
     if (!trytes) {

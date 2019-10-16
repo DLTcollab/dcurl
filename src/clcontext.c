@@ -82,7 +82,7 @@ static bool init_cl_kernel(CLContext *ctx)
 
 static bool init_cl_buffer(CLContext *ctx)
 {
-    cl_ulong mem = 0, max_mem = 0;
+    cl_ulong mem, max_mem = 0;
     cl_int errno;
 
     for (int i = 0; i < ctx->kernel_info.num_buffers; i++) {
@@ -157,7 +157,7 @@ int init_clcontext(CLContext *ctx)
     int ctx_idx = 0;
 
     cl_uint num_platform = 0;
-    cl_platform_id *platform = NULL;
+    cl_platform_id *platform;
 
     /* Get the platform */
     clGetPlatformIDs(0, NULL, &num_platform);
@@ -167,7 +167,7 @@ int init_clcontext(CLContext *ctx)
     clGetPlatformIDs(num_platform, platform, NULL);
 
     cl_uint num_devices = 0;
-    cl_device_id *devices = NULL;
+    cl_device_id *devices;
 
     /* Iterate the platform list and get its devices */
     for (int i = 0; i < num_platform; i++) {

@@ -42,8 +42,6 @@
 static bool PoWFPGAAccel(void *pow_ctx)
 {
     PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) pow_ctx;
-    ctx->pow_info.time = 0;
-    ctx->pow_info.hash_count = 0;
 
     int8_t fpga_out_nonce_trit[NONCE_TRITS_LENGTH];
 
@@ -51,16 +49,18 @@ static bool PoWFPGAAccel(void *pow_ctx)
     char buf[4];
     bool res = true;
 
-    uint32_t tick_cnt_l = 0;
-    uint32_t tick_cnt_h = 0;
-    uint64_t tick_cnt = 0;
+    uint32_t tick_cnt_l;
+    uint32_t tick_cnt_h;
+    uint64_t tick_cnt;
 
-    Trytes_t *object_tryte = NULL, *nonce_tryte = NULL;
+    Trytes_t *object_tryte, *nonce_tryte = NULL;
     Trits_t *object_trit = NULL, *object_nonce_trit = NULL;
 
     object_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
-    if (!object_tryte)
-        return false;
+    if (!object_tryte) {
+        res = false;
+        goto fail;
+    }
 
     object_trit = trits_from_trytes(object_tryte);
     if (!object_trit) {
@@ -162,7 +162,7 @@ static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
         goto fail_to_mmap;
     }
 
-    ctx->cpow_map = (uint32_t *) (ctx->fpga_regs_map + CPOW_BASE);
+    ctx->cpow_map = (uint32_t *) (ctx->fpga_regs_map) + CPOW_BASE;
 
     impl_ctx->context = ctx;
 
