@@ -42,6 +42,8 @@
 #define REPEAT11(str) REPEAT10(str), str
 #define REPEAT(n, str) REPEAT##n(str)
 
+extern int8_t TrytesToTritsMappings[][3];
+
 static inline bool validateTrits_sse42(Trobject_t *trits)
 {
     const int block_8bit = BLOCK_8BIT(__m128i);
@@ -249,6 +251,7 @@ static inline Trobject_t *trytes_from_trits_sse42(Trobject_t *trits)
         /* Store the tryte result */
         _mm_store_si128((__m128i *) (src + i * block_8bit), result);
     }
+    /* The rest of the trits */
     for (int i = ((trits->len) / 3 / block_8bit) * block_8bit;
          i < trits->len / 3; i++) {
         int j = trits->data[i * 3] + trits->data[i * 3 + 1] * 3 +
@@ -273,13 +276,6 @@ static inline Trobject_t *trits_from_trytes_sse42(Trobject_t *trytes)
     const int block_8bit = BLOCK_8BIT(__m128i);
     /* For setting the most significant bit of a byte */
     const int8_t setMSB = 0x80;
-    static int8_t TrytesToTritsMappings[][3] = {
-        {0, 0, 0},   {1, 0, 0},   {-1, 1, 0},  {0, 1, 0},   {1, 1, 0},
-        {-1, -1, 1}, {0, -1, 1},  {1, -1, 1},  {-1, 0, 1},  {0, 0, 1},
-        {1, 0, 1},   {-1, 1, 1},  {0, 1, 1},   {1, 1, 1},   {-1, -1, -1},
-        {0, -1, -1}, {1, -1, -1}, {-1, 0, -1}, {0, 0, -1},  {1, 0, -1},
-        {-1, 1, -1}, {0, 1, -1},  {1, 1, -1},  {-1, -1, 0}, {0, -1, 0},
-        {1, -1, 0},  {-1, 0, 0}};
     /* The set and range for indicating the trits value (0, 1, -1)
      * of the corresponding trytes */
     /* '9', 'C', 'F', 'I', 'L', 'O', 'R', 'U', 'X' */
@@ -425,10 +421,7 @@ static inline Trobject_t *trits_from_trytes_sse42(Trobject_t *trytes)
             _mm_or_si128(_mm_and_si128(maskHighTrit0, zero),
                          _mm_or_si128(_mm_and_si128(maskHighTritP1, posOne),
                                       _mm_and_si128(maskHighTritN1, negOne)));
-        /* Initialize with 0 */
-        __m128i dataFirst = _mm_set1_epi8(0);
-        __m128i dataMid = _mm_set1_epi8(0);
-        __m128i dataLast = _mm_set1_epi8(0);
+        __m128i dataFirst, dataMid, dataLast;
         dataFirst = _mm_or_si128(
             _mm_shuffle_epi8(lowTrit, shuffleFirst[0]),
             _mm_or_si128(_mm_shuffle_epi8(midTrit, shuffleFirst[1]),

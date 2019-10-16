@@ -210,14 +210,16 @@ static bool PowCL(void *pow_ctx)
     bool res = true;
     int8_t *c_state = NULL, *pow_result = NULL;
     Trits_t *tx_trit = NULL;
-    Trytes_t *tx_tryte = NULL, *res_tryte = NULL;
+    Trytes_t *tx_tryte, *res_tryte = NULL;
     struct timespec start_time, end_time;
 
     PoW_CL_Context *ctx = (PoW_CL_Context *) pow_ctx;
 
     tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
-    if (!tx_tryte)
-        return false;
+    if (!tx_tryte) {
+        res = false;
+        goto fail;
+    }
 
     tx_trit = trits_from_trytes(tx_tryte);
     if (!tx_trit) {
@@ -298,7 +300,7 @@ static void *PoWCL_getPoWContext(ImplContext *impl_ctx,
             impl_ctx->bitmap &= ~(0x1 << i);
             uv_mutex_unlock(&impl_ctx->lock);
             PoW_CL_Context *ctx =
-                impl_ctx->context + sizeof(PoW_CL_Context) * i;
+                (PoW_CL_Context *) impl_ctx->context + i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;

@@ -132,6 +132,11 @@ Success.
         [ Verified ] 
 ```
 
+## Static Code Analysis
+```
+$ make static-analysis
+```
+
 ## Tweaks
 * Number of threads to find nonce in CPU
     * ```$ export DCURL_NUM_CPU=26```

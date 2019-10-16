@@ -71,7 +71,10 @@ int main(int argc, char *const *argv)
 
         /* Message body format: transacton | mwm */
         memcpy(trytes, envelope.message.body.bytes, TRANSACTION_TRYTES_LENGTH);
-        memcpy(buf, envelope.message.body.bytes + TRANSACTION_TRYTES_LENGTH, 4);
+        memcpy(
+            buf,
+            (int8_t *) envelope.message.body.bytes + TRANSACTION_TRYTES_LENGTH,
+            4);
         mwm = strtol(buf, NULL, 10);
 
         log_debug(0, MSG_PREFIX "Doing PoW with mwm = %d...\n", mwm);

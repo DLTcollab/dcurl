@@ -185,7 +185,7 @@ static void *Remote_getPoWContext(RemoteImplContext *remote_ctx,
 
             uv_mutex_unlock(&remote_ctx->lock);
             PoW_Remote_Context *ctx =
-                remote_ctx->context + sizeof(PoW_Remote_Context) * i;
+                (PoW_Remote_Context *) remote_ctx->context + i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->indexOfContext = i;

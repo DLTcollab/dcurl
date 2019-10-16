@@ -7,9 +7,9 @@
  */
 
 /* Test program for pow_*.c */
+#include <math.h>
 #include "common.h"
 #include "implcontext.h"
-#include "math.h"
 
 #define POW_TOTAL 100
 

@@ -46,9 +46,9 @@ static unsigned int get_nprocs_conf()
  */
 static inline int get_nthds_per_phys_proc()
 {
-    FILE *fd;
     int nthread;
 #if defined(__linux__)
+    FILE *fd;
     char nthd[4];
 
     fd = popen("LC_ALL=C lscpu | grep 'Thread(s) per core' | awk '{printf $4}'",
@@ -61,7 +61,11 @@ static inline int get_nthds_per_phys_proc()
     if (errno == ERANGE || nthread == 0) {
         return -1;
     }
+
+    if (pclose(fd) == -1)
+        return -1;
 #elif defined(__APPLE__)
+    FILE *fd;
     char p_proc[4], l_proc[4];
     int phys_proc, logic_proc;
 
@@ -85,10 +89,12 @@ static inline int get_nthds_per_phys_proc()
     }
 
     nthread = logic_proc / phys_proc;
-#endif
 
     if (pclose(fd) == -1)
         return -1;
+#else
+    nthread = 1;
+#endif
     return nthread;
 }
 
@@ -107,32 +113,29 @@ static inline int get_nthds_per_phys_proc()
 static inline int get_avail_phys_nprocs()
 {
     int nthd;
-    size_t nproc;
+    size_t nproc = 0;
+    char *env_ncpu;
 
     nthd = get_nthds_per_phys_proc();
+    env_ncpu = getenv("DCURL_NUM_CPU");
     if (nthd <= 0)
         return -1;
-    else
+    else if (env_ncpu) {
+        do {
+            char *end;
+            signed int num = strtol(env_ncpu, &end, 10);
+            if (end == env_ncpu) {
+                /* if no characters were converted these pointers are equal */
+                break;
+            }
+            if (errno == ERANGE || num > INT_MAX || num < 0) {
+                /* because strtol produces a long, check for overflow */
+                break;
+            }
+            nproc = num;
+        } while (0);
+    } else
         nproc = (get_nprocs_conf() / nthd) - 1;
-
-    do {
-        char *env_ncpu = getenv("DCURL_NUM_CPU");
-        if (!env_ncpu) {
-            break;
-        }
-
-        char *end;
-        signed int num = strtol(env_ncpu, &end, 10);
-        if (end == env_ncpu) {
-            /* if no characters were converted these pointers are equal */
-            break;
-        }
-        if (errno == ERANGE || num > INT_MAX || num < 0) {
-            /* because strtol produces a long, check for overflow */
-            break;
-        }
-        nproc = num;
-    } while (0);
 
     if (!nproc)
         nproc = 1;

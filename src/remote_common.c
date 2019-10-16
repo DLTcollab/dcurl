@@ -284,6 +284,7 @@ bool publish_message(amqp_connection_state_t *conn,
                      char *message)
 {
     amqp_basic_properties_t props;
+    memset(&props, 0, sizeof(amqp_basic_properties_t));
     props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
     props.content_type = amqp_cstring_bytes("text/plain");
     props.delivery_mode = AMQP_DELIVERY_PERSISTENT;
@@ -305,6 +306,7 @@ bool publish_message_with_reply_to(amqp_connection_state_t *conn,
                                    char *message)
 {
     amqp_basic_properties_t props;
+    memset(&props, 0, sizeof(amqp_basic_properties_t));
     props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG |
                    AMQP_BASIC_DELIVERY_MODE_FLAG | AMQP_BASIC_REPLY_TO_FLAG;
     props.content_type = amqp_cstring_bytes("text/plain");

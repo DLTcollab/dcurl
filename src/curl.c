@@ -15,7 +15,7 @@ static const int8_t truthTable[11] = {1, 0, -1, 2, 1, -1, 0, 2, -1, 1, 0};
 
 static void _transform(int8_t state[])
 {
-    int r = 0, i = 0;
+    int r, i;
     int8_t copy[STATE_TRITS_LENGTH] = {0};
     int8_t *from = state, *to = copy;
     for (r = 0; r < 81; r++) {
