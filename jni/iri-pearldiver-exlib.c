@@ -27,13 +27,17 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
                                                 jint mwm,
                                                 jint threads)
 {
+    jboolean ret = JNI_TRUE;
+
     /*********** Get the Byte array from Java byte Array *************/
     jbyte *c_trits = (*env)->GetByteArrayElements(env, trits, NULL);
 
     Trits_t *arg_trits = initTrits((int8_t *) c_trits, 8019);
     Trytes_t *arg_trytes = trytes_from_trits(arg_trits);
-    if (!arg_trytes)
-        return JNI_FALSE;
+    if (!arg_trytes) {
+        ret = JNI_FALSE;
+        goto fail_input;
+    }
     /****************************************************************/
 
     int8_t *result = dcurl_entry(arg_trytes->data, mwm, threads);
@@ -41,18 +45,22 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
     /************ Write result back Java byte array *****************/
     Trytes_t *ret_trytes = initTrytes(result, 2673);
     Trits_t *ret_trits = trits_from_trytes(ret_trytes);
-    if (!ret_trits)
-        return JNI_FALSE;
+    if (!ret_trits) {
+        ret = JNI_FALSE;
+        goto fail_output;
+    }
     (*env)->SetByteArrayRegion(env, trits, 0, 8019, ret_trits->data);
     /****************************************************************/
 
+fail_output:
     free(result);
+    freeTrobject(ret_trits);
     freeTrobject(ret_trytes);
+fail_input:
     freeTrobject(arg_trits);
     freeTrobject(arg_trytes);
-    freeTrobject(ret_trits);
 
-    return JNI_TRUE;
+    return ret;
 }
 
 JNIEXPORT void JNICALL

@@ -41,6 +41,9 @@ void Absorb(Curl *c, Trytes_t *inn)
     Trits_t *in = trits_from_trytes(inn);
     int lenn = 0;
 
+    if (!in)
+        return;
+
     for (int i = 0; i < in->len; i += lenn) {
         lenn = 243;
         if (in->len - i < 243)
