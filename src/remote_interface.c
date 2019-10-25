@@ -16,7 +16,7 @@ bool registerRemoteContext(RemoteImplContext *remote_ctx)
 {
     bool res = initializeRemoteContext(remote_ctx);
     if (res)
-        list_add(&remote_ctx->list, &REMOTE_IMPL_LIST);
+        list_add(&remote_ctx->node, &REMOTE_IMPL_LIST);
     return res;
 }
 

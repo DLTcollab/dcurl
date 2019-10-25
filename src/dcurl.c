@@ -31,8 +31,20 @@
 #include "pow_c.h"
 #endif
 
+/* for checking whether the corresponding implementation is initialized */
+enum Capability {
+    CAP_NONE = 0U,
+    CAP_C = 1U,
+    CAP_SSE = 1U << 1,
+    CAP_AVX = 1U << 2,
+    CAP_GPU = 1U << 3,
+    CAP_FPGA = 1U << 4,
+    CAP_REMOTE = 1U << 5
+};
+
 /* check whether dcurl is initialized */
 static bool isInitialized = false;
+static uint8_t runtimeCaps = CAP_NONE;
 static uv_sem_t notify;
 
 LIST_HEAD(IMPL_LIST);
@@ -61,26 +73,44 @@ static uv_sem_t notify_remote;
 
 bool dcurl_init()
 {
-    bool ret = true;
+    bool ret = false;
 
 #if defined(ENABLE_AVX)
-    ret &= registerImplContext(&PoWAVX_Context);
+    if (registerImplContext(&PoWAVX_Context)) {
+        runtimeCaps |= CAP_AVX;
+        ret |= true;
+    }
 #elif defined(ENABLE_SSE)
-    ret &= registerImplContext(&PoWSSE_Context);
+    if (registerImplContext(&PoWSSE_Context)) {
+        runtimeCaps |= CAP_SSE;
+        ret |= true;
+    }
 #elif defined(ENABLE_GENERIC)
-    ret &= registerImplContext(&PoWC_Context);
+    if (registerImplContext(&PoWC_Context)) {
+        runtimeCaps |= CAP_C;
+        ret |= true;
+    }
 #endif
 
 #if defined(ENABLE_OPENCL)
-    ret &= registerImplContext(&PoWCL_Context);
+    if (registerImplContext(&PoWCL_Context)) {
+        runtimeCaps |= CAP_GPU;
+        ret |= true;
+    }
 #endif
 
 #if defined(ENABLE_FPGA_ACCEL)
-    ret &= registerImplContext(&PoWFPGAAccel_Context);
+    if (registerImplContext(&PoWFPGAAccel_Context)) {
+        runtimeCaps |= CAP_FPGA;
+        ret |= true;
+    }
 #endif
 
 #if defined(ENABLE_REMOTE)
-    ret &= registerRemoteContext(&Remote_Context);
+    if (registerRemoteContext(&Remote_Context)) {
+        runtimeCaps |= CAP_REMOTE;
+        ret |= true;
+    }
     uv_sem_init(&notify_remote, 0);
 #endif
 
@@ -98,17 +128,19 @@ void dcurl_destroy()
     struct list_head *pRemote;
 
     list_for_each (pRemote, &REMOTE_IMPL_LIST) {
-        remoteImpl = list_entry(pRemote, RemoteImplContext, list);
+        remoteImpl = list_entry(pRemote, RemoteImplContext, node);
         destroyRemoteContext(remoteImpl);
         list_del(pRemote);
     }
 #endif
 
     list_for_each (p, &IMPL_LIST) {
-        impl = list_entry(p, ImplContext, list);
+        impl = list_entry(p, ImplContext, node);
         destroyImplContext(impl);
         list_del(p);
     }
+
+    runtimeCaps = CAP_NONE;
 }
 
 
@@ -124,44 +156,46 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
         return NULL;
 
 #if defined(ENABLE_REMOTE)
-    RemoteImplContext *remoteImpl = NULL;
-    struct list_head *pRemote;
+    if (runtimeCaps & CAP_REMOTE) {
+        RemoteImplContext *remoteImpl = NULL;
+        struct list_head *pRemote;
 
-    do {
-        list_for_each (pRemote, &REMOTE_IMPL_LIST) {
-            remoteImpl = list_entry(pRemote, RemoteImplContext, list);
-            if (enterRemoteContext(remoteImpl)) {
-                pow_ctx = getRemoteContext(remoteImpl, trytes, mwm);
-                goto remote_pow;
+        do {
+            list_for_each (pRemote, &REMOTE_IMPL_LIST) {
+                remoteImpl = list_entry(pRemote, RemoteImplContext, node);
+                if (enterRemoteContext(remoteImpl)) {
+                    pow_ctx = getRemoteContext(remoteImpl, trytes, mwm);
+                    goto remote_pow;
+                }
             }
-        }
-        uv_sem_wait(&notify_remote);
-    } while (1);
+            uv_sem_wait(&notify_remote);
+        } while (1);
 
-remote_pow:
-    if (!doRemoteContext(remoteImpl, pow_ctx)) {
-        /* The remote interface can not work without activated RabbitMQ broker
-         * and remote worker. If it is not working, the PoW would be calculated
-         * by the local machine. And the remote interface resource should be
-         * released.
-         */
+    remote_pow:
+        if (!doRemoteContext(remoteImpl, pow_ctx)) {
+            /* The remote interface can not work without activated RabbitMQ
+             * broker and remote worker. If it is not working, the PoW would be
+             * calculated by the local machine. And the remote interface
+             * resource should be released.
+             */
+            freeRemoteContext(remoteImpl, pow_ctx);
+            exitRemoteContext(remoteImpl);
+            uv_sem_post(&notify_remote);
+            goto local_pow;
+        } else {
+            res = getRemoteResult(remoteImpl, pow_ctx);
+        }
         freeRemoteContext(remoteImpl, pow_ctx);
         exitRemoteContext(remoteImpl);
         uv_sem_post(&notify_remote);
-        goto local_pow;
-    } else {
-        res = getRemoteResult(remoteImpl, pow_ctx);
+        return res;
     }
-    freeRemoteContext(remoteImpl, pow_ctx);
-    exitRemoteContext(remoteImpl);
-    uv_sem_post(&notify_remote);
-    return res;
 
 local_pow:
 #endif
     do {
         list_for_each (p, &IMPL_LIST) {
-            impl = list_entry(p, ImplContext, list);
+            impl = list_entry(p, ImplContext, node);
             if (enterImplContext(impl)) {
                 pow_ctx = getPoWContext(impl, trytes, mwm, threads);
                 goto do_pow;

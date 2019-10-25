@@ -40,8 +40,8 @@ struct _impl_context {
     PoW_Info (*getPoWInfo)(void *pow_ctx);
     bool (*freePoWContext)(ImplContext *impl_ctx, void *pow_ctx);
 
-    /* Linked list */
-    struct list_head list;
+    /* Node in linked list */
+    struct list_head node;
 };
 
 bool registerImplContext(ImplContext *impl_ctx);

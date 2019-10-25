@@ -57,8 +57,8 @@ struct _remote_impl_context {
     PoW_Info (*getPoWInfo)(void *pow_ctx);
     bool (*freePoWContext)(RemoteImplContext *remote_ctx, void *pow_ctx);
 
-    /* Linked list */
-    struct list_head list;
+    /* Node in linked list */
+    struct list_head node;
 };
 
 bool registerRemoteContext(RemoteImplContext *remote_ctx);

@@ -17,7 +17,7 @@ bool registerImplContext(ImplContext *impl_ctx)
 {
     bool res = initializeImplContext(impl_ctx);
     if (res)
-        list_add(&impl_ctx->list, &IMPL_LIST);
+        list_add(&impl_ctx->node, &IMPL_LIST);
     return res;
 }
 
