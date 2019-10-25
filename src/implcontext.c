@@ -15,8 +15,10 @@ extern struct list_head IMPL_LIST;
 
 bool registerImplContext(ImplContext *impl_ctx)
 {
-    list_add(&impl_ctx->list, &IMPL_LIST);
-    return initializeImplContext(impl_ctx);
+    bool res = initializeImplContext(impl_ctx);
+    if (res)
+        list_add(&impl_ctx->list, &IMPL_LIST);
+    return res;
 }
 
 bool initializeImplContext(ImplContext *impl_ctx)

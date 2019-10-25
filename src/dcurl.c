@@ -36,6 +36,7 @@ static bool isInitialized = false;
 static uv_sem_t notify;
 
 LIST_HEAD(IMPL_LIST);
+LIST_HEAD(REMOTE_IMPL_LIST);
 
 #if defined(ENABLE_AVX)
 extern ImplContext PoWAVX_Context;
@@ -79,7 +80,7 @@ bool dcurl_init()
 #endif
 
 #if defined(ENABLE_REMOTE)
-    ret &= initializeRemoteContext(&Remote_Context);
+    ret &= registerRemoteContext(&Remote_Context);
     uv_sem_init(&notify_remote, 0);
 #endif
 
@@ -93,7 +94,14 @@ void dcurl_destroy()
     struct list_head *p;
 
 #if defined(ENABLE_REMOTE)
-    destroyRemoteContext(&Remote_Context);
+    RemoteImplContext *remoteImpl = NULL;
+    struct list_head *pRemote;
+
+    list_for_each (pRemote, &REMOTE_IMPL_LIST) {
+        remoteImpl = list_entry(pRemote, RemoteImplContext, list);
+        destroyRemoteContext(remoteImpl);
+        list_del(pRemote);
+    }
 #endif
 
     list_for_each (p, &IMPL_LIST) {
@@ -116,30 +124,36 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
         return NULL;
 
 #if defined(ENABLE_REMOTE)
+    RemoteImplContext *remoteImpl = NULL;
+    struct list_head *pRemote;
+
     do {
-        if (enterRemoteContext(&Remote_Context)) {
-            pow_ctx = getRemoteContext(&Remote_Context, trytes, mwm);
-            goto remote_pow;
+        list_for_each (pRemote, &REMOTE_IMPL_LIST) {
+            remoteImpl = list_entry(pRemote, RemoteImplContext, list);
+            if (enterRemoteContext(remoteImpl)) {
+                pow_ctx = getRemoteContext(remoteImpl, trytes, mwm);
+                goto remote_pow;
+            }
         }
         uv_sem_wait(&notify_remote);
     } while (1);
 
 remote_pow:
-    if (!doRemoteContext(&Remote_Context, pow_ctx)) {
+    if (!doRemoteContext(remoteImpl, pow_ctx)) {
         /* The remote interface can not work without activated RabbitMQ broker
          * and remote worker. If it is not working, the PoW would be calculated
          * by the local machine. And the remote interface resource should be
          * released.
          */
-        freeRemoteContext(&Remote_Context, pow_ctx);
-        exitRemoteContext(&Remote_Context);
+        freeRemoteContext(remoteImpl, pow_ctx);
+        exitRemoteContext(remoteImpl);
         uv_sem_post(&notify_remote);
         goto local_pow;
     } else {
-        res = getRemoteResult(&Remote_Context, pow_ctx);
+        res = getRemoteResult(remoteImpl, pow_ctx);
     }
-    freeRemoteContext(&Remote_Context, pow_ctx);
-    exitRemoteContext(&Remote_Context);
+    freeRemoteContext(remoteImpl, pow_ctx);
+    exitRemoteContext(remoteImpl);
     uv_sem_post(&notify_remote);
     return res;
 
