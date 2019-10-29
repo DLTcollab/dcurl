@@ -29,8 +29,8 @@
  * Register the determined hardware into the list and initialize the
  * corresponding resource.
  * @return
- * - true: initialization succeeded.
- * - false: initialization failed.
+ * - true: one of the initialization succeeded.
+ * - false: all the initialization failed.
  */
 bool dcurl_init();
 
@@ -53,7 +53,7 @@ void dcurl_destroy();
  * @parblock
  * The thread number of calculating the PoW. It affects CPU only.
  *
- * 0: use (maximum threads - 1).
+ * 0: use (maximum physical CPU - 1).
  * @endparblock
  * @return The result of PoW.
  */
