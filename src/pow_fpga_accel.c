@@ -177,6 +177,7 @@ fail_to_open_odata:
 fail_to_open_idata:
     close(ctx->ctrl_fd);
 fail_to_open_ctrl:
+    free(ctx);
 fail_to_malloc:
     return false;
 }

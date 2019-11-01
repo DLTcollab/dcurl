@@ -72,6 +72,8 @@ bool connect_broker(amqp_connection_state_t *conn, const char *hostName)
     /* Connect to the rabbitmq broker */
     *conn = amqp_new_connection();
     socket = amqp_tcp_socket_new(*conn);
+    if (!socket)
+        goto destroy_connection;
     if (amqp_socket_open(socket, host, 5672) != AMQP_STATUS_OK) {
         log_debug(0, "The rabbitmq broker of %s is closed\n", host);
         goto destroy_connection;
@@ -131,7 +133,7 @@ bool declare_callback_queue(amqp_connection_state_t *conn,
 
     amqp_queue_declare_ok_t *r =
         amqp_queue_declare(*conn, channel, amqp_empty_bytes, 0, 0, 1, 0, table);
-    if (!die_on_amqp_error(amqp_get_rpc_reply(*conn),
+    if (!r || !die_on_amqp_error(amqp_get_rpc_reply(*conn),
                            "Declaring the private queue with TTL = 10s"))
         return false;
 

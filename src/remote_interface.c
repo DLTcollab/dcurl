@@ -139,7 +139,7 @@ fail:
 static bool Remote_init(RemoteImplContext *remote_ctx)
 {
     if (remote_ctx->num_max_thread <= 0)
-        goto fail_to_init;
+        goto fail_to_max_thread;
 
     PoW_Remote_Context *ctx = (PoW_Remote_Context *) malloc(
         sizeof(PoW_Remote_Context) * remote_ctx->num_max_thread);
@@ -160,6 +160,8 @@ static bool Remote_init(RemoteImplContext *remote_ctx)
     return true;
 
 fail_to_init:
+    free(ctx);
+fail_to_max_thread:
     return false;
 }
 
