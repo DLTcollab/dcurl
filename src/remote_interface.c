@@ -10,6 +10,16 @@
 #include <string.h>
 #include "trinary.h"
 
+extern struct list_head REMOTE_IMPL_LIST;
+
+bool registerRemoteContext(RemoteImplContext *remote_ctx)
+{
+    bool res = initializeRemoteContext(remote_ctx);
+    if (res)
+        list_add(&remote_ctx->node, &REMOTE_IMPL_LIST);
+    return res;
+}
+
 bool initializeRemoteContext(RemoteImplContext *remote_ctx)
 {
     bool res = remote_ctx->initialize(remote_ctx);

@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include "common.h"
 #include "constants.h"
+#include "list.h"
 #include "remote_common.h"
 #include "uv.h"
 
@@ -55,8 +56,12 @@ struct _remote_impl_context {
     int8_t *(*getPoWResult)(void *pow_ctx);
     PoW_Info (*getPoWInfo)(void *pow_ctx);
     bool (*freePoWContext)(RemoteImplContext *remote_ctx, void *pow_ctx);
+
+    /* Node in linked list */
+    struct list_head node;
 };
 
+bool registerRemoteContext(RemoteImplContext *remote_ctx);
 bool initializeRemoteContext(RemoteImplContext *remote_ctx);
 void destroyRemoteContext(RemoteImplContext *remote_ctx);
 bool enterRemoteContext(RemoteImplContext *remote_ctx);
