@@ -15,7 +15,7 @@
 #include "pow_cl.h"
 #endif
 #if defined(ENABLE_FPGA_ACCEL)
-#include "pow_fpga_accel.h"
+#include "pow_fpga.h"
 #endif
 #if defined(ENABLE_REMOTE)
 #include "remote_interface.h"
@@ -63,7 +63,7 @@ extern ImplContext PoWCL_Context;
 #endif
 
 #if defined(ENABLE_FPGA_ACCEL)
-extern ImplContext PoWFPGAAccel_Context;
+extern ImplContext PoWFPGA_Context;
 #endif
 
 #if defined(ENABLE_REMOTE)
@@ -100,7 +100,7 @@ bool dcurl_init()
 #endif
 
 #if defined(ENABLE_FPGA_ACCEL)
-    if (registerImplContext(&PoWFPGAAccel_Context)) {
+    if (registerImplContext(&PoWFPGA_Context)) {
         runtimeCaps |= CAP_FPGA;
         ret |= true;
     }

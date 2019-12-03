@@ -26,7 +26,7 @@ extern ImplContext PoWCL_Context;
 #endif
 
 #if defined(ENABLE_FPGA_ACCEL)
-extern ImplContext PoWFPGAAccel_Context;
+extern ImplContext PoWFPGA_Context;
 #endif
 
 const char *description[] = {
@@ -131,7 +131,7 @@ int main()
 #endif
 
 #if defined(ENABLE_FPGA_ACCEL)
-        PoWFPGAAccel_Context,
+        PoWFPGA_Context,
 #endif
     };
 #if defined(ENABLE_STAT)

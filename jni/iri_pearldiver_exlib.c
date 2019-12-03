@@ -6,7 +6,7 @@
  * "LICENSE" at the root of this distribution.
  */
 
-#include "iri-pearldiver-exlib.h"
+#include "iri_pearldiver_exlib.h"
 #include <jni.h>
 #include <stdint.h>
 #include "../src/dcurl.h"

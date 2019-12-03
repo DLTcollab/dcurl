@@ -140,17 +140,17 @@ endif
 
 ifeq ("$(BUILD_JNI)","1")
 OBJS += \
-	jni/iri-pearldiver-exlib.o
+	jni/iri_pearldiver_exlib.o
 endif
 
 ifeq ("$(BUILD_COMPAT)", "1")
 OBJS += \
-	compat-ccurl.o
+	compat_ccurl.o
 endif
 
 ifeq ("$(BUILD_FPGA_ACCEL)","1")
 OBJS += \
-	pow_fpga_accel.o
+	pow_fpga.o
 endif
 
 ifeq ("$(BUILD_REMOTE)", "1")
@@ -160,7 +160,7 @@ OBJS += \
 
 WORKER_EXCLUDE_OBJS := remote_interface.o
 ifeq ("$(BUILD_JNI)", "1")
-WORKER_EXCLUDE_OBJS += jni/iri-pearldiver-exlib.o
+WORKER_EXCLUDE_OBJS += jni/iri_pearldiver_exlib.o
 endif
 WORKER_OBJS := $(addprefix $(OUT)/worker-,$(filter-out $(WORKER_EXCLUDE_OBJS), $(OBJS)))
 WORKER_CFLAGS := $(filter-out -DENABLE_REMOTE, $(CFLAGS))

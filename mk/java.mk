@@ -41,7 +41,7 @@ $(OUT)/com/iota/iri/crypto/PearlDiver.java: $(OUT)/com/iota/iri/crypto
 	$(Q)$(CURL) -s -o $@ \
 	"https://raw.githubusercontent.com/$(GITHUB_REPO)/$(PearlDriverSRC)"
 
-$(OUT)/jni/iri-pearldiver-exlib.h: $(OUT)/com/iota/iri/crypto/PearlDiver.java
+$(OUT)/jni/iri_pearldiver_exlib.h: $(OUT)/com/iota/iri/crypto/PearlDiver.java
 	$(VECHO) "  JAVAH\t$@\n"
 	$(Q)$(JAVAH) -classpath $(OUT) -o $@ com.iota.iri.crypto.PearlDiver
 
@@ -56,7 +56,7 @@ endif
 CFLAGS_JNI += -I$(JAVA_HOME)/include
 CFLAGS_JNI += -I$(OUT)/jni
 
-jni/iri-pearldiver-exlib.c: $(OUT)/jni/iri-pearldiver-exlib.h
+jni/iri_pearldiver_exlib.c: $(OUT)/jni/iri_pearldiver_exlib.h
 
 $(OUT)/jni/%.o: jni/%.c
 	$(VECHO) "  CC\t$@\n"

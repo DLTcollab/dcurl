@@ -7,7 +7,7 @@ dcurl is written by:
 Externel Source:
 * src/pow_sse.c is derived from preliminary work of Shinya Yagyu.
 * src/pow_cl.c and src/pow_kernel.cl are adopted from ccurl [1].
-* src/pow_fpga_accel.c is derived from accelerator by LampaLab [2].
+* src/pow_fpga.c is derived from accelerator by LampaLab [2].
 * src/list.h is adopted from National Cheng Kung University, Taiwan.
 
 [1] https://github.com/iotaledger/ccurl
