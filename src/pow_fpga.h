@@ -6,16 +6,16 @@
  * "LICENSE" at the root of this distribution.
  */
 
-#ifndef POW_FPGA_ACCEL_H_
-#define POW_FPGA_ACCEL_H_
+#ifndef POW_FPGA_H_
+#define POW_FPGA_H_
 
 #include <stdint.h>
 #include "common.h"
 #include "constants.h"
 
-typedef struct _pow_fpga_accel_context PoW_FPGA_Accel_Context;
+typedef struct _pow_fpga_context PoW_FPGA_Context;
 
-struct _pow_fpga_accel_context {
+struct _pow_fpga_context {
     /* Management of Multi-thread */
     int indexOfContext;
     /* Arguments of PoW */
@@ -24,7 +24,7 @@ struct _pow_fpga_accel_context {
     int mwm;
     /* PoW-related information */
     PoW_Info pow_info;
-    /* Device files for the PFGA accelerator*/
+    /* Device files for the FPGA accelerator*/
     int ctrl_fd;
     int in_fd;
     int out_fd;

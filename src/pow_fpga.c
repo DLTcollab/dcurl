@@ -7,7 +7,7 @@
  * "LICENSE" at the root of this distribution.
  */
 
-#include "pow_fpga_accel.h"
+#include "pow_fpga.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -39,9 +39,9 @@
         S[3] = (I >> 24) & 0xff; \
     }
 
-static bool PoWFPGAAccel(void *pow_ctx)
+static bool PoWFPGA(void *pow_ctx)
 {
-    PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) pow_ctx;
+    PoW_FPGA_Context *ctx = (PoW_FPGA_Context *) pow_ctx;
 
     int8_t fpga_out_nonce_trit[NONCE_TRITS_LENGTH];
 
@@ -125,10 +125,10 @@ fail:
     return res;
 }
 
-static bool PoWFPGAAccel_Context_Initialize(ImplContext *impl_ctx)
+static bool PoWFPGA_Context_Initialize(ImplContext *impl_ctx)
 {
-    PoW_FPGA_Accel_Context *ctx =
-        (PoW_FPGA_Accel_Context *) malloc(sizeof(PoW_FPGA_Accel_Context));
+    PoW_FPGA_Context *ctx =
+        (PoW_FPGA_Context *) malloc(sizeof(PoW_FPGA_Context));
     if (!ctx)
         goto fail_to_malloc;
 
@@ -182,9 +182,9 @@ fail_to_malloc:
     return false;
 }
 
-static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
+static void PoWFPGA_Context_Destroy(ImplContext *impl_ctx)
 {
-    PoW_FPGA_Accel_Context *ctx = (PoW_FPGA_Accel_Context *) impl_ctx->context;
+    PoW_FPGA_Context *ctx = (PoW_FPGA_Context *) impl_ctx->context;
 
     close(ctx->in_fd);
     close(ctx->out_fd);
@@ -199,12 +199,12 @@ static void PoWFPGAAccel_Context_Destroy(ImplContext *impl_ctx)
     free(ctx);
 }
 
-static void *PoWFPGAAccel_getPoWContext(ImplContext *impl_ctx,
-                                        int8_t *trytes,
-                                        int mwm,
-                                        int threads)
+static void *PoWFPGA_getPoWContext(ImplContext *impl_ctx,
+                                   int8_t *trytes,
+                                   int mwm,
+                                   int threads)
 {
-    PoW_FPGA_Accel_Context *ctx = impl_ctx->context;
+    PoW_FPGA_Context *ctx = impl_ctx->context;
     memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
     ctx->mwm = mwm;
     ctx->indexOfContext = 0;
@@ -212,37 +212,37 @@ static void *PoWFPGAAccel_getPoWContext(ImplContext *impl_ctx,
     return ctx;
 }
 
-static bool PoWFPGAAccel_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+static bool PoWFPGA_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
 {
     return true;
 }
 
-static int8_t *PoWFPGAAccel_getPoWResult(void *pow_ctx)
+static int8_t *PoWFPGA_getPoWResult(void *pow_ctx)
 {
     int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * TRANSACTION_TRYTES_LENGTH);
     if (!ret)
         return NULL;
-    memcpy(ret, ((PoW_FPGA_Accel_Context *) pow_ctx)->output_trytes,
+    memcpy(ret, ((PoW_FPGA_Context *) pow_ctx)->output_trytes,
            TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 
-static PoW_Info PoWFPGAAccel_getPoWInfo(void *pow_ctx)
+static PoW_Info PoWFPGA_getPoWInfo(void *pow_ctx)
 {
-    return ((PoW_FPGA_Accel_Context *) pow_ctx)->pow_info;
+    return ((PoW_FPGA_Context *) pow_ctx)->pow_info;
 }
 
-ImplContext PoWFPGAAccel_Context = {
+ImplContext PoWFPGA_Context = {
     .context = NULL,
     .description = "FPGA",
     .bitmap = 0,
     .num_max_thread = 1,  // num_max_thread >= 1
     .num_working_thread = 0,
-    .initialize = PoWFPGAAccel_Context_Initialize,
-    .destroy = PoWFPGAAccel_Context_Destroy,
-    .getPoWContext = PoWFPGAAccel_getPoWContext,
-    .freePoWContext = PoWFPGAAccel_freePoWContext,
-    .doThePoW = PoWFPGAAccel,
-    .getPoWResult = PoWFPGAAccel_getPoWResult,
-    .getPoWInfo = PoWFPGAAccel_getPoWInfo,
+    .initialize = PoWFPGA_Context_Initialize,
+    .destroy = PoWFPGA_Context_Destroy,
+    .getPoWContext = PoWFPGA_getPoWContext,
+    .freePoWContext = PoWFPGA_freePoWContext,
+    .doThePoW = PoWFPGA,
+    .getPoWResult = PoWFPGA_getPoWResult,
+    .getPoWInfo = PoWFPGA_getPoWInfo,
 };
