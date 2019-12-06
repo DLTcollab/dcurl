@@ -47,6 +47,9 @@ int main(int argc, char *const *argv)
     if (!connect_broker(&conn, hostIP))
         goto fail;
 
+    if (!declare_queue(&conn, 1, "incoming_queue"))
+        goto fail;
+
     if (!set_consuming_queue(&conn, 1, "incoming_queue"))
         goto fail;
 
