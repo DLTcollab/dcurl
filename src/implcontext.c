@@ -11,17 +11,17 @@
 
 #define MSG_PREFIX "[dcurl] "
 
-extern struct list_head IMPL_LIST;
+extern struct list_head impl_list;
 
-bool registerImplContext(ImplContext *impl_ctx)
+bool register_impl_context(impl_context_t *impl_ctx)
 {
-    bool res = initializeImplContext(impl_ctx);
+    bool res = initialize_impl_context(impl_ctx);
     if (res)
-        list_add(&impl_ctx->node, &IMPL_LIST);
+        list_add(&impl_ctx->node, &impl_list);
     return res;
 }
 
-bool initializeImplContext(ImplContext *impl_ctx)
+bool initialize_impl_context(impl_context_t *impl_ctx)
 {
     bool res = impl_ctx->initialize(impl_ctx);
     if (res) {
@@ -32,12 +32,12 @@ bool initializeImplContext(ImplContext *impl_ctx)
     return res;
 }
 
-void destroyImplContext(ImplContext *impl_ctx)
+void destroy_impl_context(impl_context_t *impl_ctx)
 {
     return impl_ctx->destroy(impl_ctx);
 }
 
-bool enterImplContext(ImplContext *impl_ctx)
+bool enter_impl_context(impl_context_t *impl_ctx)
 {
     uv_mutex_lock(&impl_ctx->lock);
     if (impl_ctx->num_working_thread >= impl_ctx->num_max_thread) {
@@ -49,34 +49,34 @@ bool enterImplContext(ImplContext *impl_ctx)
     return true; /* Access Success */
 }
 
-void exitImplContext(ImplContext *impl_ctx)
+void exit_impl_context(impl_context_t *impl_ctx)
 {
     uv_mutex_lock(&impl_ctx->lock);
     impl_ctx->num_working_thread--;
     uv_mutex_unlock(&impl_ctx->lock);
 }
 
-void *getPoWContext(ImplContext *impl_ctx, int8_t *trytes, int mwm, int threads)
+void *get_pow_context(impl_context_t *impl_ctx, int8_t *trytes, int mwm, int threads)
 {
-    return impl_ctx->getPoWContext(impl_ctx, trytes, mwm, threads);
+    return impl_ctx->get_pow_context(impl_ctx, trytes, mwm, threads);
 }
 
-bool doThePoW(ImplContext *impl_ctx, void *pow_ctx)
+bool do_the_pow(impl_context_t *impl_ctx, void *pow_ctx)
 {
-    return impl_ctx->doThePoW(pow_ctx);
+    return impl_ctx->do_the_pow(pow_ctx);
 }
 
-bool freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+bool free_pow_context(impl_context_t *impl_ctx, void *pow_ctx)
 {
-    return impl_ctx->freePoWContext(impl_ctx, pow_ctx);
+    return impl_ctx->free_pow_context(impl_ctx, pow_ctx);
 }
 
-int8_t *getPoWResult(ImplContext *impl_ctx, void *pow_ctx)
+int8_t *get_pow_result(impl_context_t *impl_ctx, void *pow_ctx)
 {
-    return impl_ctx->getPoWResult(pow_ctx);
+    return impl_ctx->get_pow_result(pow_ctx);
 }
 
-PoW_Info getPoWInfo(ImplContext *impl_ctx, void *pow_ctx)
+pow_info_t get_pow_info(impl_context_t *impl_ctx, void *pow_ctx)
 {
-    return impl_ctx->getPoWInfo(pow_ctx);
+    return impl_ctx->get_pow_info(pow_ctx);
 }

@@ -16,6 +16,9 @@ IOTA Reference Implementation (IRI) adaptation is available to benefit from hard
 ## Build Instructions
 Check [docs/build-n-test.md](docs/build-n-test.md) for details.
 
+## Source Code Naming Convention
+Check [docs/naming-convention.md](docs/naming-convention.md) for details.
+
 ## Performance
 After integrating dcurl into IRI, performance of [attachToTangle](https://iota.readme.io/reference#attachtotangle) is measured as following.
 * Each sampling is measured with 30 transaction trytes and total 200 samples are measured.

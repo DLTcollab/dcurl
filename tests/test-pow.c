@@ -14,19 +14,19 @@
 #define POW_TOTAL 100
 
 #if defined(ENABLE_AVX)
-extern ImplContext PoWAVX_Context;
+extern impl_context_t pow_avx_context;
 #elif defined(ENABLE_SSE)
-extern ImplContext PoWSSE_Context;
+extern impl_context_t pow_sse_context;
 #elif defined(ENABLE_GENERIC)
-extern ImplContext PoWC_Context;
+extern impl_context_t pow_c_context;
 #endif
 
 #if defined(ENABLE_OPENCL)
-extern ImplContext PoWCL_Context;
+extern impl_context_t pow_cl_context;
 #endif
 
-#if defined(ENABLE_FPGA_ACCEL)
-extern ImplContext PoWFPGA_Context;
+#if defined(ENABLE_FPGA)
+extern impl_context_t pow_fpga_context;
 #endif
 
 const char *description[] = {
@@ -42,39 +42,39 @@ const char *description[] = {
     "GPU - OpenCL",
 #endif
 
-#if defined(ENABLE_FPGA_ACCEL)
+#if defined(ENABLE_FPGA)
     "FPGA",
 #endif
 };
 
-double getAvg(const double arr[], int arrLen)
+double get_avg(const double arr[], int arr_len)
 {
     double avg, sum = 0;
 
-    for (int idx = 0; idx < arrLen; idx++) {
+    for (int idx = 0; idx < arr_len; idx++) {
         sum += arr[idx];
     }
-    avg = sum / arrLen;
+    avg = sum / arr_len;
 
     return avg;
 }
 
-double getStdDeviation(const double arr[], int arrLen)
+double get_std_deviation(const double arr[], int arr_len)
 {
     double sigma, variance = 0;
-    double avg = getAvg(arr, arrLen);
+    double avg = get_avg(arr, arr_len);
 
-    for (int idx = 0; idx < arrLen; idx++) {
+    for (int idx = 0; idx < arr_len; idx++) {
         variance += pow(arr[idx] - avg, 2);
     }
-    sigma = sqrt(variance / arrLen);
+    sigma = sqrt(variance / arr_len);
 
     return sigma;
 }
 
 int main()
 {
-    char *trytes =
+    char *transaction_trytes =
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
@@ -117,57 +117,57 @@ int main()
 
     int mwm = 14;
 
-    ImplContext ImplContextArr[] = {
+    impl_context_t impl_context_arr[] = {
 #if defined(ENABLE_AVX)
-        PoWAVX_Context,
+        pow_avx_context,
 #elif defined(ENABLE_SSE)
-        PoWSSE_Context,
+        pow_sse_context,
 #elif defined(ENABLE_GENERIC)
-        PoWC_Context,
+        pow_c_context,
 #endif
 
 #if defined(ENABLE_OPENCL)
-        PoWCL_Context,
+        pow_cl_context,
 #endif
 
-#if defined(ENABLE_FPGA_ACCEL)
-        PoWFPGA_Context,
+#if defined(ENABLE_FPGA)
+        pow_fpga_context,
 #endif
     };
 #if defined(ENABLE_STAT)
-    double hashRateArr[POW_TOTAL];
+    double hash_rate_arr[POW_TOTAL];
     int pow_total = POW_TOTAL;
 #else
     int pow_total = 1;
 #endif
 
 
-    for (int idx = 0; idx < sizeof(ImplContextArr) / sizeof(ImplContext);
+    for (int idx = 0; idx < sizeof(impl_context_arr) / sizeof(impl_context_t);
          idx++) {
         log_info(0, "%s\n", description[idx]);
 
-        ImplContext *PoW_Context_ptr = &ImplContextArr[idx];
+        impl_context_t *pow_context_ptr = &impl_context_arr[idx];
 
         /* test implementation with mwm = 14 */
-        initializeImplContext(PoW_Context_ptr);
+        initialize_impl_context(pow_context_ptr);
         void *pow_ctx =
-            getPoWContext(PoW_Context_ptr, (int8_t *) trytes, mwm, 8);
+            get_pow_context(pow_context_ptr, (int8_t *) transaction_trytes, mwm, 8);
         assert(pow_ctx);
 
         for (int count = 0; count < pow_total; count++) {
-            doThePoW(PoW_Context_ptr, pow_ctx);
-            int8_t *ret_trytes = getPoWResult(PoW_Context_ptr, pow_ctx);
+            do_the_pow(pow_context_ptr, pow_ctx);
+            int8_t *ret_trytes = get_pow_result(pow_context_ptr, pow_ctx);
             assert(ret_trytes);
 #if defined(ENABLE_STAT)
-            PoW_Info pow_info = getPoWInfo(PoW_Context_ptr, pow_ctx);
+            pow_info_t pow_info = get_pow_info(pow_context_ptr, pow_ctx);
 #endif
 
-            Trytes_t *trytes_t =
-                initTrytes(ret_trytes, TRANSACTION_TRYTES_LENGTH);
-            assert(trytes_t);
-            Trytes_t *hash_trytes = hashTrytes(trytes_t);
-            assert(hash_trytes);
-            Trits_t *ret_trits = trits_from_trytes(hash_trytes);
+            trytes_t *trytes =
+                init_trytes(ret_trytes, TRANSACTION_TRYTES_LENGTH);
+            assert(trytes);
+            trytes_t *hashed_trytes = hash_trytes(trytes);
+            assert(hashed_trytes);
+            trits_t *ret_trits = trits_from_trytes(hashed_trytes);
             assert(ret_trits);
 
             /* Validation */
@@ -177,27 +177,27 @@ int main()
             }
 
             free(ret_trytes);
-            freeTrobject(trytes_t);
-            freeTrobject(hash_trytes);
-            freeTrobject(ret_trits);
+            free_trinary_object(trytes);
+            free_trinary_object(hashed_trytes);
+            free_trinary_object(ret_trits);
 
 #if defined(ENABLE_STAT)
-            hashRateArr[count] = pow_info.hash_count / pow_info.time;
+            hash_rate_arr[count] = pow_info.hash_count / pow_info.time;
 #endif
         }
 
-        freePoWContext(PoW_Context_ptr, pow_ctx);
-        destroyImplContext(PoW_Context_ptr);
+        free_pow_context(pow_context_ptr, pow_ctx);
+        destroy_impl_context(pow_context_ptr);
 
         log_info(0, "PoW execution times: %d times.\n", pow_total);
 #if defined(ENABLE_STAT)
         log_info(0, "Hash rate average value: %.3lf kH/sec,\n",
-                 getAvg(hashRateArr, pow_total) / 1000);
+                 get_avg(hash_rate_arr, pow_total) / 1000);
         log_info(
             0,
             "with the range +- %.3lf kH/sec including 95%% of the hash rate "
             "values.\n",
-            2 * getStdDeviation(hashRateArr, pow_total) / 1000);
+            2 * get_std_deviation(hash_rate_arr, pow_total) / 1000);
 #endif
         log_info(0, "Success.\n");
     }

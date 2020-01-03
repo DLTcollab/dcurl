@@ -42,28 +42,28 @@
 #define REPEAT11(str) REPEAT10(str), str
 #define REPEAT(n, str) REPEAT##n(str)
 
-extern int8_t TrytesToTritsMappings[][3];
+extern int8_t trytes_to_trits_mappings[][3];
 
-static inline bool validateTrits_sse42(Trobject_t *trits)
+static inline bool validate_trits_sse42(trinary_object_t *trits)
 {
     const int block_8bit = BLOCK_8BIT(__m128i);
-    const int posOneElement = 0x01010101;
-    const int negOneElement = 0xFFFFFFFF;
-    const __m128i posOne = _mm_set_epi32(posOneElement, posOneElement,
-                                         posOneElement, posOneElement);
-    const __m128i negOne = _mm_set_epi32(negOneElement, negOneElement,
-                                         negOneElement, negOneElement);
+    const int pos_one_element = 0x01010101;
+    const int neg_one_element = 0xFFFFFFFF;
+    const __m128i pos_one = _mm_set_epi32(pos_one_element, pos_one_element,
+                                         pos_one_element, pos_one_element);
+    const __m128i neg_one = _mm_set_epi32(neg_one_element, neg_one_element,
+                                         neg_one_element, neg_one_element);
     /* The for loop handles the group of the 128-bit characters without the
      * end-of-string */
     for (int i = 0; i < (trits->len) / block_8bit; i++) {
         __m128i data = _mm_loadu_si128((__m128i *) (trits->data) + i);
         __m128i result = _mm_or_si128(
             /* > 1 */
-            _mm_cmpgt_epi8(data, posOne),
+            _mm_cmpgt_epi8(data, pos_one),
             /* < -1 */
-            _mm_cmplt_epi8(data, negOne));
-        int notValid = !_mm_test_all_zeros(result, result);
-        if (notValid)
+            _mm_cmplt_epi8(data, neg_one));
+        int not_valid = !_mm_test_all_zeros(result, result);
+        if (not_valid)
             return false;
     }
     /* The for loop handles the rest of the characters until the end-of-string
@@ -77,7 +77,7 @@ static inline bool validateTrits_sse42(Trobject_t *trits)
 }
 
 #if defined(__SSE4_2__)
-static inline bool validateTrytes_sse42(Trobject_t *trytes)
+static inline bool validate_trytes_sse42(trinary_object_t *trytes)
 {
     const int block_8bit = BLOCK_8BIT(__m128i);
     /* Characters from 'A' to 'Z' and '9' to '9' */
@@ -90,7 +90,7 @@ static inline bool validateTrytes_sse42(Trobject_t *trytes)
         /* Check whether the characters are in the defined range or not
          * Return 0 if all the characters are in the range, otherwise return 1
          */
-        int notValid = _mm_cmpistrc(pattern, src,
+        int not_valid = _mm_cmpistrc(pattern, src,
                                     /* Signed byte comparison */
                                     _SIDD_SBYTE_OPS |
                                         /* Compare with the character range */
@@ -98,7 +98,7 @@ static inline bool validateTrytes_sse42(Trobject_t *trytes)
                                         /* Negate the comparison result */
                                         _SIDD_MASKED_NEGATIVE_POLARITY);
 
-        if (notValid)
+        if (not_valid)
             return false;
     }
     /* The for loop handles the rest of the characters until the end-of-string
@@ -112,142 +112,142 @@ static inline bool validateTrytes_sse42(Trobject_t *trytes)
     return true;
 }
 
-static inline Trobject_t *trytes_from_trits_sse42(Trobject_t *trits)
+static inline trinary_object_t *trytes_from_trits_sse42(trinary_object_t *trits)
 {
-    Trobject_t *trytes = NULL;
+    trinary_object_t *trytes = NULL;
     int8_t *src = (int8_t *) malloc(trits->len / 3);
 
     const int block_8bit = BLOCK_8BIT(__m128i);
-    const int8_t setMSB = 0x80;
-    const __m128i tryteAlphabet[2] = {
-        _mm_setr_epi8(TryteAlphabet[0], TryteAlphabet[1], TryteAlphabet[2],
-                      TryteAlphabet[3], TryteAlphabet[4], TryteAlphabet[5],
-                      TryteAlphabet[6], TryteAlphabet[7], TryteAlphabet[8],
-                      TryteAlphabet[9], TryteAlphabet[10], TryteAlphabet[11],
-                      TryteAlphabet[12], TryteAlphabet[13], TryteAlphabet[14],
-                      TryteAlphabet[15]),
-        _mm_setr_epi8(TryteAlphabet[16], TryteAlphabet[17], TryteAlphabet[18],
-                      TryteAlphabet[19], TryteAlphabet[20], TryteAlphabet[21],
-                      TryteAlphabet[22], TryteAlphabet[23], TryteAlphabet[24],
-                      TryteAlphabet[25], TryteAlphabet[26], 0, 0, 0, 0, 0)};
+    const int8_t set_msb = 0x80;
+    const __m128i tryte_alphabet_for_simd[2] = {
+        _mm_setr_epi8(tryte_alphabet[0], tryte_alphabet[1], tryte_alphabet[2],
+                      tryte_alphabet[3], tryte_alphabet[4], tryte_alphabet[5],
+                      tryte_alphabet[6], tryte_alphabet[7], tryte_alphabet[8],
+                      tryte_alphabet[9], tryte_alphabet[10], tryte_alphabet[11],
+                      tryte_alphabet[12], tryte_alphabet[13], tryte_alphabet[14],
+                      tryte_alphabet[15]),
+        _mm_setr_epi8(tryte_alphabet[16], tryte_alphabet[17], tryte_alphabet[18],
+                      tryte_alphabet[19], tryte_alphabet[20], tryte_alphabet[21],
+                      tryte_alphabet[22], tryte_alphabet[23], tryte_alphabet[24],
+                      tryte_alphabet[25], tryte_alphabet[26], 0, 0, 0, 0, 0)};
     /* For shuffling the bytes of the input trits */
-    const __m128i shuffleLow[3] = {
-        _mm_setr_epi8(REPEAT(0, setMSB) COMMA(0) INDEX_3DIFF_0F COMMA(1)
-                          REPEAT(10, setMSB)),
-        _mm_setr_epi8(REPEAT(6, setMSB) COMMA(1) INDEX_3DIFF_2E COMMA(1)
-                          REPEAT(5, setMSB)),
-        _mm_setr_epi8(REPEAT(11, setMSB) COMMA(1) INDEX_3DIFF_1D COMMA(0)
-                          REPEAT(0, setMSB))};
-    const __m128i shuffleMid[3] = {
-        _mm_setr_epi8(REPEAT(0, setMSB) COMMA(0) INDEX_3DIFF_1D COMMA(1)
-                          REPEAT(11, setMSB)),
-        _mm_setr_epi8(REPEAT(5, setMSB) COMMA(1) INDEX_3DIFF_0F COMMA(1)
-                          REPEAT(5, setMSB)),
-        _mm_setr_epi8(REPEAT(11, setMSB) COMMA(1) INDEX_3DIFF_2E COMMA(0)
-                          REPEAT(0, setMSB))};
-    const __m128i shuffleHigh[3] = {
-        _mm_setr_epi8(REPEAT(0, setMSB) COMMA(0) INDEX_3DIFF_2E COMMA(1)
-                          REPEAT(11, setMSB)),
-        _mm_setr_epi8(REPEAT(5, setMSB) COMMA(1) INDEX_3DIFF_1D COMMA(1)
-                          REPEAT(6, setMSB)),
-        _mm_setr_epi8(REPEAT(10, setMSB) COMMA(1) INDEX_3DIFF_0F COMMA(0)
-                          REPEAT(0, setMSB))};
+    const __m128i shuffle_low[3] = {
+        _mm_setr_epi8(REPEAT(0, set_msb) COMMA(0) INDEX_3DIFF_0F COMMA(1)
+                          REPEAT(10, set_msb)),
+        _mm_setr_epi8(REPEAT(6, set_msb) COMMA(1) INDEX_3DIFF_2E COMMA(1)
+                          REPEAT(5, set_msb)),
+        _mm_setr_epi8(REPEAT(11, set_msb) COMMA(1) INDEX_3DIFF_1D COMMA(0)
+                          REPEAT(0, set_msb))};
+    const __m128i shuffle_mid[3] = {
+        _mm_setr_epi8(REPEAT(0, set_msb) COMMA(0) INDEX_3DIFF_1D COMMA(1)
+                          REPEAT(11, set_msb)),
+        _mm_setr_epi8(REPEAT(5, set_msb) COMMA(1) INDEX_3DIFF_0F COMMA(1)
+                          REPEAT(5, set_msb)),
+        _mm_setr_epi8(REPEAT(11, set_msb) COMMA(1) INDEX_3DIFF_2E COMMA(0)
+                          REPEAT(0, set_msb))};
+    const __m128i shuffle_high[3] = {
+        _mm_setr_epi8(REPEAT(0, set_msb) COMMA(0) INDEX_3DIFF_2E COMMA(1)
+                          REPEAT(11, set_msb)),
+        _mm_setr_epi8(REPEAT(5, set_msb) COMMA(1) INDEX_3DIFF_1D COMMA(1)
+                          REPEAT(6, set_msb)),
+        _mm_setr_epi8(REPEAT(10, set_msb) COMMA(1) INDEX_3DIFF_0F COMMA(0)
+                          REPEAT(0, set_msb))};
     /* The mask with interleaved bytes of 0xFF and 0x00 */
-    const __m128i byteInterMask =
+    const __m128i byte_inter_mask =
         _mm_set_epi32(0xFF00FF00, 0xFF00FF00, 0xFF00FF00, 0xFF00FF00);
 
     /* Start converting */
     for (int i = 0; i < trits->len / 3 / block_8bit; i++) {
         /* Get trit data */
-        __m128i dataFirst = _mm_loadu_si128((__m128i *) (trits->data) + i * 3);
-        __m128i dataMid =
+        __m128i data_first = _mm_loadu_si128((__m128i *) (trits->data) + i * 3);
+        __m128i data_mid =
             _mm_loadu_si128((__m128i *) (trits->data) + i * 3 + 1);
-        __m128i dataLast =
+        __m128i data_last =
             _mm_loadu_si128((__m128i *) (trits->data) + i * 3 + 2);
         /*
          * Each block represents a trit.
-         *                                           shuffle
-         *             ----------------        ------                  ------     ------     ------
-         * dataFirst = | a1 | a2 | a3 | ...... | f1 |       lowTrit  = | a1 | ... | f1 | ... | p1 |
-         *             ----------------        ------                  ------     ------     ------
-         *             ----------------        ------                  ------     ------     ------
-         * dataMid   = | f2 | f3 | g1 | ...... | k2 |  =>   midTrit  = | a2 | ... | f2 | ... | p2 |
-         *             ----------------        ------                  ------     ------     ------
-         *             ----------------        ------                  ------     ------     ------
-         * dataLast  = | k3 | l1 | l2 | ...... | p3 |       highTrit = | a3 | ... | f3 | ... | p3 |
-         *             ----------------        ------                  ------     ------     ------
+         *                                            shuffle
+         *              ----------------        ------                  ------     ------     ------
+         * data_first = | a1 | a2 | a3 | ...... | f1 |       low_trit  = | a1 | ... | f1 | ... | p1 |
+         *              ----------------        ------                  ------     ------     ------
+         *              ----------------        ------                  ------     ------     ------
+         * data_mid   = | f2 | f3 | g1 | ...... | k2 |  =>   mid_trit  = | a2 | ... | f2 | ... | p2 |
+         *              ----------------        ------                  ------     ------     ------
+         *              ----------------        ------                  ------     ------     ------
+         * data_last  = | k3 | l1 | l2 | ...... | p3 |       high_trit = | a3 | ... | f3 | ... | p3 |
+         *              ----------------        ------                  ------     ------     ------
          */
-        __m128i lowTrit = _mm_or_si128(
-            _mm_shuffle_epi8(dataFirst, shuffleLow[0]),
-            _mm_or_si128(_mm_shuffle_epi8(dataMid, shuffleLow[1]),
-                         _mm_shuffle_epi8(dataLast, shuffleLow[2])));
-        __m128i midTrit = _mm_or_si128(
-            _mm_shuffle_epi8(dataFirst, shuffleMid[0]),
-            _mm_or_si128(_mm_shuffle_epi8(dataMid, shuffleMid[1]),
-                         _mm_shuffle_epi8(dataLast, shuffleMid[2])));
-        __m128i highTrit = _mm_or_si128(
-            _mm_shuffle_epi8(dataFirst, shuffleHigh[0]),
-            _mm_or_si128(_mm_shuffle_epi8(dataMid, shuffleHigh[1]),
-                         _mm_shuffle_epi8(dataLast, shuffleHigh[2])));
-        /* lowResult = (lowTrit) */
-        __m128i lowResult = lowTrit;
-        /* midResult = (midTrit * 3) */
-        __m128i midResult = _mm_or_si128(
+        __m128i low_trit = _mm_or_si128(
+            _mm_shuffle_epi8(data_first, shuffle_low[0]),
+            _mm_or_si128(_mm_shuffle_epi8(data_mid, shuffle_low[1]),
+                         _mm_shuffle_epi8(data_last, shuffle_low[2])));
+        __m128i mid_trit = _mm_or_si128(
+            _mm_shuffle_epi8(data_first, shuffle_mid[0]),
+            _mm_or_si128(_mm_shuffle_epi8(data_mid, shuffle_mid[1]),
+                         _mm_shuffle_epi8(data_last, shuffle_mid[2])));
+        __m128i high_trit = _mm_or_si128(
+            _mm_shuffle_epi8(data_first, shuffle_high[0]),
+            _mm_or_si128(_mm_shuffle_epi8(data_mid, shuffle_high[1]),
+                         _mm_shuffle_epi8(data_last, shuffle_high[2])));
+        /* low_result = (low_trit) */
+        __m128i low_result = low_trit;
+        /* mid_result = (mid_trit * 3) */
+        __m128i mid_result = _mm_or_si128(
             _mm_and_si128(
-                byteInterMask,
-                _mm_mullo_epi16(_mm_and_si128(midTrit, byteInterMask),
+                byte_inter_mask,
+                _mm_mullo_epi16(_mm_and_si128(mid_trit, byte_inter_mask),
                                 _mm_set_epi16(0x0003, 0x0003, 0x0003, 0x0003,
                                               0x0003, 0x0003, 0x0003, 0x0003))),
             _mm_andnot_si128(
-                byteInterMask,
+                byte_inter_mask,
                 _mm_mullo_epi16(
-                    _mm_and_si128(midTrit, ~byteInterMask),
+                    _mm_and_si128(mid_trit, ~byte_inter_mask),
                     _mm_set_epi16(0x0003, 0x0003, 0x0003, 0x0003, 0x0003,
                                   0x0003, 0x0003, 0x0003))));
-        /* highResult = (highTrit * 9) */
-        __m128i highResult = _mm_or_si128(
+        /* high_result = (high_trit * 9) */
+        __m128i high_result = _mm_or_si128(
             _mm_and_si128(
-                byteInterMask,
-                _mm_mullo_epi16(_mm_and_si128(highTrit, byteInterMask),
+                byte_inter_mask,
+                _mm_mullo_epi16(_mm_and_si128(high_trit, byte_inter_mask),
                                 _mm_set_epi16(0x0009, 0x0009, 0x0009, 0x0009,
                                               0x0009, 0x0009, 0x0009, 0x0009))),
             _mm_andnot_si128(
-                byteInterMask,
+                byte_inter_mask,
                 _mm_mullo_epi16(
-                    _mm_and_si128(highTrit, ~byteInterMask),
+                    _mm_and_si128(high_trit, ~byte_inter_mask),
                     _mm_set_epi16(0x0009, 0x0009, 0x0009, 0x0009, 0x0009,
                                   0x0009, 0x0009, 0x0009))));
-        /* alphabetOffset = (lowResult + midResult + highResult) */
-        __m128i alphabetOffset =
-            _mm_add_epi8(lowResult, _mm_add_epi8(midResult, highResult));
+        /* alphabet_offset = (low_result + mid_result + high_result) */
+        __m128i alphabet_offset =
+            _mm_add_epi8(low_result, _mm_add_epi8(mid_result, high_result));
         /* Check whether the offset is < 0 */
-        __m128i tmpMask =
-            _mm_cmplt_epi8(alphabetOffset, _mm_set_epi32(0, 0, 0, 0));
+        __m128i tmp_mask =
+            _mm_cmplt_epi8(alphabet_offset, _mm_set_epi32(0, 0, 0, 0));
         /* If the offset is < 0, then offset += 27 */
-        __m128i alphabetOffsetAdd = _mm_add_epi8(
-            alphabetOffset,
+        __m128i alphabet_offset_add = _mm_add_epi8(
+            alphabet_offset,
             _mm_set_epi32(0x1B1B1B1B, 0x1B1B1B1B, 0x1B1B1B1B, 0x1B1B1B1B));
-        alphabetOffset =
-            _mm_or_si128(_mm_and_si128(tmpMask, alphabetOffsetAdd),
-                         _mm_andnot_si128(tmpMask, alphabetOffset));
+        alphabet_offset =
+            _mm_or_si128(_mm_and_si128(tmp_mask, alphabet_offset_add),
+                         _mm_andnot_si128(tmp_mask, alphabet_offset));
 
         /* Assign tryte alphabet */
         /* If the offset is >= 16 (> 15), then the compared result byte = 0xFF,
          * else = 0x00 */
-        __m128i cmpResult = _mm_cmpgt_epi8(
-            alphabetOffset, _mm_set_epi8(15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+        __m128i cmp_result = _mm_cmpgt_epi8(
+            alphabet_offset, _mm_set_epi8(15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
                                          15, 15, 15, 15, 15, 15));
-        /* Use the offset to get the correct tryte alphabet from tryteAlphabet[]
+        /* Use the offset to get the correct tryte alphabet from tryte_alphabet_for_simd[]
          */
-        __m128i resultLt = _mm_shuffle_epi8(tryteAlphabet[0], alphabetOffset);
-        __m128i resultGe = _mm_shuffle_epi8(
-            tryteAlphabet[1],
-            /* alphabetOffset - 16 */
-            _mm_sub_epi8(alphabetOffset,
+        __m128i result_lt = _mm_shuffle_epi8(tryte_alphabet_for_simd[0], alphabet_offset);
+        __m128i result_ge = _mm_shuffle_epi8(
+            tryte_alphabet_for_simd[1],
+            /* alphabet_offset - 16 */
+            _mm_sub_epi8(alphabet_offset,
                          _mm_set_epi8(16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
                                       16, 16, 16, 16, 16, 16)));
-        __m128i result = _mm_or_si128(_mm_andnot_si128(cmpResult, resultLt),
-                                      _mm_and_si128(cmpResult, resultGe));
+        __m128i result = _mm_or_si128(_mm_andnot_si128(cmp_result, result_lt),
+                                      _mm_and_si128(cmp_result, result_ge));
         /* Store the tryte result */
         _mm_store_si128((__m128i *) (src + i * block_8bit), result);
     }
@@ -259,96 +259,96 @@ static inline Trobject_t *trytes_from_trits_sse42(Trobject_t *trits)
 
         if (j < 0)
             j += 27;
-        src[i] = TryteAlphabet[j];
+        src[i] = tryte_alphabet[j];
     }
 
-    trytes = initTrytes(src, trits->len / 3);
+    trytes = init_trytes(src, trits->len / 3);
     free(src);
 
     return trytes;
 }
 
-static inline Trobject_t *trits_from_trytes_sse42(Trobject_t *trytes)
+static inline trinary_object_t *trits_from_trytes_sse42(trinary_object_t *trytes)
 {
-    Trobject_t *trits = NULL;
+    trinary_object_t *trits = NULL;
     int8_t *src = (int8_t *) malloc(trytes->len * 3);
 
     const int block_8bit = BLOCK_8BIT(__m128i);
     /* For setting the most significant bit of a byte */
-    const int8_t setMSB = 0x80;
+    const int8_t set_msb = 0x80;
     /* The set and range for indicating the trits value (0, 1, -1)
      * of the corresponding trytes */
     /* '9', 'C', 'F', 'I', 'L', 'O', 'R', 'U', 'X' */
-    const char setLowTrit0[BYTE_OF_128BIT] = "9CFILORUX";
+    const char set_low_trit_0[BYTE_OF_128BIT] = "9CFILORUX";
     /* 'A', 'D', 'G', 'J', 'M', 'P', 'S', 'V', 'Y' */
-    const char setLowTritP1[BYTE_OF_128BIT] = "ADGJMPSVY";
+    const char set_low_trit_p1[BYTE_OF_128BIT] = "ADGJMPSVY";
     /* 'B', 'E', 'H', 'K', 'N', 'Q', 'T', 'W', 'Z' */
-    const char setLowTritN1[BYTE_OF_128BIT] = "BEHKNQTWZ";
+    const char set_low_trit_n1[BYTE_OF_128BIT] = "BEHKNQTWZ";
     /* '9', 'A', 'H', 'I', 'J', 'Q', 'R', 'S', 'Z' */
-    const char rangeMidTrit0[BYTE_OF_128BIT] = "99AAHJQSZZ";
+    const char range_mid_trit_0[BYTE_OF_128BIT] = "99AAHJQSZZ";
     /* 'B', 'C', 'D', 'K', 'L', 'M', 'T', 'U', 'V' */
-    const char rangeMidTritP1[BYTE_OF_128BIT] = "BDKMTV";
+    const char range_mid_trit_p1[BYTE_OF_128BIT] = "BDKMTV";
     /* 'E', 'F', 'G', 'N', 'O', 'P', 'W', 'X', 'Y' */
-    const char rangeMidTritN1[BYTE_OF_128BIT] = "EGNPWY";
+    const char range_mid_trit_n1[BYTE_OF_128BIT] = "EGNPWY";
     /* '9', 'A', 'B', 'C', 'D', 'W', 'X', 'Y', 'Z' */
-    const char rangeHighTrit0[BYTE_OF_128BIT] = "99ADWZ";
+    const char range_high_trit_0[BYTE_OF_128BIT] = "99ADWZ";
     /* 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M' */
-    const char rangeHighTritP1[BYTE_OF_128BIT] = "EM";
+    const char range_high_trit_p1[BYTE_OF_128BIT] = "EM";
     /* 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V' */
-    const char rangeHighTritN1[BYTE_OF_128BIT] = "NV";
+    const char range_high_trit_n1[BYTE_OF_128BIT] = "NV";
     /* Convert the char array to the 128-bit data */
-    const __m128i patternLowTrit0 = _mm_loadu_si128((__m128i *) (setLowTrit0));
-    const __m128i patternLowTritP1 =
-        _mm_loadu_si128((__m128i *) (setLowTritP1));
-    const __m128i patternLowTritN1 =
-        _mm_loadu_si128((__m128i *) (setLowTritN1));
-    const __m128i patternMidTrit0 =
-        _mm_loadu_si128((__m128i *) (rangeMidTrit0));
-    const __m128i patternMidTritP1 =
-        _mm_loadu_si128((__m128i *) (rangeMidTritP1));
-    const __m128i patternMidTritN1 =
-        _mm_loadu_si128((__m128i *) (rangeMidTritN1));
-    const __m128i patternHighTrit0 =
-        _mm_loadu_si128((__m128i *) (rangeHighTrit0));
-    const __m128i patternHighTritP1 =
-        _mm_loadu_si128((__m128i *) (rangeHighTritP1));
-    const __m128i patternHighTritN1 =
-        _mm_loadu_si128((__m128i *) (rangeHighTritN1));
+    const __m128i pattern_low_trit_0 = _mm_loadu_si128((__m128i *) (set_low_trit_0));
+    const __m128i pattern_low_trit_p1 =
+        _mm_loadu_si128((__m128i *) (set_low_trit_p1));
+    const __m128i pattern_low_trit_n1 =
+        _mm_loadu_si128((__m128i *) (set_low_trit_n1));
+    const __m128i pattern_mid_trit_0 =
+        _mm_loadu_si128((__m128i *) (range_mid_trit_0));
+    const __m128i pattern_mid_trit_p1 =
+        _mm_loadu_si128((__m128i *) (range_mid_trit_p1));
+    const __m128i pattern_mid_trit_n1 =
+        _mm_loadu_si128((__m128i *) (range_mid_trit_n1));
+    const __m128i pattern_high_trit_0 =
+        _mm_loadu_si128((__m128i *) (range_high_trit_0));
+    const __m128i pattern_high_trit_p1 =
+        _mm_loadu_si128((__m128i *) (range_high_trit_p1));
+    const __m128i pattern_high_trit_n1 =
+        _mm_loadu_si128((__m128i *) (range_high_trit_n1));
     /* The 128-bit data with the repeated same bytes */
-    const __m128i posOne = _mm_set1_epi8(1);
-    const __m128i negOne = _mm_set1_epi8(-1);
+    const __m128i pos_one = _mm_set1_epi8(1);
+    const __m128i neg_one = _mm_set1_epi8(-1);
     const __m128i zero = _mm_set1_epi8(0);
     /* For shuffling the bytes of the trits transformed from the input trytes */
-    const __m128i shuffleFirst[3] = {
-        _mm_setr_epi8(0x00, REPEAT2(setMSB), 0x01, REPEAT2(setMSB), 0x02,
-                      REPEAT2(setMSB), 0x03, REPEAT2(setMSB), 0x04,
-                      REPEAT2(setMSB), 0x05),
-        _mm_setr_epi8(REPEAT1(setMSB), 0x00, REPEAT2(setMSB), 0x01,
-                      REPEAT2(setMSB), 0x02, REPEAT2(setMSB), 0x03,
-                      REPEAT2(setMSB), 0x04, REPEAT2(setMSB)),
-        _mm_setr_epi8(REPEAT2(setMSB), 0x00, REPEAT2(setMSB), 0x01,
-                      REPEAT2(setMSB), 0x02, REPEAT2(setMSB), 0x03,
-                      REPEAT2(setMSB), 0x04, REPEAT1(setMSB))};
-    const __m128i shuffleMid[3] = {
-        _mm_setr_epi8(REPEAT2(setMSB), 0x06, REPEAT2(setMSB), 0x07,
-                      REPEAT2(setMSB), 0x08, REPEAT2(setMSB), 0x09,
-                      REPEAT2(setMSB), 0x0A, REPEAT1(setMSB)),
-        _mm_setr_epi8(0x05, REPEAT2(setMSB), 0x06, REPEAT2(setMSB), 0x07,
-                      REPEAT2(setMSB), 0x08, REPEAT2(setMSB), 0x09,
-                      REPEAT2(setMSB), 0x0A),
-        _mm_setr_epi8(REPEAT1(setMSB), 0x05, REPEAT2(setMSB), 0x06,
-                      REPEAT2(setMSB), 0x07, REPEAT2(setMSB), 0x08,
-                      REPEAT2(setMSB), 0x09, REPEAT2(setMSB))};
-    const __m128i shuffleLast[3] = {
-        _mm_setr_epi8(REPEAT1(setMSB), 0x0B, REPEAT2(setMSB), 0x0C,
-                      REPEAT2(setMSB), 0x0D, REPEAT2(setMSB), 0x0E,
-                      REPEAT2(setMSB), 0x0F, REPEAT2(setMSB)),
-        _mm_setr_epi8(REPEAT2(setMSB), 0x0B, REPEAT2(setMSB), 0x0C,
-                      REPEAT2(setMSB), 0x0D, REPEAT2(setMSB), 0x0E,
-                      REPEAT2(setMSB), 0x0F, REPEAT1(setMSB)),
-        _mm_setr_epi8(0x0A, REPEAT2(setMSB), 0x0B, REPEAT2(setMSB), 0x0C,
-                      REPEAT2(setMSB), 0x0D, REPEAT2(setMSB), 0x0E,
-                      REPEAT2(setMSB), 0x0F)};
+    const __m128i shuffle_first[3] = {
+        _mm_setr_epi8(0x00, REPEAT2(set_msb), 0x01, REPEAT2(set_msb), 0x02,
+                      REPEAT2(set_msb), 0x03, REPEAT2(set_msb), 0x04,
+                      REPEAT2(set_msb), 0x05),
+        _mm_setr_epi8(REPEAT1(set_msb), 0x00, REPEAT2(set_msb), 0x01,
+                      REPEAT2(set_msb), 0x02, REPEAT2(set_msb), 0x03,
+                      REPEAT2(set_msb), 0x04, REPEAT2(set_msb)),
+        _mm_setr_epi8(REPEAT2(set_msb), 0x00, REPEAT2(set_msb), 0x01,
+                      REPEAT2(set_msb), 0x02, REPEAT2(set_msb), 0x03,
+                      REPEAT2(set_msb), 0x04, REPEAT1(set_msb))};
+    const __m128i shuffle_mid[3] = {
+        _mm_setr_epi8(REPEAT2(set_msb), 0x06, REPEAT2(set_msb), 0x07,
+                      REPEAT2(set_msb), 0x08, REPEAT2(set_msb), 0x09,
+                      REPEAT2(set_msb), 0x0A, REPEAT1(set_msb)),
+        _mm_setr_epi8(0x05, REPEAT2(set_msb), 0x06, REPEAT2(set_msb), 0x07,
+                      REPEAT2(set_msb), 0x08, REPEAT2(set_msb), 0x09,
+                      REPEAT2(set_msb), 0x0A),
+        _mm_setr_epi8(REPEAT1(set_msb), 0x05, REPEAT2(set_msb), 0x06,
+                      REPEAT2(set_msb), 0x07, REPEAT2(set_msb), 0x08,
+                      REPEAT2(set_msb), 0x09, REPEAT2(set_msb))};
+    const __m128i shuffle_last[3] = {
+        _mm_setr_epi8(REPEAT1(set_msb), 0x0B, REPEAT2(set_msb), 0x0C,
+                      REPEAT2(set_msb), 0x0D, REPEAT2(set_msb), 0x0E,
+                      REPEAT2(set_msb), 0x0F, REPEAT2(set_msb)),
+        _mm_setr_epi8(REPEAT2(set_msb), 0x0B, REPEAT2(set_msb), 0x0C,
+                      REPEAT2(set_msb), 0x0D, REPEAT2(set_msb), 0x0E,
+                      REPEAT2(set_msb), 0x0F, REPEAT1(set_msb)),
+        _mm_setr_epi8(0x0A, REPEAT2(set_msb), 0x0B, REPEAT2(set_msb), 0x0C,
+                      REPEAT2(set_msb), 0x0D, REPEAT2(set_msb), 0x0E,
+                      REPEAT2(set_msb), 0x0F)};
 
     /* Start converting */
     /* The for loop handles the group of the 128-bit characters without the
@@ -358,98 +358,98 @@ static inline Trobject_t *trits_from_trytes_sse42(Trobject_t *trytes)
         __m128i data = _mm_loadu_si128((__m128i *) (trytes->data) + i);
 
         /* The masks for setting the corresponding trits */
-        __m128i maskLowTrit0 = _mm_cmpistrm(
-            patternLowTrit0, data,
+        __m128i mask_low_trit_0 = _mm_cmpistrm(
+            pattern_low_trit_0, data,
             /* Signed byte comparison */
             _SIDD_SBYTE_OPS |
                 /* Compare with the character set */
                 _SIDD_CMP_EQUAL_ANY |
                 /* Expand the corrsponding bit result to byte unit */
                 _SIDD_UNIT_MASK);
-        __m128i maskLowTritP1 = _mm_cmpistrm(
-            patternLowTritP1, data,
+        __m128i mask_low_trit_p1 = _mm_cmpistrm(
+            pattern_low_trit_p1, data,
             _SIDD_SBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_UNIT_MASK);
-        __m128i maskLowTritN1 = _mm_cmpistrm(
-            patternLowTritN1, data,
+        __m128i mask_low_trit_n1 = _mm_cmpistrm(
+            pattern_low_trit_n1, data,
             _SIDD_SBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_UNIT_MASK);
-        __m128i maskMidTrit0 = _mm_cmpistrm(
-            patternMidTrit0, data,
+        __m128i mask_mid_trit_0 = _mm_cmpistrm(
+            pattern_mid_trit_0, data,
             /* Signed byte comparison */
             _SIDD_SBYTE_OPS |
                 /* Compare with the character range */
                 _SIDD_CMP_RANGES |
                 /* Expand the corrsponding bit result to byte unit */
                 _SIDD_UNIT_MASK);
-        __m128i maskMidTritP1 =
-            _mm_cmpistrm(patternMidTritP1, data,
+        __m128i mask_mid_trit_p1 =
+            _mm_cmpistrm(pattern_mid_trit_p1, data,
                          _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
-        __m128i maskMidTritN1 =
-            _mm_cmpistrm(patternMidTritN1, data,
+        __m128i mask_mid_trit_n1 =
+            _mm_cmpistrm(pattern_mid_trit_n1, data,
                          _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
-        __m128i maskHighTrit0 =
-            _mm_cmpistrm(patternHighTrit0, data,
+        __m128i mask_high_trit_0 =
+            _mm_cmpistrm(pattern_high_trit_0, data,
                          _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
-        __m128i maskHighTritP1 =
-            _mm_cmpistrm(patternHighTritP1, data,
+        __m128i mask_high_trit_p1 =
+            _mm_cmpistrm(pattern_high_trit_p1, data,
                          _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
-        __m128i maskHighTritN1 =
-            _mm_cmpistrm(patternHighTritN1, data,
+        __m128i mask_high_trit_n1 =
+            _mm_cmpistrm(pattern_high_trit_n1, data,
                          _SIDD_SBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_UNIT_MASK);
 
         /*
          * Each block represents a trit.
-         *                                        shuffle
-         *            ------     ------     ------                   ----------------        ------ 
-         * lowTrit  = | a1 | ... | f1 | ... | p1 |       dataFirst = | a1 | a2 | a3 | ...... | f1 |    
-         *            ------     ------     ------                   ----------------        ------    
-         *            ------     ------     ------                   ----------------        ------    
-         * midTrit  = | a2 | ... | f2 | ... | p2 |   =>  dataMid   = | f2 | f3 | g1 | ...... | k2 |    
-         *            ------     ------     ------                   ----------------        ------    
-         *            ------     ------     ------                   ----------------        ------    
-         * highTrit = | a3 | ... | f3 | ... | p3 |       dataLast  = | k3 | l1 | l2 | ...... | p3 |    
-         *            ------     ------     ------                   ----------------        ------    
+         *                                         shuffle
+         *             ------     ------     ------                   ----------------        ------ 
+         * low_trit  = | a1 | ... | f1 | ... | p1 |       data_first = | a1 | a2 | a3 | ...... | f1 |    
+         *             ------     ------     ------                   ----------------        ------    
+         *             ------     ------     ------                   ----------------        ------    
+         * mid_trit  = | a2 | ... | f2 | ... | p2 |   =>  data_mid   = | f2 | f3 | g1 | ...... | k2 |    
+         *             ------     ------     ------                   ----------------        ------    
+         *             ------     ------     ------                   ----------------        ------    
+         * high_trit = | a3 | ... | f3 | ... | p3 |       data_last  = | k3 | l1 | l2 | ...... | p3 |    
+         *             ------     ------     ------                   ----------------        ------    
          */
-        __m128i lowTrit =
-            _mm_or_si128(_mm_and_si128(maskLowTrit0, zero),
-                         _mm_or_si128(_mm_and_si128(maskLowTritP1, posOne),
-                                      _mm_and_si128(maskLowTritN1, negOne)));
-        __m128i midTrit =
-            _mm_or_si128(_mm_and_si128(maskMidTrit0, zero),
-                         _mm_or_si128(_mm_and_si128(maskMidTritP1, posOne),
-                                      _mm_and_si128(maskMidTritN1, negOne)));
-        __m128i highTrit =
-            _mm_or_si128(_mm_and_si128(maskHighTrit0, zero),
-                         _mm_or_si128(_mm_and_si128(maskHighTritP1, posOne),
-                                      _mm_and_si128(maskHighTritN1, negOne)));
-        __m128i dataFirst, dataMid, dataLast;
-        dataFirst = _mm_or_si128(
-            _mm_shuffle_epi8(lowTrit, shuffleFirst[0]),
-            _mm_or_si128(_mm_shuffle_epi8(midTrit, shuffleFirst[1]),
-                         _mm_shuffle_epi8(highTrit, shuffleFirst[2])));
-        dataMid = _mm_or_si128(
-            _mm_shuffle_epi8(lowTrit, shuffleMid[0]),
-            _mm_or_si128(_mm_shuffle_epi8(midTrit, shuffleMid[1]),
-                         _mm_shuffle_epi8(highTrit, shuffleMid[2])));
-        dataLast = _mm_or_si128(
-            _mm_shuffle_epi8(lowTrit, shuffleLast[0]),
-            _mm_or_si128(_mm_shuffle_epi8(midTrit, shuffleLast[1]),
-                         _mm_shuffle_epi8(highTrit, shuffleLast[2])));
+        __m128i low_trit =
+            _mm_or_si128(_mm_and_si128(mask_low_trit_0, zero),
+                         _mm_or_si128(_mm_and_si128(mask_low_trit_p1, pos_one),
+                                      _mm_and_si128(mask_low_trit_n1, neg_one)));
+        __m128i mid_trit =
+            _mm_or_si128(_mm_and_si128(mask_mid_trit_0, zero),
+                         _mm_or_si128(_mm_and_si128(mask_mid_trit_p1, pos_one),
+                                      _mm_and_si128(mask_mid_trit_n1, neg_one)));
+        __m128i high_trit =
+            _mm_or_si128(_mm_and_si128(mask_high_trit_0, zero),
+                         _mm_or_si128(_mm_and_si128(mask_high_trit_p1, pos_one),
+                                      _mm_and_si128(mask_high_trit_n1, neg_one)));
+        __m128i data_first, data_mid, data_last;
+        data_first = _mm_or_si128(
+            _mm_shuffle_epi8(low_trit, shuffle_first[0]),
+            _mm_or_si128(_mm_shuffle_epi8(mid_trit, shuffle_first[1]),
+                         _mm_shuffle_epi8(high_trit, shuffle_first[2])));
+        data_mid = _mm_or_si128(
+            _mm_shuffle_epi8(low_trit, shuffle_mid[0]),
+            _mm_or_si128(_mm_shuffle_epi8(mid_trit, shuffle_mid[1]),
+                         _mm_shuffle_epi8(high_trit, shuffle_mid[2])));
+        data_last = _mm_or_si128(
+            _mm_shuffle_epi8(low_trit, shuffle_last[0]),
+            _mm_or_si128(_mm_shuffle_epi8(mid_trit, shuffle_last[1]),
+                         _mm_shuffle_epi8(high_trit, shuffle_last[2])));
 
         /* Store the 3 * 128-bit trits converted from trytes */
-        _mm_store_si128((__m128i *) (src + (3 * i) * block_8bit), dataFirst);
-        _mm_store_si128((__m128i *) (src + (3 * i + 1) * block_8bit), dataMid);
-        _mm_store_si128((__m128i *) (src + (3 * i + 2) * block_8bit), dataLast);
+        _mm_store_si128((__m128i *) (src + (3 * i) * block_8bit), data_first);
+        _mm_store_si128((__m128i *) (src + (3 * i + 1) * block_8bit), data_mid);
+        _mm_store_si128((__m128i *) (src + (3 * i + 2) * block_8bit), data_last);
     }
     /* The rest of the trytes */
     for (int i = (trytes->len / block_8bit) * block_8bit; i < trytes->len;
          i++) {
         int idx = (trytes->data[i] == '9') ? 0 : trytes->data[i] - 'A' + 1;
         for (int j = 0; j < 3; j++) {
-            src[i * 3 + j] = TrytesToTritsMappings[idx][j];
+            src[i * 3 + j] = trytes_to_trits_mappings[idx][j];
         }
     }
 
-    trits = initTrits(src, trytes->len * 3);
+    trits = init_trits(src, trytes->len * 3);
     free(src);
 
     return trits;

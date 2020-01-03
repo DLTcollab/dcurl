@@ -34,7 +34,7 @@ void *dcurl_entry_cb(void *arg)
 
 int main()
 {
-    char *trytes =
+    char *transaction_trytes =
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
@@ -82,7 +82,7 @@ int main()
     dcurl_init();
 
     for (int i = 0; i < THREAD_MAX; i++) {
-        memcpy(items[i].input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
+        memcpy(items[i].input_trytes, transaction_trytes, TRANSACTION_TRYTES_LENGTH);
         items[i].mwm = mwm;
         pthread_create(&threads[i], NULL, dcurl_entry_cb, (void *) &items[i]);
     }
@@ -91,21 +91,21 @@ int main()
         pthread_join(threads[i], NULL);
 
     for (int i = 0; i < THREAD_MAX; i++) {
-        Trytes_t *trytes_t =
-            initTrytes(items[i].output_trytes, TRANSACTION_TRYTES_LENGTH);
-        assert(trytes_t && "initTrytes() failed");
-        Trytes_t *hash_trytes = hashTrytes(trytes_t);
-        assert(hash_trytes && "hashTrytes() failed");
+        trytes_t *trytes =
+            init_trytes(items[i].output_trytes, TRANSACTION_TRYTES_LENGTH);
+        assert(trytes && "init_trytes() failed");
+        trytes_t *hashed_trytes = hash_trytes(trytes);
+        assert(hashed_trytes && "hash_trytes() failed");
 
         /* Validation */
-        Trits_t *ret_trits = trits_from_trytes(hash_trytes);
+        trits_t *ret_trits = trits_from_trytes(hashed_trytes);
         for (int j = 243 - 1; j >= 243 - items[i].mwm; j--) {
             assert(ret_trits->data[j] == 0 && "Validation failed");
         }
 
-        freeTrobject(trytes_t);
-        freeTrobject(hash_trytes);
-        freeTrobject(ret_trits);
+        free_trinary_object(trytes);
+        free_trinary_object(hashed_trytes);
+        free_trinary_object(ret_trits);
     }
 
     dcurl_destroy();

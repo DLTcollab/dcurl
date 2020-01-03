@@ -31,7 +31,7 @@
 /* Set FPGA operation frequency 100 MHz */
 #define FPGA_OPERATION_FREQUENCY 100000000
 
-#define INT2STRING(I, S)         \
+#define INT_TO_STRING(I, S)         \
     {                            \
         S[0] = I & 0xff;         \
         S[1] = (I >> 8) & 0xff;  \
@@ -39,9 +39,9 @@
         S[3] = (I >> 24) & 0xff; \
     }
 
-static bool PoWFPGA(void *pow_ctx)
+static bool pow_fpga(void *pow_ctx)
 {
-    PoW_FPGA_Context *ctx = (PoW_FPGA_Context *) pow_ctx;
+    pow_fpga_context_t *ctx = (pow_fpga_context_t *) pow_ctx;
 
     int8_t fpga_out_nonce_trit[NONCE_TRITS_LENGTH];
 
@@ -53,10 +53,10 @@ static bool PoWFPGA(void *pow_ctx)
     uint32_t tick_cnt_h;
     uint64_t tick_cnt;
 
-    Trytes_t *object_tryte, *nonce_tryte = NULL;
-    Trits_t *object_trit = NULL, *object_nonce_trit = NULL;
+    trytes_t *object_tryte, *nonce_tryte = NULL;
+    trits_t *object_trit = NULL, *object_nonce_trit = NULL;
 
-    object_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
+    object_tryte = init_trytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
     if (!object_tryte) {
         res = false;
         goto fail;
@@ -78,7 +78,7 @@ static bool PoWFPGA(void *pow_ctx)
         goto fail;
     }
 
-    INT2STRING(ctx->mwm, buf);
+    INT_TO_STRING(ctx->mwm, buf);
     if (write(ctx->ctrl_fd, buf, sizeof(buf)) < 0) {
         res = false;
         goto fail;
@@ -94,7 +94,7 @@ static bool PoWFPGA(void *pow_ctx)
         goto fail;
     }
 
-    object_nonce_trit = initTrits(fpga_out_nonce_trit, NONCE_TRITS_LENGTH);
+    object_nonce_trit = init_trits(fpga_out_nonce_trit, NONCE_TRITS_LENGTH);
     if (!object_nonce_trit) {
         res = false;
         goto fail;
@@ -113,22 +113,22 @@ static bool PoWFPGA(void *pow_ctx)
     ctx->pow_info.time = (double) tick_cnt / (double) FPGA_OPERATION_FREQUENCY;
     ctx->pow_info.hash_count = *(ctx->cpow_map + HASH_CNT_REG_OFFSET);
 
-    memcpy(ctx->output_trytes, ctx->input_trytes, (NonceTrinaryOffset) / 3);
-    memcpy(ctx->output_trytes + ((NonceTrinaryOffset) / 3), nonce_tryte->data,
-           ((TRANSACTION_TRITS_LENGTH) - (NonceTrinaryOffset)) / 3);
+    memcpy(ctx->output_trytes, ctx->input_trytes, (NONCE_TRINARY_OFFSET) / 3);
+    memcpy(ctx->output_trytes + ((NONCE_TRINARY_OFFSET) / 3), nonce_tryte->data,
+           ((TRANSACTION_TRITS_LENGTH) - (NONCE_TRINARY_OFFSET)) / 3);
 
 fail:
-    freeTrobject(object_tryte);
-    freeTrobject(object_trit);
-    freeTrobject(object_nonce_trit);
-    freeTrobject(nonce_tryte);
+    free_trinary_object(object_tryte);
+    free_trinary_object(object_trit);
+    free_trinary_object(object_nonce_trit);
+    free_trinary_object(nonce_tryte);
     return res;
 }
 
-static bool PoWFPGA_Context_Initialize(ImplContext *impl_ctx)
+static bool pow_fpga_context_initialize(impl_context_t *impl_ctx)
 {
-    PoW_FPGA_Context *ctx =
-        (PoW_FPGA_Context *) malloc(sizeof(PoW_FPGA_Context));
+    pow_fpga_context_t *ctx =
+        (pow_fpga_context_t *) malloc(sizeof(pow_fpga_context_t));
     if (!ctx)
         goto fail_to_malloc;
 
@@ -148,15 +148,15 @@ static bool PoWFPGA_Context_Initialize(ImplContext *impl_ctx)
         goto fail_to_open_odata;
     }
 
-    ctx->devmem_fd = open(DEV_MEM_FPGA, O_RDWR | O_SYNC);
-    if (ctx->devmem_fd < 0) {
+    ctx->dev_mem_fd = open(DEV_MEM_FPGA, O_RDWR | O_SYNC);
+    if (ctx->dev_mem_fd < 0) {
         perror("devmem open fail");
         goto fail_to_open_mem;
     }
 
     ctx->fpga_regs_map =
         (uint32_t *) mmap(NULL, HPS_TO_FPGA_SPAN, PROT_READ | PROT_WRITE,
-                          MAP_SHARED, ctx->devmem_fd, HPS_TO_FPGA_BASE);
+                          MAP_SHARED, ctx->dev_mem_fd, HPS_TO_FPGA_BASE);
     if (ctx->fpga_regs_map == MAP_FAILED) {
         perror("devmem mmap fial");
         goto fail_to_mmap;
@@ -169,7 +169,7 @@ static bool PoWFPGA_Context_Initialize(ImplContext *impl_ctx)
     return true;
 
 fail_to_mmap:
-    close(ctx->devmem_fd);
+    close(ctx->dev_mem_fd);
 fail_to_open_mem:
     close(ctx->out_fd);
 fail_to_open_odata:
@@ -182,9 +182,9 @@ fail_to_malloc:
     return false;
 }
 
-static void PoWFPGA_Context_Destroy(ImplContext *impl_ctx)
+static void pow_fpga_context_destroy(impl_context_t *impl_ctx)
 {
-    PoW_FPGA_Context *ctx = (PoW_FPGA_Context *) impl_ctx->context;
+    pow_fpga_context_t *ctx = (pow_fpga_context_t *) impl_ctx->context;
 
     close(ctx->in_fd);
     close(ctx->out_fd);
@@ -194,55 +194,55 @@ static void PoWFPGA_Context_Destroy(ImplContext *impl_ctx)
     if (result < 0) {
         perror("devmem munmap fail");
     }
-    close(ctx->devmem_fd);
+    close(ctx->dev_mem_fd);
 
     free(ctx);
 }
 
-static void *PoWFPGA_getPoWContext(ImplContext *impl_ctx,
+static void *pow_fpga_get_pow_context(impl_context_t *impl_ctx,
                                    int8_t *trytes,
                                    int mwm,
                                    int threads)
 {
-    PoW_FPGA_Context *ctx = impl_ctx->context;
+    pow_fpga_context_t *ctx = impl_ctx->context;
     memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
     ctx->mwm = mwm;
-    ctx->indexOfContext = 0;
+    ctx->index_of_context = 0;
 
     return ctx;
 }
 
-static bool PoWFPGA_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+static bool pow_fpga_free_pow_context(impl_context_t *impl_ctx, void *pow_ctx)
 {
     return true;
 }
 
-static int8_t *PoWFPGA_getPoWResult(void *pow_ctx)
+static int8_t *pow_fpga_get_pow_result(void *pow_ctx)
 {
     int8_t *ret = (int8_t *) malloc(sizeof(int8_t) * TRANSACTION_TRYTES_LENGTH);
     if (!ret)
         return NULL;
-    memcpy(ret, ((PoW_FPGA_Context *) pow_ctx)->output_trytes,
+    memcpy(ret, ((pow_fpga_context_t *) pow_ctx)->output_trytes,
            TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 
-static PoW_Info PoWFPGA_getPoWInfo(void *pow_ctx)
+static pow_info_t pow_fpga_get_pow_info(void *pow_ctx)
 {
-    return ((PoW_FPGA_Context *) pow_ctx)->pow_info;
+    return ((pow_fpga_context_t *) pow_ctx)->pow_info;
 }
 
-ImplContext PoWFPGA_Context = {
+impl_context_t pow_fpga_context = {
     .context = NULL,
     .description = "FPGA",
     .bitmap = 0,
     .num_max_thread = 1,  // num_max_thread >= 1
     .num_working_thread = 0,
-    .initialize = PoWFPGA_Context_Initialize,
-    .destroy = PoWFPGA_Context_Destroy,
-    .getPoWContext = PoWFPGA_getPoWContext,
-    .freePoWContext = PoWFPGA_freePoWContext,
-    .doThePoW = PoWFPGA,
-    .getPoWResult = PoWFPGA_getPoWResult,
-    .getPoWInfo = PoWFPGA_getPoWInfo,
+    .initialize = pow_fpga_context_initialize,
+    .destroy = pow_fpga_context_destroy,
+    .get_pow_context = pow_fpga_get_pow_context,
+    .free_pow_context = pow_fpga_free_pow_context,
+    .do_the_pow = pow_fpga,
+    .get_pow_result = pow_fpga_get_pow_result,
+    .get_pow_info = pow_fpga_get_pow_info,
 };

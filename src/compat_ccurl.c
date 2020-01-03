@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include "dcurl.h"
 
-static bool isInitialized = false;
+static bool is_initialized = false;
 
 /* mutex protecting initialization section */
 static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -18,9 +18,9 @@ static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 char *ccurl_pow(char *trytes, int mwm)
 {
     pthread_mutex_lock(&mtx);
-    if (!isInitialized) {
+    if (!is_initialized) {
         dcurl_init();
-        isInitialized = true;
+        is_initialized = true;
     }
     pthread_mutex_unlock(&mtx);
     return (char *) dcurl_entry((int8_t *) trytes, mwm, 1);

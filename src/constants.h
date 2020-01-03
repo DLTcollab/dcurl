@@ -9,11 +9,11 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
-#define MinTryteValue -13
-#define MaxTryteValue 13
-#define SignatureSize 6561
-#define Depth 3
-#define Radix 3
+#define MIN_TRYTE_VALUE -13
+#define MAX_TRYTE_VALUE 13
+#define SIGNATURE_SIZE 6561
+#define DEPTH 3
+#define RADIX 3
 
 #define HASH_TRYTES_LENGTH 81
 #define NONCE_TRYTES_LENGTH 27
@@ -25,60 +25,60 @@
 #define STATE_TRITS_LENGTH 3 * HASH_TRITS_LENGTH
 #define TRANSACTION_TRITS_LENGTH (TRANSACTION_TRYTES_LENGTH * 3)
 
-#define SignatureMessageFragmentTrinaryOffset 0
-#define SignatureMessageFragmentTrinarySize 6561
-#define AddressTrinaryOffset                 \
-    (SignatureMessageFragmentTrinaryOffset + \
-     SignatureMessageFragmentTrinarySize)
-#define AddressTrinarySize 243
-#define ValueTrinaryOffset (AddressTrinaryOffset + AddressTrinarySize)
-#define ValueTrinarySize 81
-#define ObsoleteTagTrinaryOffset (ValueTrinaryOffset + ValueTrinarySize)
-#define ObsoleteTagTrinarySize 81
-#define TimestampTrinaryOffset \
-    (ObsoleteTagTrinaryOffset + ObsoleteTagTrinarySize)
-#define TimestampTrinarySize 27
-#define CurrentIndexTrinaryOffset \
-    (TimestampTrinaryOffset + TimestampTrinarySize)
-#define CurrentIndexTrinarySize 27
-#define LastIndexTrinaryOffset \
-    (CurrentIndexTrinaryOffset + CurrentIndexTrinarySize)
-#define LastIndexTrinarySize 27
-#define BundleTrinaryOffset (LastIndexTrinaryOffset + LastIndexTrinarySize)
-#define BundleTrinarySize 243
-#define TrunkTransactionTrinaryOffset (BundleTrinaryOffset + BundleTrinarySize)
-#define TrunkTransactionTrinarySize 243
-#define BranchTransactionTrinaryOffset \
-    (TrunkTransactionTrinaryOffset + TrunkTransactionTrinarySize)
-#define BranchTransactionTrinarySize 243
-#define TagTrinaryOffset \
-    (BranchTransactionTrinaryOffset + BranchTransactionTrinarySize)
-#define TagTrinarySize 81
-#define AttachmentTimestampTrinaryOffset (TagTrinaryOffset + TagTrinarySize)
-#define AttachmentTimestampTrinarySize 27
+#define SIGNATURE_MESSAGE_FRAGMENT_TRINARY_OFFSET 0
+#define SIGNATURE_MESSAGE_FRAGMENT_TRINARY_SIZE 6561
+#define ADDRESS_TRINARY_OFFSET                 \
+    (SIGNATURE_MESSAGE_FRAGMENT_TRINARY_OFFSET + \
+     SIGNATURE_MESSAGE_FRAGMENT_TRINARY_SIZE)
+#define ADDRESS_TRINARY_SIZE 243
+#define VALUE_TRINARY_OFFSET (ADDRESS_TRINARY_OFFSET + ADDRESS_TRINARY_SIZE)
+#define VALUE_TRINARY_SIZE 81
+#define OBSOLETE_TAG_TRINARY_OFFSET (VALUE_TRINARY_OFFSET + VALUE_TRINARY_SIZE)
+#define OBSOLETE_TAG_TRINARY_SIZE 81
+#define TIMESTAMP_TRINARY_OFFSET \
+    (OBSOLETE_TAG_TRINARY_OFFSET + OBSOLETE_TAG_TRINARY_SIZE)
+#define TIMESTAMP_TRINARY_SIZE 27
+#define CURRENT_INDEX_TRINARY_OFFSET \
+    (TIMESTAMP_TRINARY_OFFSET + TIMESTAMP_TRINARY_SIZE)
+#define CURRENT_INDEX_TRINARY_SIZE 27
+#define LAST_INDEX_TRINARY_OFFSET \
+    (CURRENT_INDEX_TRINARY_OFFSET + CURRENT_INDEX_TRINARY_SIZE)
+#define LAST_INDEX_TRINARY_SIZE 27
+#define BUNDLE_TRINARY_OFFSET (LAST_INDEX_TRINARY_OFFSET + LAST_INDEX_TRINARY_SIZE)
+#define BUNDLE_TRINARY_SIZE 243
+#define TRUNK_TRANSACTION_TRINARY_OFFSET (BUNDLE_TRINARY_OFFSET + BUNDLE_TRINARY_SIZE)
+#define TRUNK_TRANSACTION_TRINARY_SIZE 243
+#define BRANCH_TRANSACTION_TRINARY_OFFSET \
+    (TRUNK_TRANSACTION_TRINARY_OFFSET + TRUNK_TRANSACTION_TRINARY_SIZE)
+#define BRANCH_TRANSACTION_TRINARY_SIZE 243
+#define TAG_TRINARY_OFFSET \
+    (BRANCH_TRANSACTION_TRINARY_OFFSET + BRANCH_TRANSACTION_TRINARY_SIZE)
+#define TAG_TRINARY_SIZE 81
+#define ATTACHMENT_TIMESTAMP_TRINARY_OFFSET (TAG_TRINARY_OFFSET + TAG_TRINARY_SIZE)
+#define ATTACHMENT_TIMESTAMP_TRINARY_SIZE 27
 
-#define AttachmentTimestampLowerBoundTrinaryOffset \
-    (AttachmentTimestampTrinaryOffset + AttachmentTimestampTrinarySize)
-#define AttachmentTimestampLowerBoundTrinarySize 27
-#define AttachmentTimestampUpperBoundTrinaryOffset \
-    (AttachmentTimestampLowerBoundTrinaryOffset +  \
-     AttachmentTimestampLowerBoundTrinarySize)
-#define AttachmentTimestampUpperBoundTrinarySize 27
-#define NonceTrinaryOffset                        \
-    (AttachmentTimestampUpperBoundTrinaryOffset + \
-     AttachmentTimestampUpperBoundTrinarySize)
-#define NonceTrinarySize 81
+#define ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_OFFSET \
+    (ATTACHMENT_TIMESTAMP_TRINARY_OFFSET + ATTACHMENT_TIMESTAMP_TRINARY_SIZE)
+#define ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_SIZE 27
+#define ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_OFFSET \
+    (ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_OFFSET +  \
+     ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_SIZE)
+#define ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_SIZE 27
+#define NONCE_TRINARY_OFFSET                        \
+    (ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_OFFSET + \
+     ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_SIZE)
+#define NONCE_TRINARY_SIZE 81
 
-#define transactionTrinarySize                                            \
-    (SignatureMessageFragmentTrinarySize + AddressTrinarySize +           \
-     ValueTrinarySize + ObsoleteTagTrinarySize + TimestampTrinarySize +   \
-     CurrentIndexTrinarySize + LastIndexTrinarySize + BundleTrinarySize + \
-     TrunkTransactionTrinarySize + BranchTransactionTrinarySize +         \
-     TagTrinarySize + AttachmentTimestampTrinarySize +                    \
-     AttachmentTimestampLowerBoundTrinarySize +                           \
-     AttachmentTimestampUpperBoundTrinarySize + NonceTrinarySize)
+#define TRANSACTION_TRINARY_SIZE                                            \
+    (SIGNATURE_MESSAGE_FRAGMENT_TRINARY_SIZE + ADDRESS_TRINARY_SIZE +           \
+     VALUE_TRINARY_SIZE + OBSOLETE_TAG_TRINARY_SIZE + TIMESTAMP_TRINARY_SIZE +   \
+     CURRENT_INDEX_TRINARY_SIZE + LAST_INDEX_TRINARY_SIZE + BUNDLE_TRINARY_SIZE + \
+     TRUNK_TRANSACTION_TRINARY_SIZE + BRANCH_TRANSACTION_TRINARY_SIZE +         \
+     TAG_TRINARY_SIZE + ATTACHMENT_TIMESTAMP_TRINARY_SIZE +                    \
+     ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_SIZE +                           \
+     ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_SIZE + NONCE_TRINARY_SIZE)
 
-extern char TryteAlphabet[];
+extern char tryte_alphabet[];
 extern const int indices[];
 
 #endif

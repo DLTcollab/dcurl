@@ -25,7 +25,7 @@
 /**
  * t1 = j == 0? 0:(((j - 1)%2)+1)*HALF_LENGTH - ((j-1)>>1);
  */
-__constant size_t INDEX[STATE_TRITS_LENGTH + 1] = {
+__constant size_t index[STATE_TRITS_LENGTH + 1] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
     357, 721, 356, 720, 355, 719, 354, 718, 353, 717, 352, 716, 351, 715, 350,
     714, 349, 713, 348, 712, 347, 711, 346, 710, 345, 709, 344, 708, 343, 707,
@@ -135,11 +135,11 @@ void transform(__global bc_trit_t* state_low, __global bc_trit_t* state_high,
     for (i = 0; i < n_trits; i++) {
       j = id + i * l_size;
       k = j+1;
-      alpha = state_low[INDEX[j]];
-      beta = state_high[INDEX[j]];
-      delta = alpha & (beta ^ state_low[INDEX[k]]);
+      alpha = state_low[index[j]];
+      beta = state_high[index[j]];
+      delta = alpha & (beta ^ state_low[index[k]]);
       sp_low[i] = ~delta;
-      sp_high[i] = (alpha ^ state_high[INDEX[k]]) | delta;
+      sp_high[i] = (alpha ^ state_high[index[k]]) | delta;
     }
     barrier(CLK_LOCAL_MEM_FENCE);
     for (i = 0; i < n_trits; i++) {

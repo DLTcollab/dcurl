@@ -64,10 +64,10 @@ bool die_on_error(int x, char const *context)
     return true;
 }
 
-bool connect_broker(amqp_connection_state_t *conn, const char *hostName)
+bool connect_broker(amqp_connection_state_t *conn, const char *host_name)
 {
     amqp_socket_t *socket = NULL;
-    const char *host = (hostName != NULL) ? hostName : "localhost";
+    const char *host = (host_name != NULL) ? host_name : "localhost";
 
     /* Connect to the rabbitmq broker */
     *conn = amqp_new_connection();

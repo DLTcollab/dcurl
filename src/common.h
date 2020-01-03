@@ -48,9 +48,9 @@ static inline void log_info(logger_id_t const logger_id,
     fflush(stdout);
 }
 
-typedef struct _pow_info PoW_Info;
+typedef struct pow_info_s pow_info_t;
 
-struct _pow_info {
+struct pow_info_s {
     double time;
     uint64_t hash_count;
 };

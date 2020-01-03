@@ -15,18 +15,18 @@
 #include "constants.h"
 #include "trinary.h"
 
-typedef struct _pow_cl_context PoW_CL_Context;
+typedef struct pow_cl_context_s pow_cl_context_t;
 
-struct _pow_cl_context {
-    CLContext *clctx;
+struct pow_cl_context_s {
+    cl_context_t *cl_ctx;
     /* Management of Multi-thread */
-    int indexOfContext;
+    int index_of_context;
     /* Arguments of PoW */
     int8_t input_trytes[TRANSACTION_TRYTES_LENGTH];  /* 2673 */
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
     /* PoW-related information */
-    PoW_Info pow_info;
+    pow_info_t pow_info;
 };
 
 /* Number of GPU devices supported */

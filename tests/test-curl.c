@@ -52,19 +52,19 @@ int main()
         "SYVDPCXX9LLAT";
     int length_test_case = 2673;
 
-    Trytes_t *answer = initTrytes((signed char *) "WPM9JCTQH9QHBHBJCODWDNPSLFLQDZADRAEZTZDL9OEGTVRZARVLVJHZIMPBPCTAIYJKWTUSRKNNTMFOQ", 81);
+    trytes_t *answer = init_trytes((signed char *) "WPM9JCTQH9QHBHBJCODWDNPSLFLQDZADRAEZTZDL9OEGTVRZARVLVJHZIMPBPCTAIYJKWTUSRKNNTMFOQ", 81);
     assert(answer);
-    Trytes_t *trytes =
-        initTrytes((signed char *) trytes_test_case, length_test_case);
+    trytes_t *trytes =
+        init_trytes((signed char *) trytes_test_case, length_test_case);
     assert(trytes);
-    Trytes_t *ret_trytes = hashTrytes(trytes);
+    trytes_t *ret_trytes = hash_trytes(trytes);
     assert(ret_trytes);
 
-    int ret = compareTrobject(ret_trytes, answer);
+    int ret = compare_trinary_object(ret_trytes, answer);
 
-    freeTrobject(answer);
-    freeTrobject(trytes);
-    freeTrobject(ret_trytes);
+    free_trinary_object(answer);
+    free_trinary_object(trytes);
+    free_trinary_object(ret_trytes);
 
     assert(ret != 0);
 

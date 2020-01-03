@@ -15,7 +15,7 @@
 #include "curl.h"
 #include "implcontext.h"
 
-static void transform64(uint64_t *lmid, uint64_t *hmid)
+static void transform_64(uint64_t *lmid, uint64_t *hmid)
 {
     uint64_t alpha, beta, delta;
     uint64_t *lfrom = lmid, *hfrom = hmid;
@@ -105,19 +105,19 @@ static long long int loop_cpu(uint64_t *lmid,
                               uint64_t *hmid,
                               int m,
                               int8_t *nonce,
-                              int *stopPoW,
+                              int *stop_pow,
                               uv_rwlock_t *lock)
 {
     long long int i = 0;
     uint64_t lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
 
     uv_rwlock_rdlock(lock);
-    for (i = 0; !incr(lmid, hmid) && !*stopPoW; i++) {
+    for (i = 0; !incr(lmid, hmid) && !*stop_pow; i++) {
         uv_rwlock_rdunlock(lock);
         int n;
         memcpy(lcpy, lmid, STATE_TRITS_LENGTH * sizeof(uint64_t));
         memcpy(hcpy, hmid, STATE_TRITS_LENGTH * sizeof(uint64_t));
-        transform64(lcpy, hcpy);
+        transform_64(lcpy, hcpy);
         if ((n = check(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
                        m)) >= 0) {
             seri(lmid, hmid, n, nonce);
@@ -149,7 +149,7 @@ static void para(int8_t in[], uint64_t l[], uint64_t h[])
     }
 }
 
-static void incrN(int n, uint64_t *mid_low, uint64_t *mid_high)
+static void incr_n(int n, uint64_t *mid_low, uint64_t *mid_high)
 {
     for (int j = 0; j < n; j++) {
         uint64_t carry = 1;
@@ -166,7 +166,7 @@ static int64_t pwork(int8_t mid[],
                      int mwm,
                      int8_t nonce[],
                      int n,
-                     int *stopPoW,
+                     int *stop_pow,
                      uv_rwlock_t *lock)
 {
     uint64_t lmid[STATE_TRITS_LENGTH] = {0}, hmid[STATE_TRITS_LENGTH] = {0};
@@ -181,33 +181,33 @@ static int64_t pwork(int8_t mid[],
     hmid[offset + 2] = HIGH2;
     lmid[offset + 3] = LOW3;
     hmid[offset + 3] = HIGH3;
-    incrN(n, lmid, hmid);
+    incr_n(n, lmid, hmid);
 
-    return loop_cpu(lmid, hmid, mwm, nonce, stopPoW, lock);
+    return loop_cpu(lmid, hmid, mwm, nonce, stop_pow, lock);
 }
 
 static void work_cb(uv_work_t *req)
 {
-    Pwork_struct *pworkInfo = (Pwork_struct *) req->data;
-    pworkInfo->ret = pwork(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce,
-                           pworkInfo->n, pworkInfo->stopPoW, pworkInfo->lock);
+    pwork_t *pwork_info = (pwork_t *) req->data;
+    pwork_info->ret = pwork(pwork_info->mid, pwork_info->mwm, pwork_info->nonce,
+                           pwork_info->n, pwork_info->stop_pow, pwork_info->lock);
 
-    uv_rwlock_wrlock(pworkInfo->lock);
-    if (pworkInfo->ret >= 0) {
-        *pworkInfo->stopPoW = 1;
+    uv_rwlock_wrlock(pwork_info->lock);
+    if (pwork_info->ret >= 0) {
+        *pwork_info->stop_pow = 1;
         /* This means this thread got the result */
-        pworkInfo->n = -1;
+        pwork_info->n = -1;
     }
-    uv_rwlock_wrunlock(pworkInfo->lock);
+    uv_rwlock_wrunlock(pwork_info->lock);
 }
 
-static int8_t *tx_to_cstate(Trytes_t *tx)
+static int8_t *tx_to_cstate(trytes_t *tx)
 {
-    Trytes_t *inn = NULL;
-    Trits_t *tr = NULL;
+    trytes_t *inn = NULL;
+    trits_t *tr = NULL;
     int8_t tyt[TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] = {0};
 
-    Curl *c = initCurl();
+    curl_t *c = init_curl();
     int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
     if (!c || !c_state)
         goto fail;
@@ -215,11 +215,11 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     /* Copy tx->data[:TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] to tyt */
     memcpy(tyt, tx->data, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
 
-    inn = initTrytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
+    inn = init_trytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
     if (!inn)
         goto fail;
 
-    Absorb(c, inn);
+    absorb(c, inn);
 
     tr = trits_from_trytes(tx);
     if (!tr)
@@ -235,19 +235,19 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
            c->state->len - tr->len +
                (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
 
-    freeTrobject(inn);
-    freeTrobject(tr);
-    freeCurl(c);
+    free_trinary_object(inn);
+    free_trinary_object(tr);
+    free_curl(c);
     return c_state;
 fail:
-    freeTrobject(inn);
-    freeTrobject(tr);
-    freeCurl(c);
+    free_trinary_object(inn);
+    free_trinary_object(tr);
+    free_curl(c);
     free(c_state);
     return NULL;
 }
 
-static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
+static void nonce_to_result(trytes_t *tx, trytes_t *nonce, int8_t *ret)
 {
     int rst_len = tx->len - NONCE_TRYTES_LENGTH + nonce->len;
 
@@ -256,26 +256,26 @@ static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
            rst_len - (tx->len - NONCE_TRYTES_LENGTH));
 }
 
-bool PowC(void *pow_ctx)
+bool pow_c(void *pow_ctx)
 {
     bool res = true;
-    Trits_t *nonce_trit = NULL;
-    Trytes_t *tx_tryte = NULL, *nonce_tryte = NULL;
+    trits_t *nonce_trit = NULL;
+    trytes_t *tx_tryte = NULL, *nonce_tryte = NULL;
     struct timespec start_time, end_time;
 
     /* Initialize the context */
-    PoW_C_Context *ctx = (PoW_C_Context *) pow_ctx;
-    ctx->stopPoW = 0;
+    pow_c_context_t *ctx = (pow_c_context_t *) pow_ctx;
+    ctx->stop_pow = 0;
     ctx->pow_info.time = 0;
     ctx->pow_info.hash_count = 0;
     uv_rwlock_init(&ctx->lock);
     uv_loop_t *loop_ptr = &ctx->loop;
     uv_work_t *work_req = ctx->work_req;
-    Pwork_struct *pitem = ctx->pitem;
+    pwork_t *pitem = ctx->pitem;
     int8_t **nonce_array = ctx->nonce_array;
 
     /* Prepare the input trytes for algorithm */
-    tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
+    tx_tryte = init_trytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
     if (!tx_tryte)
         return false;
 
@@ -293,7 +293,7 @@ bool PowC(void *pow_ctx)
         pitem[i].nonce = nonce_array[i];
         pitem[i].n = i;
         pitem[i].lock = &ctx->lock;
-        pitem[i].stopPoW = &ctx->stopPoW;
+        pitem[i].stop_pow = &ctx->stop_pow;
         pitem[i].ret = 0;
         work_req[i].data = &pitem[i];
         uv_queue_work(loop_ptr, &work_req[i], work_cb, NULL);
@@ -301,17 +301,17 @@ bool PowC(void *pow_ctx)
 
     uv_run(loop_ptr, UV_RUN_DEFAULT);
 
-    int completedIndex = -1;
+    int completed_index = -1;
     for (int i = 0; i < ctx->num_threads; i++) {
         if (pitem[i].n == -1)
-            completedIndex = i;
+            completed_index = i;
         ctx->pow_info.hash_count +=
             (uint64_t)(pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
     clock_gettime(CLOCK_REALTIME, &end_time);
     ctx->pow_info.time = diff_in_second(start_time, end_time);
 
-    nonce_trit = initTrits(nonce_array[completedIndex], NONCE_TRITS_LENGTH);
+    nonce_trit = init_trits(nonce_array[completed_index], NONCE_TRITS_LENGTH);
     if (!nonce_trit) {
         res = false;
         goto fail;
@@ -329,20 +329,20 @@ fail:
     /* Free resource */
     uv_rwlock_destroy(&ctx->lock);
     free(c_state);
-    freeTrobject(tx_tryte);
-    freeTrobject(nonce_trit);
-    freeTrobject(nonce_tryte);
+    free_trinary_object(tx_tryte);
+    free_trinary_object(nonce_trit);
+    free_trinary_object(nonce_tryte);
     return res;
 }
 
-static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
+static bool pow_c_context_initialize(impl_context_t *impl_ctx)
 {
     impl_ctx->num_max_thread = get_nthds_per_phys_proc();
     int nproc = get_avail_phys_nprocs();
     if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
         return false;
 
-    PoW_C_Context *ctx = (PoW_C_Context *) malloc(sizeof(PoW_C_Context) *
+    pow_c_context_t *ctx = (pow_c_context_t *) malloc(sizeof(pow_c_context_t) *
                                                   impl_ctx->num_max_thread);
     if (!ctx)
         return false;
@@ -351,7 +351,7 @@ static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
     void *work_req_chunk =
         malloc(impl_ctx->num_max_thread * sizeof(uv_work_t) * nproc);
     void *pitem_chunk =
-        malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
+        malloc(impl_ctx->num_max_thread * sizeof(pwork_t) * nproc);
     void *nonce_ptr_chunk =
         malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
     void *nonce_chunk =
@@ -361,7 +361,7 @@ static bool PoWC_Context_Initialize(ImplContext *impl_ctx)
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         ctx[i].work_req = (uv_work_t *) (work_req_chunk) + i * nproc;
-        ctx[i].pitem = (Pwork_struct *) (pitem_chunk) + i * nproc;
+        ctx[i].pitem = (pwork_t *) (pitem_chunk) + i * nproc;
         ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk) + i * nproc;
         for (int j = 0; j < nproc; j++)
             ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk) +
@@ -388,9 +388,9 @@ fail:
     return false;
 }
 
-static void PoWC_Context_Destroy(ImplContext *impl_ctx)
+static void pow_c_context_destroy(impl_context_t *impl_ctx)
 {
-    PoW_C_Context *ctx = (PoW_C_Context *) impl_ctx->context;
+    pow_c_context_t *ctx = (pow_c_context_t *) impl_ctx->context;
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         uv_loop_close(&ctx[i].loop);
     }
@@ -401,7 +401,7 @@ static void PoWC_Context_Destroy(ImplContext *impl_ctx)
     free(ctx);
 }
 
-static void *PoWC_getPoWContext(ImplContext *impl_ctx,
+static void *pow_c_get_pow_context(impl_context_t *impl_ctx,
                                 int8_t *trytes,
                                 int mwm,
                                 int threads)
@@ -411,10 +411,10 @@ static void *PoWC_getPoWContext(ImplContext *impl_ctx,
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
             uv_mutex_unlock(&impl_ctx->lock);
-            PoW_C_Context *ctx = (PoW_C_Context *) impl_ctx->context + i;
+            pow_c_context_t *ctx = (pow_c_context_t *) impl_ctx->context + i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
-            ctx->indexOfContext = i;
+            ctx->index_of_context = i;
             if (threads > 0 && threads < ctx->num_max_threads)
                 ctx->num_threads = threads;
             else
@@ -426,41 +426,41 @@ static void *PoWC_getPoWContext(ImplContext *impl_ctx,
     return NULL; /* It should not happen */
 }
 
-static bool PoWC_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+static bool pow_c_free_pow_context(impl_context_t *impl_ctx, void *pow_ctx)
 {
     uv_mutex_lock(&impl_ctx->lock);
-    impl_ctx->bitmap |= 0x1 << ((PoW_C_Context *) pow_ctx)->indexOfContext;
+    impl_ctx->bitmap |= 0x1 << ((pow_c_context_t *) pow_ctx)->index_of_context;
     uv_mutex_unlock(&impl_ctx->lock);
     return true;
 }
 
-static int8_t *PoWC_getPoWResult(void *pow_ctx)
+static int8_t *pow_c_get_pow_result(void *pow_ctx)
 {
     int8_t *ret =
         (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
     if (!ret)
         return NULL;
-    memcpy(ret, ((PoW_C_Context *) pow_ctx)->output_trytes,
+    memcpy(ret, ((pow_c_context_t *) pow_ctx)->output_trytes,
            TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 
-static PoW_Info PoWC_getPoWInfo(void *pow_ctx)
+static pow_info_t pow_c_get_pow_info(void *pow_ctx)
 {
-    return ((PoW_C_Context *) pow_ctx)->pow_info;
+    return ((pow_c_context_t *) pow_ctx)->pow_info;
 }
 
-ImplContext PoWC_Context = {
+impl_context_t pow_c_context = {
     .context = NULL,
     .description = "CPU (Pure C)",
     .bitmap = 0,
     .num_max_thread = 0,
     .num_working_thread = 0,
-    .initialize = PoWC_Context_Initialize,
-    .destroy = PoWC_Context_Destroy,
-    .getPoWContext = PoWC_getPoWContext,
-    .freePoWContext = PoWC_freePoWContext,
-    .doThePoW = PowC,
-    .getPoWResult = PoWC_getPoWResult,
-    .getPoWInfo = PoWC_getPoWInfo,
+    .initialize = pow_c_context_initialize,
+    .destroy = pow_c_context_destroy,
+    .get_pow_context = pow_c_get_pow_context,
+    .free_pow_context = pow_c_free_pow_context,
+    .do_the_pow = pow_c,
+    .get_pow_result = pow_c_get_pow_result,
+    .get_pow_info = pow_c_get_pow_info,
 };

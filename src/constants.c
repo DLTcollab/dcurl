@@ -6,7 +6,7 @@
  * "LICENSE" at the root of this distribution.
  */
 
-char TryteAlphabet[] = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+char tryte_alphabet[] = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 const int indices[] = {
     0,   364, 728, 363, 727, 362, 726, 361, 725, 360, 724, 359, 723, 358, 722,
