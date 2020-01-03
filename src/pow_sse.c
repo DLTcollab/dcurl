@@ -112,11 +112,11 @@ static int check_128(__m128i *l, __m128i *h, int m)
 }
 
 static int64_t loop_128(__m128i *lmid,
-                       __m128i *hmid,
-                       int m,
-                       int8_t *nonce,
-                       int *stop_pow,
-                       uv_rwlock_t *lock)
+                        __m128i *hmid,
+                        int m,
+                        int8_t *nonce,
+                        int *stop_pow,
+                        uv_rwlock_t *lock)
 {
     int64_t i = 0;
     __m128i lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
@@ -133,7 +133,7 @@ static int64_t loop_128(__m128i *lmid,
         transform_128(lcpy, hcpy);
 
         if ((n = check_128(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
-                          m)) >= 0) {
+                           m)) >= 0) {
             seri_128(lmid, hmid, n, nonce);
             return i * 128;
         }
@@ -178,11 +178,11 @@ static void incr_n_128(int n, __m128i *mid_low, __m128i *mid_high)
 }
 
 static int64_t pwork_128(int8_t mid[],
-                        int mwm,
-                        int8_t nonce[],
-                        int n,
-                        int *stop_pow,
-                        uv_rwlock_t *lock)
+                         int mwm,
+                         int8_t nonce[],
+                         int n,
+                         int *stop_pow,
+                         uv_rwlock_t *lock)
 {
     __m128i lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
     para_128(mid, lmid, hmid);
@@ -207,8 +207,8 @@ static void work_cb(uv_work_t *req)
 {
     pwork_t *pwork_info = (pwork_t *) req->data;
     pwork_info->ret =
-        pwork_128(pwork_info->mid, pwork_info->mwm, pwork_info->nonce, pwork_info->n,
-                 pwork_info->stop_pow, pwork_info->lock);
+        pwork_128(pwork_info->mid, pwork_info->mwm, pwork_info->nonce,
+                  pwork_info->n, pwork_info->stop_pow, pwork_info->lock);
 
     uv_rwlock_wrlock(pwork_info->lock);
     if (pwork_info->ret >= 0) {
@@ -360,8 +360,8 @@ static bool pow_sse_context_initialize(impl_context_t *impl_ctx)
     if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
         return false;
 
-    pow_sse_context_t *ctx = (pow_sse_context_t *) malloc(sizeof(pow_sse_context_t) *
-                                                      impl_ctx->num_max_thread);
+    pow_sse_context_t *ctx = (pow_sse_context_t *) malloc(
+        sizeof(pow_sse_context_t) * impl_ctx->num_max_thread);
     if (!ctx)
         return false;
 
@@ -420,16 +420,17 @@ static void pow_sse_context_destroy(impl_context_t *impl_ctx)
 }
 
 static void *pow_sse_get_pow_context(impl_context_t *impl_ctx,
-                                  int8_t *trytes,
-                                  int mwm,
-                                  int threads)
+                                     int8_t *trytes,
+                                     int mwm,
+                                     int threads)
 {
     uv_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
             uv_mutex_unlock(&impl_ctx->lock);
-            pow_sse_context_t *ctx = (pow_sse_context_t *) impl_ctx->context + i;
+            pow_sse_context_t *ctx =
+                (pow_sse_context_t *) impl_ctx->context + i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->index_of_context = i;
@@ -447,7 +448,8 @@ static void *pow_sse_get_pow_context(impl_context_t *impl_ctx,
 static bool pow_sse_free_pow_context(impl_context_t *impl_ctx, void *pow_ctx)
 {
     uv_mutex_lock(&impl_ctx->lock);
-    impl_ctx->bitmap |= 0x1 << ((pow_sse_context_t *) pow_ctx)->index_of_context;
+    impl_ctx->bitmap |= 0x1
+                        << ((pow_sse_context_t *) pow_ctx)->index_of_context;
     uv_mutex_unlock(&impl_ctx->lock);
     return true;
 }

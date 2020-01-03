@@ -50,9 +50,9 @@ static inline bool validate_trits_sse42(trinary_object_t *trits)
     const int pos_one_element = 0x01010101;
     const int neg_one_element = 0xFFFFFFFF;
     const __m128i pos_one = _mm_set_epi32(pos_one_element, pos_one_element,
-                                         pos_one_element, pos_one_element);
+                                          pos_one_element, pos_one_element);
     const __m128i neg_one = _mm_set_epi32(neg_one_element, neg_one_element,
-                                         neg_one_element, neg_one_element);
+                                          neg_one_element, neg_one_element);
     /* The for loop handles the group of the 128-bit characters without the
      * end-of-string */
     for (int i = 0; i < (trits->len) / block_8bit; i++) {
@@ -91,12 +91,12 @@ static inline bool validate_trytes_sse42(trinary_object_t *trytes)
          * Return 0 if all the characters are in the range, otherwise return 1
          */
         int not_valid = _mm_cmpistrc(pattern, src,
-                                    /* Signed byte comparison */
-                                    _SIDD_SBYTE_OPS |
-                                        /* Compare with the character range */
-                                        _SIDD_CMP_RANGES |
-                                        /* Negate the comparison result */
-                                        _SIDD_MASKED_NEGATIVE_POLARITY);
+                                     /* Signed byte comparison */
+                                     _SIDD_SBYTE_OPS |
+                                         /* Compare with the character range */
+                                         _SIDD_CMP_RANGES |
+                                         /* Negate the comparison result */
+                                         _SIDD_MASKED_NEGATIVE_POLARITY);
 
         if (not_valid)
             return false;
@@ -235,11 +235,13 @@ static inline trinary_object_t *trytes_from_trits_sse42(trinary_object_t *trits)
         /* If the offset is >= 16 (> 15), then the compared result byte = 0xFF,
          * else = 0x00 */
         __m128i cmp_result = _mm_cmpgt_epi8(
-            alphabet_offset, _mm_set_epi8(15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                                         15, 15, 15, 15, 15, 15));
-        /* Use the offset to get the correct tryte alphabet from tryte_alphabet_for_simd[]
+            alphabet_offset, _mm_set_epi8(15, 15, 15, 15, 15, 15, 15, 15, 15,
+                                          15, 15, 15, 15, 15, 15, 15));
+        /* Use the offset to get the correct tryte alphabet from
+         * tryte_alphabet_for_simd[]
          */
-        __m128i result_lt = _mm_shuffle_epi8(tryte_alphabet_for_simd[0], alphabet_offset);
+        __m128i result_lt =
+            _mm_shuffle_epi8(tryte_alphabet_for_simd[0], alphabet_offset);
         __m128i result_ge = _mm_shuffle_epi8(
             tryte_alphabet_for_simd[1],
             /* alphabet_offset - 16 */
@@ -297,7 +299,8 @@ static inline trinary_object_t *trits_from_trytes_sse42(trinary_object_t *trytes
     /* 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V' */
     const char range_high_trit_n1[BYTE_OF_128BIT] = "NV";
     /* Convert the char array to the 128-bit data */
-    const __m128i pattern_low_trit_0 = _mm_loadu_si128((__m128i *) (set_low_trit_0));
+    const __m128i pattern_low_trit_0 =
+        _mm_loadu_si128((__m128i *) (set_low_trit_0));
     const __m128i pattern_low_trit_p1 =
         _mm_loadu_si128((__m128i *) (set_low_trit_p1));
     const __m128i pattern_low_trit_n1 =
@@ -409,18 +412,18 @@ static inline trinary_object_t *trits_from_trytes_sse42(trinary_object_t *trytes
          * high_trit = | a3 | ... | f3 | ... | p3 |       data_last  = | k3 | l1 | l2 | ...... | p3 |    
          *             ------     ------     ------                   ----------------        ------    
          */
-        __m128i low_trit =
-            _mm_or_si128(_mm_and_si128(mask_low_trit_0, zero),
-                         _mm_or_si128(_mm_and_si128(mask_low_trit_p1, pos_one),
-                                      _mm_and_si128(mask_low_trit_n1, neg_one)));
-        __m128i mid_trit =
-            _mm_or_si128(_mm_and_si128(mask_mid_trit_0, zero),
-                         _mm_or_si128(_mm_and_si128(mask_mid_trit_p1, pos_one),
-                                      _mm_and_si128(mask_mid_trit_n1, neg_one)));
-        __m128i high_trit =
-            _mm_or_si128(_mm_and_si128(mask_high_trit_0, zero),
-                         _mm_or_si128(_mm_and_si128(mask_high_trit_p1, pos_one),
-                                      _mm_and_si128(mask_high_trit_n1, neg_one)));
+        __m128i low_trit = _mm_or_si128(
+            _mm_and_si128(mask_low_trit_0, zero),
+            _mm_or_si128(_mm_and_si128(mask_low_trit_p1, pos_one),
+                         _mm_and_si128(mask_low_trit_n1, neg_one)));
+        __m128i mid_trit = _mm_or_si128(
+            _mm_and_si128(mask_mid_trit_0, zero),
+            _mm_or_si128(_mm_and_si128(mask_mid_trit_p1, pos_one),
+                         _mm_and_si128(mask_mid_trit_n1, neg_one)));
+        __m128i high_trit = _mm_or_si128(
+            _mm_and_si128(mask_high_trit_0, zero),
+            _mm_or_si128(_mm_and_si128(mask_high_trit_p1, pos_one),
+                         _mm_and_si128(mask_high_trit_n1, neg_one)));
         __m128i data_first, data_mid, data_last;
         data_first = _mm_or_si128(
             _mm_shuffle_epi8(low_trit, shuffle_first[0]),

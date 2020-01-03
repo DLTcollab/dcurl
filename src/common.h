@@ -38,8 +38,8 @@ static inline void log_debug(logger_id_t const logger_id,
 }
 
 static inline void log_info(logger_id_t const logger_id,
-                             const char *format,
-                             ...)
+                            const char *format,
+                            ...)
 {
     va_list ap;
     va_start(ap, format);

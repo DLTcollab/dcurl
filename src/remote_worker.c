@@ -20,7 +20,7 @@ int main(int argc, char *const *argv)
     int cmd_opt;
     int opt_idx;
     const struct option long_opt[] = {{"broker", required_argument, NULL, 'b'},
-                                     {NULL, 0, NULL, 0}};
+                                      {NULL, 0, NULL, 0}};
 
     amqp_connection_state_t conn;
     amqp_envelope_t envelope;

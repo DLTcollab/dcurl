@@ -189,8 +189,9 @@ static int64_t pwork(int8_t mid[],
 static void work_cb(uv_work_t *req)
 {
     pwork_t *pwork_info = (pwork_t *) req->data;
-    pwork_info->ret = pwork(pwork_info->mid, pwork_info->mwm, pwork_info->nonce,
-                           pwork_info->n, pwork_info->stop_pow, pwork_info->lock);
+    pwork_info->ret =
+        pwork(pwork_info->mid, pwork_info->mwm, pwork_info->nonce,
+              pwork_info->n, pwork_info->stop_pow, pwork_info->lock);
 
     uv_rwlock_wrlock(pwork_info->lock);
     if (pwork_info->ret >= 0) {
@@ -343,7 +344,7 @@ static bool pow_c_context_initialize(impl_context_t *impl_ctx)
         return false;
 
     pow_c_context_t *ctx = (pow_c_context_t *) malloc(sizeof(pow_c_context_t) *
-                                                  impl_ctx->num_max_thread);
+                                                      impl_ctx->num_max_thread);
     if (!ctx)
         return false;
 
@@ -402,9 +403,9 @@ static void pow_c_context_destroy(impl_context_t *impl_ctx)
 }
 
 static void *pow_c_get_pow_context(impl_context_t *impl_ctx,
-                                int8_t *trytes,
-                                int mwm,
-                                int threads)
+                                   int8_t *trytes,
+                                   int mwm,
+                                   int threads)
 {
     uv_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {

@@ -56,7 +56,10 @@ void exit_impl_context(impl_context_t *impl_ctx)
     uv_mutex_unlock(&impl_ctx->lock);
 }
 
-void *get_pow_context(impl_context_t *impl_ctx, int8_t *trytes, int mwm, int threads)
+void *get_pow_context(impl_context_t *impl_ctx,
+                      int8_t *trytes,
+                      int mwm,
+                      int threads)
 {
     return impl_ctx->get_pow_context(impl_ctx, trytes, mwm, threads);
 }

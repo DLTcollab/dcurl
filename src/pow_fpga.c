@@ -31,7 +31,7 @@
 /* Set FPGA operation frequency 100 MHz */
 #define FPGA_OPERATION_FREQUENCY 100000000
 
-#define INT_TO_STRING(I, S)         \
+#define INT_TO_STRING(I, S)      \
     {                            \
         S[0] = I & 0xff;         \
         S[1] = (I >> 8) & 0xff;  \
@@ -200,9 +200,9 @@ static void pow_fpga_context_destroy(impl_context_t *impl_ctx)
 }
 
 static void *pow_fpga_get_pow_context(impl_context_t *impl_ctx,
-                                   int8_t *trytes,
-                                   int mwm,
-                                   int threads)
+                                      int8_t *trytes,
+                                      int mwm,
+                                      int threads)
 {
     pow_fpga_context_t *ctx = impl_ctx->context;
     memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);

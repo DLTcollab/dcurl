@@ -50,8 +50,8 @@ struct remote_impl_context_s {
     void (*destroy)(remote_impl_context_t *remote_ctx);
     /* Private PoW Context for each thread */
     void *(*get_pow_context)(remote_impl_context_t *remote_ctx,
-                           int8_t *trytes,
-                           int mwm);
+                             int8_t *trytes,
+                             int mwm);
     bool (*do_the_pow)(remote_impl_context_t *remote_ctx, void *pow_ctx);
     int8_t *(*get_pow_result)(void *pow_ctx);
     pow_info_t (*get_pow_info)(void *pow_ctx);
@@ -65,7 +65,9 @@ bool register_remote_context(remote_impl_context_t *remote_ctx);
 bool initialize_remote_context(remote_impl_context_t *remote_ctx);
 void destroy_remote_context(remote_impl_context_t *remote_ctx);
 bool enter_remote_context(remote_impl_context_t *remote_ctx);
-void *get_remote_context(remote_impl_context_t *remote_ctx, int8_t *trytes, int mwm);
+void *get_remote_context(remote_impl_context_t *remote_ctx,
+                         int8_t *trytes,
+                         int mwm);
 bool do_remote_context(remote_impl_context_t *remote_ctx, void *pow_ctx);
 int8_t *get_remote_result(remote_impl_context_t *remote_ctx, void *pow_ctx);
 bool free_remote_context(remote_impl_context_t *remote_ctx, void *pow_ctx);

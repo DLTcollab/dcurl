@@ -48,7 +48,9 @@ bool enter_remote_context(remote_impl_context_t *remote_ctx)
     return true; /* Access Success */
 }
 
-void *get_remote_context(remote_impl_context_t *remote_ctx, int8_t *trytes, int mwm)
+void *get_remote_context(remote_impl_context_t *remote_ctx,
+                         int8_t *trytes,
+                         int mwm)
 {
     return remote_ctx->get_pow_context(remote_ctx, trytes, mwm);
 }
@@ -186,8 +188,8 @@ static void remote_destroy(remote_impl_context_t *remote_ctx)
 }
 
 static void *remote_get_pow_context(remote_impl_context_t *remote_ctx,
-                                  int8_t *trytes,
-                                  int mwm)
+                                    int8_t *trytes,
+                                    int mwm)
 {
     uv_mutex_lock(&remote_ctx->lock);
 
@@ -211,11 +213,13 @@ static void *remote_get_pow_context(remote_impl_context_t *remote_ctx,
     return NULL; /* It should not happen */
 }
 
-static bool remote_free_pow_context(remote_impl_context_t *remote_ctx, void *pow_ctx)
+static bool remote_free_pow_context(remote_impl_context_t *remote_ctx,
+                                    void *pow_ctx)
 {
     uv_mutex_lock(&remote_ctx->lock);
 
-    remote_ctx->slots[((pow_remote_context_t *) pow_ctx)->index_of_context] = false;
+    remote_ctx->slots[((pow_remote_context_t *) pow_ctx)->index_of_context] =
+        false;
 
     uv_mutex_unlock(&remote_ctx->lock);
 

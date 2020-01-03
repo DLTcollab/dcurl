@@ -107,10 +107,10 @@ static int8_t *pwork(int8_t *state, int mwm, cl_context_t *ctx)
     if (!write_cl_buffer(titan, mid_low, mid_high, mwm, LOOP_COUNT))
         return NULL;
 
-    if (CL_SUCCESS ==
-        clEnqueueNDRangeKernel(titan->cmd_q, titan->kernel[INDEX_OF_KERNEL_INIT],
-                               1, &global_offset, &global_work_size,
-                               &local_work_size, 0, NULL, &ev)) {
+    if (CL_SUCCESS == clEnqueueNDRangeKernel(
+                          titan->cmd_q, titan->kernel[INDEX_OF_KERNEL_INIT], 1,
+                          &global_offset, &global_work_size, &local_work_size,
+                          0, NULL, &ev)) {
         clWaitForEvents(1, &ev);
         clReleaseEvent(ev);
         ctx->hash_count += 64 * num_groups * LOOP_COUNT;
@@ -118,8 +118,8 @@ static int8_t *pwork(int8_t *state, int mwm, cl_context_t *ctx)
         while (found == 0) {
             if (CL_SUCCESS !=
                 clEnqueueNDRangeKernel(
-                    titan->cmd_q, titan->kernel[INDEX_OF_KERNEL_SEARCH], 1, NULL,
-                    &global_work_size, &local_work_size, 0, NULL, &ev1)) {
+                    titan->cmd_q, titan->kernel[INDEX_OF_KERNEL_SEARCH], 1,
+                    NULL, &global_work_size, &local_work_size, 0, NULL, &ev1)) {
                 clReleaseEvent(ev1);
                 return NULL; /* Running "search" kernel function failed */
             }
@@ -265,8 +265,8 @@ fail:
 static bool pow_cl_context_initialize(impl_context_t *impl_ctx)
 {
     impl_ctx->num_max_thread = init_clcontext(opencl_ctx);
-    pow_cl_context_t *ctx = (pow_cl_context_t *) malloc(sizeof(pow_cl_context_t) *
-                                                    impl_ctx->num_max_thread);
+    pow_cl_context_t *ctx = (pow_cl_context_t *) malloc(
+        sizeof(pow_cl_context_t) * impl_ctx->num_max_thread);
     if (!ctx)
         goto fail;
 
@@ -290,17 +290,16 @@ static void pow_cl_context_destroy(impl_context_t *impl_ctx)
 }
 
 static void *pow_cl_get_pow_context(impl_context_t *impl_ctx,
-                                 int8_t *trytes,
-                                 int mwm,
-                                 int threads)
+                                    int8_t *trytes,
+                                    int mwm,
+                                    int threads)
 {
     uv_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
             uv_mutex_unlock(&impl_ctx->lock);
-            pow_cl_context_t *ctx =
-                (pow_cl_context_t *) impl_ctx->context + i;
+            pow_cl_context_t *ctx = (pow_cl_context_t *) impl_ctx->context + i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
             ctx->index_of_context = i;

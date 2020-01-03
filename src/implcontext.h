@@ -32,9 +32,9 @@ struct impl_context_s {
     void (*destroy)(impl_context_t *impl_ctx);
     /* Private PoW Context for each thread */
     void *(*get_pow_context)(impl_context_t *impl_ctx,
-                           int8_t *trytes,
-                           int mwm,
-                           int threads);
+                             int8_t *trytes,
+                             int mwm,
+                             int threads);
     bool (*do_the_pow)(void *pow_ctx);
     int8_t *(*get_pow_result)(void *pow_ctx);
     pow_info_t (*get_pow_info)(void *pow_ctx);
@@ -50,9 +50,9 @@ void destroy_impl_context(impl_context_t *impl_ctx);
 bool enter_impl_context(impl_context_t *impl_ctx);
 void exit_impl_context(impl_context_t *impl_ctx);
 void *get_pow_context(impl_context_t *impl_ctx,
-                    int8_t *trytes,
-                    int mwm,
-                    int threads);
+                      int8_t *trytes,
+                      int mwm,
+                      int threads);
 bool do_the_pow(impl_context_t *impl_ctx, void *pow_ctx);
 bool free_pow_context(impl_context_t *impl_ctx, void *pow_ctx);
 int8_t *get_pow_result(impl_context_t *impl_ctx, void *pow_ctx);
