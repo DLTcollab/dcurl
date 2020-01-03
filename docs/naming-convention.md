@@ -21,7 +21,7 @@ dcurl uses the **[snake case](https://en.wikipedia.org/wiki/Snake_case)** naming
 
 - Macro: Use capital letters
   ```
-  #define MIN_TRYTE_VALUE -13
+  #define MIN_TRYTE_VALUE (-13)
   #define MAX_TRYTE_VALUE 13
   ```
 

@@ -49,7 +49,7 @@ struct pow_avx_context_s {
 #include <x86intrin.h>
 #endif
 
-#define INCR_START HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27
+#define INCR_START (HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27)
 
 #ifdef __AVX2__
 #define HBITS 0xFFFFFFFFFFFFFFFFuLL
