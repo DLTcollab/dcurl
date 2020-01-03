@@ -9,7 +9,7 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
-#define MIN_TRYTE_VALUE -13
+#define MIN_TRYTE_VALUE (-13)
 #define MAX_TRYTE_VALUE 13
 #define SIGNATURE_SIZE 6561
 #define DEPTH 3
