@@ -19,21 +19,21 @@
 
 #define CONN_MAX 20
 
-typedef struct _pow_remote_context PoW_Remote_Context;
-typedef struct _remote_impl_context RemoteImplContext;
+typedef struct pow_remote_context_s pow_remote_context_t;
+typedef struct remote_impl_context_s remote_impl_context_t;
 
-struct _pow_remote_context {
+struct pow_remote_context_s {
     /* Thread management */
-    int indexOfContext;
+    int index_of_context;
     /* Arguments of PoW */
     int8_t input_trytes[TRANSACTION_TRYTES_LENGTH];  /* 2673 */
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
     /* PoW-related information */
-    PoW_Info pow_info;
+    pow_info_t pow_info;
 };
 
-struct _remote_impl_context {
+struct remote_impl_context_s {
     void *context;
     char *description;
     /* Connection parameters */
@@ -46,29 +46,31 @@ struct _remote_impl_context {
     int num_working_thread;
 
     /* Functions of Implementation Context */
-    bool (*initialize)(RemoteImplContext *remote_ctx);
-    void (*destroy)(RemoteImplContext *remote_ctx);
+    bool (*initialize)(remote_impl_context_t *remote_ctx);
+    void (*destroy)(remote_impl_context_t *remote_ctx);
     /* Private PoW Context for each thread */
-    void *(*getPoWContext)(RemoteImplContext *remote_ctx,
-                           int8_t *trytes,
-                           int mwm);
-    bool (*doThePoW)(RemoteImplContext *remote_ctx, void *pow_ctx);
-    int8_t *(*getPoWResult)(void *pow_ctx);
-    PoW_Info (*getPoWInfo)(void *pow_ctx);
-    bool (*freePoWContext)(RemoteImplContext *remote_ctx, void *pow_ctx);
+    void *(*get_pow_context)(remote_impl_context_t *remote_ctx,
+                             int8_t *trytes,
+                             int mwm);
+    bool (*do_the_pow)(remote_impl_context_t *remote_ctx, void *pow_ctx);
+    int8_t *(*get_pow_result)(void *pow_ctx);
+    pow_info_t (*get_pow_info)(void *pow_ctx);
+    bool (*free_pow_context)(remote_impl_context_t *remote_ctx, void *pow_ctx);
 
     /* Node in linked list */
     struct list_head node;
 };
 
-bool registerRemoteContext(RemoteImplContext *remote_ctx);
-bool initializeRemoteContext(RemoteImplContext *remote_ctx);
-void destroyRemoteContext(RemoteImplContext *remote_ctx);
-bool enterRemoteContext(RemoteImplContext *remote_ctx);
-void *getRemoteContext(RemoteImplContext *remote_ctx, int8_t *trytes, int mwm);
-bool doRemoteContext(RemoteImplContext *remote_ctx, void *pow_ctx);
-int8_t *getRemoteResult(RemoteImplContext *remote_ctx, void *pow_ctx);
-bool freeRemoteContext(RemoteImplContext *remote_ctx, void *pow_ctx);
-void exitRemoteContext(RemoteImplContext *remote_ctx);
+bool register_remote_context(remote_impl_context_t *remote_ctx);
+bool initialize_remote_context(remote_impl_context_t *remote_ctx);
+void destroy_remote_context(remote_impl_context_t *remote_ctx);
+bool enter_remote_context(remote_impl_context_t *remote_ctx);
+void *get_remote_context(remote_impl_context_t *remote_ctx,
+                         int8_t *trytes,
+                         int mwm);
+bool do_remote_context(remote_impl_context_t *remote_ctx, void *pow_ctx);
+int8_t *get_remote_result(remote_impl_context_t *remote_ctx, void *pow_ctx);
+bool free_remote_context(remote_impl_context_t *remote_ctx, void *pow_ctx);
+void exit_remote_context(remote_impl_context_t *remote_ctx);
 
 #endif

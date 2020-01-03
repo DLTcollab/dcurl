@@ -12,15 +12,15 @@
 #include "constants.h"
 #include "trinary.h"
 
-typedef struct _curl {
-    Trits_t *state;
-} Curl;
+typedef struct curl_s {
+    trits_t *state;
+} curl_t;
 
-void Absorb(Curl *c, Trytes_t *inn);
-void Transform(Curl *c);
-Trytes_t *Squeeze(Curl *c);
+void absorb(curl_t *c, trytes_t *inn);
+void transform(curl_t *c);
+trytes_t *squeeze(curl_t *c);
 
-Curl *initCurl();
-void freeCurl(Curl *c);
+curl_t *init_curl();
+void free_curl(curl_t *c);
 
 #endif

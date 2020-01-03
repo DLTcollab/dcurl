@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static const int8_t truthTable[11] = {1, 0, -1, 2, 1, -1, 0, 2, -1, 1, 0};
+static const int8_t truth_table[11] = {1, 0, -1, 2, 1, -1, 0, 2, -1, 1, 0};
 
 static void _transform(int8_t state[])
 {
@@ -22,7 +22,7 @@ static void _transform(int8_t state[])
         for (i = 0; i < STATE_TRITS_LENGTH; i++) {
             int aa = indices[i];
             int bb = indices[i + 1];
-            to[i] = truthTable[from[aa] + (from[bb] * 4) + 5];
+            to[i] = truth_table[from[aa] + (from[bb] * 4) + 5];
         }
         int8_t *tmp = from;
         from = to;
@@ -31,14 +31,14 @@ static void _transform(int8_t state[])
     memcpy(state, copy, STATE_TRITS_LENGTH);
 }
 
-void Transform(Curl *c)
+void transform(curl_t *c)
 {
     _transform(c->state->data);
 }
 
-void Absorb(Curl *c, Trytes_t *inn)
+void absorb(curl_t *c, trytes_t *inn)
 {
-    Trits_t *in = trits_from_trytes(inn);
+    trits_t *in = trits_from_trytes(inn);
     int lenn = 0;
 
     if (!in)
@@ -52,43 +52,43 @@ void Absorb(Curl *c, Trytes_t *inn)
         /* Copy in[i, i + lenn] to c->state->data[0, lenn] */
         memcpy(c->state->data, in->data + i, lenn);
 
-        Transform(c);
+        transform(c);
     }
-    freeTrobject(in);
+    free_trinary_object(in);
 }
 
-Trytes_t *Squeeze(Curl *c)
+trytes_t *squeeze(curl_t *c)
 {
     int8_t src[HASH_TRITS_LENGTH] = {0};
 
     /* Get trits[:HASH_TRITS_LENGTH] to an array */
     memcpy(src, c->state->data, HASH_TRITS_LENGTH);
 
-    Trits_t *trits = initTrits(src, HASH_TRITS_LENGTH);
-    Trytes_t *trytes = trytes_from_trits(trits);
+    trits_t *trits = init_trits(src, HASH_TRITS_LENGTH);
+    trytes_t *trytes = trytes_from_trits(trits);
 
-    Transform(c);
-    freeTrobject(trits);
+    transform(c);
+    free_trinary_object(trits);
 
     return trytes;
 }
 
-Curl *initCurl()
+curl_t *init_curl()
 {
-    Curl *c = (Curl *) malloc(sizeof(Curl));
+    curl_t *c = (curl_t *) malloc(sizeof(curl_t));
     if (!c)
         return NULL;
 
     int8_t src[STATE_TRITS_LENGTH] = {0};
-    c->state = initTrits(src, STATE_TRITS_LENGTH);
+    c->state = init_trits(src, STATE_TRITS_LENGTH);
 
     return c;
 }
 
-void freeCurl(Curl *c)
+void free_curl(curl_t *c)
 {
     if (c) {
-        freeTrobject(c->state);
+        free_trinary_object(c->state);
         free(c);
     }
 }

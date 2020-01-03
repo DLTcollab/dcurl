@@ -75,7 +75,7 @@ include mk/opencl.mk
 endif
 
 ifeq ("$(BUILD_FPGA_ACCEL)","1")
-CFLAGS += -DENABLE_FPGA_ACCEL
+CFLAGS += -DENABLE_FPGA
 endif
 
 ifeq ("$(BUILD_REMOTE)","1")

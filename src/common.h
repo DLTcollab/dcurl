@@ -38,8 +38,8 @@ static inline void log_debug(logger_id_t const logger_id,
 }
 
 static inline void log_info(logger_id_t const logger_id,
-                             const char *format,
-                             ...)
+                            const char *format,
+                            ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -48,9 +48,9 @@ static inline void log_info(logger_id_t const logger_id,
     fflush(stdout);
 }
 
-typedef struct _pow_info PoW_Info;
+typedef struct pow_info_s pow_info_t;
 
-struct _pow_info {
+struct pow_info_s {
     double time;
     uint64_t hash_count;
 };

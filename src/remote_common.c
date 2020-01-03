@@ -64,10 +64,10 @@ bool die_on_error(int x, char const *context)
     return true;
 }
 
-bool connect_broker(amqp_connection_state_t *conn, const char *hostName)
+bool connect_broker(amqp_connection_state_t *conn, const char *host_name)
 {
     amqp_socket_t *socket = NULL;
-    const char *host = (hostName != NULL) ? hostName : "localhost";
+    const char *host = (host_name != NULL) ? host_name : "localhost";
 
     /* Connect to the rabbitmq broker */
     *conn = amqp_new_connection();
@@ -134,7 +134,7 @@ bool declare_callback_queue(amqp_connection_state_t *conn,
     amqp_queue_declare_ok_t *r =
         amqp_queue_declare(*conn, channel, amqp_empty_bytes, 0, 0, 1, 0, table);
     if (!r || !die_on_amqp_error(amqp_get_rpc_reply(*conn),
-                           "Declaring the private queue with TTL = 10s"))
+                                 "Declaring the private queue with TTL = 10s"))
         return false;
 
     *reply_to_queue = amqp_bytes_malloc_dup(r->queue);

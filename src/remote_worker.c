@@ -17,34 +17,34 @@ int main(int argc, char *const *argv)
     char trytes[TRANSACTION_TRYTES_LENGTH];
     char buf[4];
     int mwm;
-    int cmdOpt;
-    int optIdx;
-    const struct option longOpt[] = {{"broker", required_argument, NULL, 'b'},
-                                     {NULL, 0, NULL, 0}};
+    int cmd_opt;
+    int opt_idx;
+    const struct option long_opt[] = {{"broker", required_argument, NULL, 'b'},
+                                      {NULL, 0, NULL, 0}};
 
     amqp_connection_state_t conn;
     amqp_envelope_t envelope;
-    char *hostIP = NULL;
+    char *host_ip = NULL;
 
     /* Parse the command line options */
     /* TODO: Support macOS since getopt_long() is GNU extension */
     while (1) {
-        cmdOpt = getopt_long(argc, argv, "b:", longOpt, &optIdx);
-        if (cmdOpt == -1)
+        cmd_opt = getopt_long(argc, argv, "b:", long_opt, &opt_idx);
+        if (cmd_opt == -1)
             break;
 
         /* Invalid option */
-        if (cmdOpt == '?')
+        if (cmd_opt == '?')
             break;
 
-        if (cmdOpt == 'b') {
-            hostIP = optarg;
+        if (cmd_opt == 'b') {
+            host_ip = optarg;
         }
     }
 
     dcurl_init();
 
-    if (!connect_broker(&conn, hostIP))
+    if (!connect_broker(&conn, host_ip))
         goto fail;
 
     if (!declare_queue(&conn, 1, "incoming_queue"))

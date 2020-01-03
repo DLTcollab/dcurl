@@ -13,7 +13,7 @@
 #include "constants.h"
 #include "pearl.cl.h"
 
-static bool init_cl_devices(CLContext *ctx)
+static bool init_cl_devices(cl_context_t *ctx)
 {
     cl_int errno;
 
@@ -40,14 +40,14 @@ static bool init_cl_devices(CLContext *ctx)
         ctx->num_work_group = 1;
 
     /* Create Command Queue */
-    ctx->cmdq = clCreateCommandQueue(ctx->context, ctx->device, 0, &errno);
+    ctx->cmd_q = clCreateCommandQueue(ctx->context, ctx->device, 0, &errno);
     if (errno != CL_SUCCESS)
         return false; /* Failed to create command queue */
 
     return true;
 }
 
-static bool init_cl_program(CLContext *ctx)
+static bool init_cl_program(cl_context_t *ctx)
 {
     unsigned char *source_str = pearl_cl;
     size_t source_size = pearl_cl_len;
@@ -67,7 +67,7 @@ static bool init_cl_program(CLContext *ctx)
     return true;
 }
 
-static bool init_cl_kernel(CLContext *ctx)
+static bool init_cl_kernel(cl_context_t *ctx)
 {
     char *kernel_name[] = {"init", "search", "finalize"};
     cl_int errno;
@@ -80,7 +80,7 @@ static bool init_cl_kernel(CLContext *ctx)
     return true;
 }
 
-static bool init_cl_buffer(CLContext *ctx)
+static bool init_cl_buffer(cl_context_t *ctx)
 {
     cl_ulong mem, max_mem = 0;
     cl_int errno;
@@ -118,31 +118,31 @@ static bool init_cl_buffer(CLContext *ctx)
     return true;
 }
 
-static bool init_BufferInfo(CLContext *ctx)
+static bool init_buffer_info(cl_context_t *ctx)
 {
     ctx->kernel_info.buffer_info[INDEX_OF_TRIT_HASH] =
-        (BufferInfo){sizeof(char) * HASH_TRITS_LENGTH, CL_MEM_WRITE_ONLY};
-    ctx->kernel_info.buffer_info[INDEX_OF_MID_LOW] = (BufferInfo){
+        (buffer_info_t){sizeof(char) * HASH_TRITS_LENGTH, CL_MEM_WRITE_ONLY};
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_LOW] = (buffer_info_t){
         sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[INDEX_OF_MID_HIGH] = (BufferInfo){
+    ctx->kernel_info.buffer_info[INDEX_OF_MID_HIGH] = (buffer_info_t){
         sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[INDEX_OF_STATE_LOW] = (BufferInfo){
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_LOW] = (buffer_info_t){
         sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
-    ctx->kernel_info.buffer_info[INDEX_OF_STATE_HIGH] = (BufferInfo){
+    ctx->kernel_info.buffer_info[INDEX_OF_STATE_HIGH] = (buffer_info_t){
         sizeof(int64_t) * STATE_TRITS_LENGTH, CL_MEM_READ_WRITE, 2};
     ctx->kernel_info.buffer_info[INDEX_OF_MWM] =
-        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
+        (buffer_info_t){sizeof(size_t), CL_MEM_READ_ONLY};
     ctx->kernel_info.buffer_info[INDEX_OF_FOUND] =
-        (BufferInfo){sizeof(char), CL_MEM_READ_WRITE};
+        (buffer_info_t){sizeof(char), CL_MEM_READ_WRITE};
     ctx->kernel_info.buffer_info[INDEX_OF_NONCE_PROBE] =
-        (BufferInfo){sizeof(int64_t), CL_MEM_READ_WRITE, 2};
+        (buffer_info_t){sizeof(int64_t), CL_MEM_READ_WRITE, 2};
     ctx->kernel_info.buffer_info[INDEX_OF_LOOP_COUNT] =
-        (BufferInfo){sizeof(size_t), CL_MEM_READ_ONLY};
+        (buffer_info_t){sizeof(size_t), CL_MEM_READ_ONLY};
 
     return init_cl_buffer(ctx);
 }
 
-static bool set_clcontext(CLContext *ctx, cl_device_id device)
+static bool set_clcontext(cl_context_t *ctx, cl_device_id device)
 {
     ctx->device = device;
     ctx->kernel_info.num_buffers = 9;
@@ -152,7 +152,7 @@ static bool set_clcontext(CLContext *ctx, cl_device_id device)
     return init_cl_devices(ctx) && init_cl_program(ctx);
 }
 
-int init_clcontext(CLContext *ctx)
+int init_clcontext(cl_context_t *ctx)
 {
     int ctx_idx = 0;
 
@@ -181,7 +181,7 @@ int init_clcontext(CLContext *ctx)
             int ret = 1;
             ret &= set_clcontext(&ctx[ctx_idx], devices[j]);
             ret &= init_cl_kernel(&ctx[ctx_idx]);
-            ret &= init_BufferInfo(&ctx[ctx_idx]);
+            ret &= init_buffer_info(&ctx[ctx_idx]);
             if (!ret) {
                 free(devices);
                 goto leave;

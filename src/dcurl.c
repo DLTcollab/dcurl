@@ -14,7 +14,7 @@
 #if defined(ENABLE_OPENCL)
 #include "pow_cl.h"
 #endif
-#if defined(ENABLE_FPGA_ACCEL)
+#if defined(ENABLE_FPGA)
 #include "pow_fpga.h"
 #endif
 #if defined(ENABLE_REMOTE)
@@ -32,7 +32,7 @@
 #endif
 
 /* for checking whether the corresponding implementation is initialized */
-enum Capability {
+enum capability {
     CAP_NONE = 0U,
     CAP_C = 1U,
     CAP_SSE = 1U << 1,
@@ -43,31 +43,31 @@ enum Capability {
 };
 
 /* check whether dcurl is initialized */
-static bool isInitialized = false;
-static uint8_t runtimeCaps = CAP_NONE;
+static bool is_initialized = false;
+static uint8_t runtime_caps = CAP_NONE;
 static uv_sem_t notify;
 
-LIST_HEAD(IMPL_LIST);
-LIST_HEAD(REMOTE_IMPL_LIST);
+LIST_HEAD(impl_list);
+LIST_HEAD(remote_impl_list);
 
 #if defined(ENABLE_AVX)
-extern ImplContext PoWAVX_Context;
+extern impl_context_t pow_avx_context;
 #elif defined(ENABLE_SSE)
-extern ImplContext PoWSSE_Context;
+extern impl_context_t pow_sse_context;
 #elif defined(ENABLE_GENERIC)
-extern ImplContext PoWC_Context;
+extern impl_context_t pow_c_context;
 #endif
 
 #if defined(ENABLE_OPENCL)
-extern ImplContext PoWCL_Context;
+extern impl_context_t pow_cl_context;
 #endif
 
-#if defined(ENABLE_FPGA_ACCEL)
-extern ImplContext PoWFPGA_Context;
+#if defined(ENABLE_FPGA)
+extern impl_context_t pow_fpga_context;
 #endif
 
 #if defined(ENABLE_REMOTE)
-extern RemoteImplContext Remote_Context;
+extern remote_impl_context_t remote_context;
 static uv_sem_t notify_remote;
 #endif
 
@@ -76,71 +76,71 @@ bool dcurl_init()
     bool ret = false;
 
 #if defined(ENABLE_AVX)
-    if (registerImplContext(&PoWAVX_Context)) {
-        runtimeCaps |= CAP_AVX;
+    if (register_impl_context(&pow_avx_context)) {
+        runtime_caps |= CAP_AVX;
         ret |= true;
     }
 #elif defined(ENABLE_SSE)
-    if (registerImplContext(&PoWSSE_Context)) {
-        runtimeCaps |= CAP_SSE;
+    if (register_impl_context(&pow_sse_context)) {
+        runtime_caps |= CAP_SSE;
         ret |= true;
     }
 #elif defined(ENABLE_GENERIC)
-    if (registerImplContext(&PoWC_Context)) {
-        runtimeCaps |= CAP_C;
+    if (register_impl_context(&pow_c_context)) {
+        runtime_caps |= CAP_C;
         ret |= true;
     }
 #endif
 
 #if defined(ENABLE_OPENCL)
-    if (registerImplContext(&PoWCL_Context)) {
-        runtimeCaps |= CAP_GPU;
+    if (register_impl_context(&pow_cl_context)) {
+        runtime_caps |= CAP_GPU;
         ret |= true;
     }
 #endif
 
-#if defined(ENABLE_FPGA_ACCEL)
-    if (registerImplContext(&PoWFPGA_Context)) {
-        runtimeCaps |= CAP_FPGA;
+#if defined(ENABLE_FPGA)
+    if (register_impl_context(&pow_fpga_context)) {
+        runtime_caps |= CAP_FPGA;
         ret |= true;
     }
 #endif
 
 #if defined(ENABLE_REMOTE)
-    if (registerRemoteContext(&Remote_Context)) {
-        runtimeCaps |= CAP_REMOTE;
+    if (register_remote_context(&remote_context)) {
+        runtime_caps |= CAP_REMOTE;
         ret |= true;
     }
     uv_sem_init(&notify_remote, 0);
 #endif
 
     uv_sem_init(&notify, 0);
-    return isInitialized = ret;
+    return is_initialized = ret;
 }
 
 void dcurl_destroy()
 {
-    ImplContext *impl = NULL;
+    impl_context_t *impl = NULL;
     struct list_head *p;
 
 #if defined(ENABLE_REMOTE)
-    RemoteImplContext *remoteImpl = NULL;
-    struct list_head *pRemote;
+    remote_impl_context_t *remote_impl = NULL;
+    struct list_head *p_remote;
 
-    list_for_each (pRemote, &REMOTE_IMPL_LIST) {
-        remoteImpl = list_entry(pRemote, RemoteImplContext, node);
-        destroyRemoteContext(remoteImpl);
-        list_del(pRemote);
+    list_for_each (p_remote, &remote_impl_list) {
+        remote_impl = list_entry(p_remote, remote_impl_context_t, node);
+        destroy_remote_context(remote_impl);
+        list_del(p_remote);
     }
 #endif
 
-    list_for_each (p, &IMPL_LIST) {
-        impl = list_entry(p, ImplContext, node);
-        destroyImplContext(impl);
+    list_for_each (p, &impl_list) {
+        impl = list_entry(p, impl_context_t, node);
+        destroy_impl_context(impl);
         list_del(p);
     }
 
-    runtimeCaps = CAP_NONE;
+    runtime_caps = CAP_NONE;
 }
 
 
@@ -149,22 +149,22 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
     void *pow_ctx = NULL;
     int8_t *res = NULL;
 
-    ImplContext *impl = NULL;
+    impl_context_t *impl = NULL;
     struct list_head *p;
 
-    if (!isInitialized)
+    if (!is_initialized)
         return NULL;
 
 #if defined(ENABLE_REMOTE)
-    if (runtimeCaps & CAP_REMOTE) {
-        RemoteImplContext *remoteImpl = NULL;
-        struct list_head *pRemote;
+    if (runtime_caps & CAP_REMOTE) {
+        remote_impl_context_t *remote_impl = NULL;
+        struct list_head *p_remote;
 
         do {
-            list_for_each (pRemote, &REMOTE_IMPL_LIST) {
-                remoteImpl = list_entry(pRemote, RemoteImplContext, node);
-                if (enterRemoteContext(remoteImpl)) {
-                    pow_ctx = getRemoteContext(remoteImpl, trytes, mwm);
+            list_for_each (p_remote, &remote_impl_list) {
+                remote_impl = list_entry(p_remote, remote_impl_context_t, node);
+                if (enter_remote_context(remote_impl)) {
+                    pow_ctx = get_remote_context(remote_impl, trytes, mwm);
                     goto remote_pow;
                 }
             }
@@ -172,21 +172,21 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
         } while (1);
 
     remote_pow:
-        if (!doRemoteContext(remoteImpl, pow_ctx)) {
+        if (!do_remote_context(remote_impl, pow_ctx)) {
             /* The remote interface can not work without activated RabbitMQ
              * broker and remote worker. If it is not working, the PoW would be
              * calculated by the local machine. And the remote interface
              * resource should be released.
              */
-            freeRemoteContext(remoteImpl, pow_ctx);
-            exitRemoteContext(remoteImpl);
+            free_remote_context(remote_impl, pow_ctx);
+            exit_remote_context(remote_impl);
             uv_sem_post(&notify_remote);
             goto local_pow;
         } else {
-            res = getRemoteResult(remoteImpl, pow_ctx);
+            res = get_remote_result(remote_impl, pow_ctx);
         }
-        freeRemoteContext(remoteImpl, pow_ctx);
-        exitRemoteContext(remoteImpl);
+        free_remote_context(remote_impl, pow_ctx);
+        exit_remote_context(remote_impl);
         uv_sem_post(&notify_remote);
         return res;
     }
@@ -194,10 +194,10 @@ int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads)
 local_pow:
 #endif
     do {
-        list_for_each (p, &IMPL_LIST) {
-            impl = list_entry(p, ImplContext, node);
-            if (enterImplContext(impl)) {
-                pow_ctx = getPoWContext(impl, trytes, mwm, threads);
+        list_for_each (p, &impl_list) {
+            impl = list_entry(p, impl_context_t, node);
+            if (enter_impl_context(impl)) {
+                pow_ctx = get_pow_context(impl, trytes, mwm, threads);
                 goto do_pow;
             }
         }
@@ -205,13 +205,13 @@ local_pow:
     } while (1);
 
 do_pow:
-    if (!doThePoW(impl, pow_ctx)) {
+    if (!do_the_pow(impl, pow_ctx)) {
         res = NULL;
     } else {
-        res = getPoWResult(impl, pow_ctx);
+        res = get_pow_result(impl, pow_ctx);
     }
-    freePoWContext(impl, pow_ctx);
-    exitImplContext(impl);
+    free_pow_context(impl, pow_ctx);
+    exit_impl_context(impl);
     uv_sem_post(&notify);
     return res;
 }

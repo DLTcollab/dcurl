@@ -32,8 +32,8 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
     /*********** Get the Byte array from Java byte Array *************/
     jbyte *c_trits = (*env)->GetByteArrayElements(env, trits, NULL);
 
-    Trits_t *arg_trits = initTrits((int8_t *) c_trits, 8019);
-    Trytes_t *arg_trytes = trytes_from_trits(arg_trits);
+    trits_t *arg_trits = init_trits((int8_t *) c_trits, 8019);
+    trytes_t *arg_trytes = trytes_from_trits(arg_trits);
     if (!arg_trytes) {
         ret = JNI_FALSE;
         goto fail_input;
@@ -43,8 +43,8 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
     int8_t *result = dcurl_entry(arg_trytes->data, mwm, threads);
 
     /************ Write result back Java byte array *****************/
-    Trytes_t *ret_trytes = initTrytes(result, 2673);
-    Trits_t *ret_trits = trits_from_trytes(ret_trytes);
+    trytes_t *ret_trytes = init_trytes(result, 2673);
+    trits_t *ret_trits = trits_from_trytes(ret_trytes);
     if (!ret_trits) {
         ret = JNI_FALSE;
         goto fail_output;
@@ -54,11 +54,11 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
 
 fail_output:
     free(result);
-    freeTrobject(ret_trits);
-    freeTrobject(ret_trytes);
+    free_trinary_object(ret_trits);
+    free_trinary_object(ret_trytes);
 fail_input:
-    freeTrobject(arg_trits);
-    freeTrobject(arg_trytes);
+    free_trinary_object(arg_trits);
+    free_trinary_object(arg_trytes);
 
     return ret;
 }
