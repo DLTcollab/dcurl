@@ -13,7 +13,7 @@ dcurl uses the **[snake case](https://en.wikipedia.org/wiki/Snake_case)** naming
 
 - Structure: The suffixes **_s** represents for structure and **_t** represents for type
   ```
-  typedef struct pwrok_s pwork_t;
+  typedef struct pwork_s pwork_t;
   struct pwork_s {
       ......
   }
