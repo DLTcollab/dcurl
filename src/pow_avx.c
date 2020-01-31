@@ -318,6 +318,7 @@ static int check_256(__m256d *l, __m256d *h, int m)
     for (j = 0; j < 4; j++) {
         for (i = 0; i < 64; i++) {
             long long np = ((dl) nonce_probe[j]).l;
+            // cppcheck-suppress shiftTooManyBitsSigned ; The most significant bit is not used as a signed bit
             if ((np >> i) & 1) {
                 return i + j * 64;
             }

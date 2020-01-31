@@ -1,15 +1,2 @@
-// The most significant bit is not used as a signed bit
-shiftTooManyBitsSigned:src/pow_avx.c:321
-
-// The unused functions are for the ccurl compatibility
-unusedFunction:src/compat_ccurl.c:18
-unusedFunction:src/compat_ccurl.c:29
-unusedFunction:src/compat_ccurl.c:34
-
-// The invoked functions of OpenCL are not checked correctly with CppCheck
-unusedFunction:src/pow_kernel.cl:213
-unusedFunction:src/pow_kernel.cl:248
-unusedFunction:src/pow_kernel.cl:284
-
 // Do not treat system header files missing as errors
 missingIncludeSystem:*
