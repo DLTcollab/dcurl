@@ -18,6 +18,7 @@ static-analysis:
 	  --enable=all \
 	  --error-exitcode=1 \
 	  --force \
+	  --inline-suppr \
 	  -I $(SRC) \
 	  $(LIBTUV_INCLUDE) \
 	  $(LIBRABBITMQ_INCLUDE) \

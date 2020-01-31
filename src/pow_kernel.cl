@@ -210,6 +210,7 @@ void setup_ids(__private size_t *id,
     *n_trits -= (*n_trits) * (*id) < STATE_TRITS_LENGTH ? 0 : 1;
 }
 
+// cppcheck-suppress unusedFunction ; The invoked functions of OpenCL are not checked correctly with CppCheck
 __kernel void init(__global char *trit_hash,
                    __global bc_trit_t *mid_low,
                    __global bc_trit_t *mid_high,
@@ -245,6 +246,7 @@ __kernel void init(__global char *trit_hash,
     }
 }
 
+// cppcheck-suppress unusedFunction ; The invoked functions of OpenCL are not checked correctly with CppCheck
 __kernel void search(__global char *trit_hash,
                      __global bc_trit_t *mid_low,
                      __global bc_trit_t *mid_high,
@@ -281,6 +283,7 @@ __kernel void search(__global char *trit_hash,
     }
 }
 
+// cppcheck-suppress unusedFunction ; The invoked functions of OpenCL are not checked correctly with CppCheck
 __kernel void finalize(__global char *trit_hash,
                        __global bc_trit_t *mid_low,
                        __global bc_trit_t *mid_high,
