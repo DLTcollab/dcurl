@@ -25,7 +25,7 @@ Change the FPGA configuration mode switch as shown in the image\
 <img src="https://forum.uvm.io/uploads/default/original/1X/e09be635519a0af23ad88baed8ef99d06941eca4.png" width="600">
 
 
-## Connect with the De10-Nano board
+## Connect with the DE10-Nano board
 ### Hardware
 Please make sure the following list are well set or connected:
 - 5V DC Power Jack
@@ -91,6 +91,23 @@ After configuration, select **Save setup as dfl** and select **Exit from Minicom
 $ sudo minicom
 ```
 Then enter the user account and the password to login.
+
+### MAC address setting (optional)
+For monitoring or using [Ansible Playbooks](https://docs.ansible.com/ansible/latest/user_guide/playbooks.html) on remote workers,
+the IP address of them should be fixed.
+The router can assign the IP address by detecting the hardware MAC address.
+However, each time the **DE10-Nano** board is rebooted, the MAC address would be different.
+
+The steps to set the MAC address:
+- Open the file `/etc/network/interfaces`
+- Add the following text
+  ```
+  auto eth0
+  iface eth0 inet dhcp
+  hwaddress ether xx:xx:xx:xx:xx:xx
+  ```
+  xx:xx:xx:xx:xx:xx is the assigned MAC address
+- Reboot
 
 
 ## Build and execute the remote worker
