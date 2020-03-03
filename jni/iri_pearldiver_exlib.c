@@ -13,11 +13,32 @@
 #include "../src/trinary.h"
 
 JNIEXPORT jboolean JNICALL
-Java_com_iota_iri_crypto_PearlDiver_exlibInit(JNIEnv *env, jclass clazz)
+Java_com_iota_iri_crypto_PearlDiver_exlibInit(JNIEnv *env,
+                                              jclass clazz,
+                                              jbyteArray broker_host,
+                                              jint broker_host_len)
 {
-    if (!dcurl_init())
-        return JNI_FALSE;
-    return JNI_TRUE;
+    jboolean ret = JNI_TRUE;
+
+    /* Get the Byte array from Java byte Array */
+    jbyte *host = (*env)->GetByteArrayElements(env, broker_host, NULL);
+
+    dcurl_config config;
+    config.broker_host = malloc(broker_host_len + 1);
+    if (!config.broker_host) {
+        ret = JNI_FALSE;
+        goto fail;
+    }
+    memcpy(config.broker_host, (char *) host, broker_host_len);
+    config.broker_host[broker_host_len] = '\0';
+
+    if (!dcurl_init(&config))
+        ret = JNI_FALSE;
+
+    free(config.broker_host);
+
+fail:
+    return ret;
 }
 
 JNIEXPORT jboolean JNICALL
@@ -29,7 +50,7 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
 {
     jboolean ret = JNI_TRUE;
 
-    /*********** Get the Byte array from Java byte Array *************/
+    /* Get the Byte array from Java byte Array */
     jbyte *c_trits = (*env)->GetByteArrayElements(env, trits, NULL);
 
     trits_t *arg_trits = init_trits((int8_t *) c_trits, 8019);
@@ -38,11 +59,10 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
         ret = JNI_FALSE;
         goto fail_input;
     }
-    /****************************************************************/
 
     int8_t *result = dcurl_entry(arg_trytes->data, mwm, threads);
 
-    /************ Write result back Java byte array *****************/
+    /* Write result back Java byte array */
     trytes_t *ret_trytes = init_trytes(result, 2673);
     trits_t *ret_trits = trits_from_trytes(ret_trytes);
     if (!ret_trits) {
@@ -50,7 +70,6 @@ Java_com_iota_iri_crypto_PearlDiver_exlibSearch(JNIEnv *env,
         goto fail_output;
     }
     (*env)->SetByteArrayRegion(env, trits, 0, 8019, ret_trits->data);
-    /****************************************************************/
 
 fail_output:
     free(result);

@@ -23,16 +23,32 @@
  * easily.
  */
 
+/*! The default value of the broker hostname */
+#define DEFAULT_BROKER_HOST "localhost"
+
+/**
+ * A structure representing the configuration of the initialization.
+ */
+typedef struct {
+    char *broker_host; /**< The broker hostname used in the remote mode */
+} dcurl_config;
+
 /**
  * @brief dcurl initialization.
  *
  * Register the determined hardware into the list and initialize the
  * corresponding resource.
+ * @param [in] config
+ * @parblock
+ * The configuration of the initialization.
+ *
+ * NULL: Use default configuration.
+ * @endparblock
  * @return
  * - true: one of the initialization succeeded.
  * - false: all the initialization failed.
  */
-bool dcurl_init();
+bool dcurl_init(dcurl_config *config);
 
 /**
  * @brief dcurl destruction.

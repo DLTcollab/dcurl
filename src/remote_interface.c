@@ -159,7 +159,7 @@ static bool remote_init(remote_impl_context_t *remote_ctx)
     memset(remote_ctx->slots, 0, remote_ctx->num_max_thread * sizeof(bool));
 
     for (int i = 0; i < CONN_MAX; i++) {
-        if (!connect_broker(&remote_ctx->conn[i], NULL))
+        if (!connect_broker(&remote_ctx->conn[i], remote_ctx->broker_host))
             goto fail_to_init;
     }
     if (!declare_queue(&remote_ctx->conn[0], 1, "incoming_queue"))

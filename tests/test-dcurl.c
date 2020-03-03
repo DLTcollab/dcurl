@@ -59,7 +59,7 @@ int main()
 
     for (int loop_count = 0; loop_count < LOOP_MAX; loop_count++) {
         /* test dcurl Implementation with mwm = 14 */
-        dcurl_init();
+        dcurl_init(NULL);
         int8_t *ret_trytes = dcurl_entry((int8_t *) transaction_trytes, mwm, 8);
         assert(ret_trytes);
         dcurl_destroy();
