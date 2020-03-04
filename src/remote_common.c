@@ -74,7 +74,7 @@ bool connect_broker(amqp_connection_state_t *conn, const char *host_name)
     socket = amqp_tcp_socket_new(*conn);
     if (!socket)
         goto destroy_connection;
-    if (amqp_socket_open(socket, host, 5672) != AMQP_STATUS_OK) {
+    if (amqp_socket_open(socket, host, AMQP_PROTOCOL_PORT) != AMQP_STATUS_OK) {
         log_debug(0, "The rabbitmq broker of %s is closed\n", host);
         goto destroy_connection;
     }
