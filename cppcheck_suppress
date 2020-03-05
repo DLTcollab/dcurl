@@ -1,0 +1,2 @@
+// Do not treat system header files missing as errors
+missingIncludeSystem:*

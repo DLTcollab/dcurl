@@ -10,27 +10,30 @@
 #include <stdbool.h>
 #include "dcurl.h"
 
-static bool isInitialized = false;
+static bool is_initialized = false;
 
 /* mutex protecting initialization section */
 static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
+// cppcheck-suppress unusedFunction ; The unused functions are for the ccurl compatibility
 char *ccurl_pow(char *trytes, int mwm)
 {
     pthread_mutex_lock(&mtx);
-    if (!isInitialized) {
+    if (!is_initialized) {
         dcurl_init();
-        isInitialized = true;
+        is_initialized = true;
     }
     pthread_mutex_unlock(&mtx);
     return (char *) dcurl_entry((int8_t *) trytes, mwm, 1);
 }
 
+// cppcheck-suppress unusedFunction ; The unused functions are for the ccurl compatibility
 void ccurl_pow_finalize(void)
 {
     dcurl_destroy();
 }
 
+// cppcheck-suppress unusedFunction ; The unused functions are for the ccurl compatibility
 void ccurl_pow_interrupt(void)
 {
     /* Do Nothing */

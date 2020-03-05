@@ -19,11 +19,11 @@ bool die_on_amqp_error(amqp_rpc_reply_t x, char const *context)
         return true;
 
     case AMQP_RESPONSE_NONE:
-        ddprintf("%s: missing RPC reply type!\n", context);
+        log_debug(0, "%s: missing RPC reply type!\n", context);
         break;
 
     case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-        ddprintf("%s: %s\n", context, amqp_error_string2(x.library_error));
+        log_debug(0, "%s: %s\n", context, amqp_error_string2(x.library_error));
         break;
 
     case AMQP_RESPONSE_SERVER_EXCEPTION:
@@ -31,21 +31,21 @@ bool die_on_amqp_error(amqp_rpc_reply_t x, char const *context)
         case AMQP_CONNECTION_CLOSE_METHOD: {
             amqp_connection_close_t *m =
                 (amqp_connection_close_t *) x.reply.decoded;
-            ddprintf("%s: server connection error %u, message: %.*s\n",
-                     context, m->reply_code, (int) m->reply_text.len,
-                     (char *) m->reply_text.bytes);
+            log_debug(0, "%s: server connection error %u, message: %.*s\n",
+                      context, m->reply_code, (int) m->reply_text.len,
+                      (char *) m->reply_text.bytes);
             break;
         }
         case AMQP_CHANNEL_CLOSE_METHOD: {
             amqp_channel_close_t *m = (amqp_channel_close_t *) x.reply.decoded;
-            ddprintf("%s: server channel error %u, message: %.*s\n", context,
-                     m->reply_code, (int) m->reply_text.len,
-                     (char *) m->reply_text.bytes);
+            log_debug(0, "%s: server channel error %u, message: %.*s\n",
+                      context, m->reply_code, (int) m->reply_text.len,
+                      (char *) m->reply_text.bytes);
             break;
         }
         default:
-            ddprintf("%s: unknown server error, method id 0x%08X\n", context,
-                     x.reply.id);
+            log_debug(0, "%s: unknown server error, method id 0x%08X\n",
+                      context, x.reply.id);
             break;
         }
         break;
@@ -57,23 +57,25 @@ bool die_on_amqp_error(amqp_rpc_reply_t x, char const *context)
 bool die_on_error(int x, char const *context)
 {
     if (x < 0) {
-        ddprintf("%s: %s\n", context, amqp_error_string2(x));
+        log_debug(0, "%s: %s\n", context, amqp_error_string2(x));
         return false;
     }
 
     return true;
 }
 
-bool connect_broker(amqp_connection_state_t *conn, const char *hostName)
+bool connect_broker(amqp_connection_state_t *conn, const char *host_name)
 {
     amqp_socket_t *socket = NULL;
-    const char *host = (hostName != NULL) ? hostName : "localhost";
+    const char *host = (host_name != NULL) ? host_name : "localhost";
 
     /* Connect to the rabbitmq broker */
     *conn = amqp_new_connection();
     socket = amqp_tcp_socket_new(*conn);
-    if (amqp_socket_open(socket, host, 5672) != AMQP_STATUS_OK) {
-        ddprintf("The rabbitmq broker of %s is closed\n", host);
+    if (!socket)
+        goto destroy_connection;
+    if (amqp_socket_open(socket, host, AMQP_PROTOCOL_PORT) != AMQP_STATUS_OK) {
+        log_debug(0, "The rabbitmq broker of %s is closed\n", host);
         goto destroy_connection;
     }
 
@@ -131,8 +133,8 @@ bool declare_callback_queue(amqp_connection_state_t *conn,
 
     amqp_queue_declare_ok_t *r =
         amqp_queue_declare(*conn, channel, amqp_empty_bytes, 0, 0, 1, 0, table);
-    if (!die_on_amqp_error(amqp_get_rpc_reply(*conn),
-                           "Declaring the private queue with TTL = 10s"))
+    if (!r || !die_on_amqp_error(amqp_get_rpc_reply(*conn),
+                                 "Declaring the private queue with TTL = 10s"))
         return false;
 
     *reply_to_queue = amqp_bytes_malloc_dup(r->queue);
@@ -197,24 +199,25 @@ bool wait_response_message(amqp_connection_state_t *conn,
         if (!die_on_amqp_error(amqp_get_rpc_reply(*conn), "Wait method frame"))
             return false;
 
-        ddprintf(MSG_PREFIX "Frame type: %u channel: %u\n", frame.frame_type,
-                 frame.channel);
+        log_debug(0, MSG_PREFIX "Frame type: %u channel: %u\n",
+                  frame.frame_type, frame.channel);
 
         if (frame.frame_type != AMQP_FRAME_METHOD)
             continue;
 
-        ddprintf(MSG_PREFIX "Method: %s\n",
-                 amqp_method_name(frame.payload.method.id));
+        log_debug(0, MSG_PREFIX "Method: %s\n",
+                  amqp_method_name(frame.payload.method.id));
 
         if (frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD)
             continue;
 
 #if defined(ENABLE_DEBUG)
         d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
-        ddprintf(MSG_PREFIX "Delivery: %u exchange: %.*s routingkey: %.*s\n",
-                 (unsigned) d->delivery_tag, (int) d->exchange.len,
-                 (char *) d->exchange.bytes, (int) d->routing_key.len,
-                 (char *) d->routing_key.bytes);
+        log_debug(0,
+                  MSG_PREFIX "Delivery: %u exchange: %.*s routingkey: %.*s\n",
+                  (unsigned) d->delivery_tag, (int) d->exchange.len,
+                  (char *) d->exchange.bytes, (int) d->routing_key.len,
+                  (char *) d->routing_key.bytes);
 #endif
 
         amqp_maybe_release_buffers(*conn);
@@ -227,18 +230,19 @@ bool wait_response_message(amqp_connection_state_t *conn,
             return false;
 
         if (frame.frame_type != AMQP_FRAME_HEADER) {
-            ddprintf("Unexpected header!\n");
+            log_debug(0, "Unexpected header!\n");
             return false;
         }
 
 #if defined(ENABLE_DEBUG)
         p = (amqp_basic_properties_t *) frame.payload.properties.decoded;
         if (p->_flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
-            ddprintf(MSG_PREFIX "Content-type: %.*s\n",
-                     (int) p->content_type.len, (char *) p->content_type.bytes);
+            log_debug(0, MSG_PREFIX "Content-type: %.*s\n",
+                      (int) p->content_type.len,
+                      (char *) p->content_type.bytes);
         }
 #endif
-        ddprintf("---\n");
+        log_debug(0, "---\n");
 
         body_target = (size_t) frame.payload.properties.body_size;
         body_received = 0;
@@ -252,24 +256,24 @@ bool wait_response_message(amqp_connection_state_t *conn,
                 return false;
 
             if (frame.frame_type != AMQP_FRAME_BODY) {
-                ddprintf("Unexpected body\n");
+                log_debug(0, "Unexpected body\n");
                 return false;
             }
 
             body_received += frame.payload.body_fragment.len;
         }
         if (body_received != body_target) {
-            ddprintf("Received body is smaller than body target\n");
+            log_debug(0, "Received body is smaller than body target\n");
             return false;
         }
 
         memcpy(frame_body, (char *) frame.payload.body_fragment.bytes,
                body_len);
 
-        ddprintf(MSG_PREFIX "PoW result: %.*s\n",
-                 (int) frame.payload.body_fragment.len,
-                 (char *) frame.payload.body_fragment.bytes);
-        ddprintf("---\n");
+        log_debug(0, MSG_PREFIX "PoW result: %.*s\n",
+                  (int) frame.payload.body_fragment.len,
+                  (char *) frame.payload.body_fragment.bytes);
+        log_debug(0, "---\n");
 
         /* everything was fine, we can quit now because we received the reply */
         return true;
@@ -282,6 +286,7 @@ bool publish_message(amqp_connection_state_t *conn,
                      char *message)
 {
     amqp_basic_properties_t props;
+    memset(&props, 0, sizeof(amqp_basic_properties_t));
     props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
     props.content_type = amqp_cstring_bytes("text/plain");
     props.delivery_mode = AMQP_DELIVERY_PERSISTENT;
@@ -303,6 +308,7 @@ bool publish_message_with_reply_to(amqp_connection_state_t *conn,
                                    char *message)
 {
     amqp_basic_properties_t props;
+    memset(&props, 0, sizeof(amqp_basic_properties_t));
     props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG |
                    AMQP_BASIC_DELIVERY_MODE_FLAG | AMQP_BASIC_REPLY_TO_FLAG;
     props.content_type = amqp_cstring_bytes("text/plain");
@@ -315,7 +321,8 @@ bool publish_message_with_reply_to(amqp_connection_state_t *conn,
                       "Publishing the message with reply_to"))
         return false;
 
-    ddprintf(MSG_PREFIX "callback queue %s \n", (char *) props.reply_to.bytes);
+    log_debug(0, MSG_PREFIX "callback queue %s \n",
+              (char *) props.reply_to.bytes);
     amqp_bytes_free(props.reply_to);
 
     return true;

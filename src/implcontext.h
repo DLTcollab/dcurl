@@ -15,9 +15,9 @@
 #include "list.h"
 #include "uv.h"
 
-typedef struct _impl_context ImplContext;
+typedef struct impl_context_s impl_context_t;
 
-struct _impl_context {
+struct impl_context_s {
     void *context;
     char *description;
 
@@ -28,34 +28,34 @@ struct _impl_context {
     int num_working_thread;
 
     /* Functions of Implementation Context */
-    bool (*initialize)(ImplContext *impl_ctx);
-    void (*destroy)(ImplContext *impl_ctx);
+    bool (*initialize)(impl_context_t *impl_ctx);
+    void (*destroy)(impl_context_t *impl_ctx);
     /* Private PoW Context for each thread */
-    void *(*getPoWContext)(ImplContext *impl_ctx,
-                           int8_t *trytes,
-                           int mwm,
-                           int threads);
-    bool (*doThePoW)(void *pow_ctx);
-    int8_t *(*getPoWResult)(void *pow_ctx);
-    PoW_Info (*getPoWInfo)(void *pow_ctx);
-    bool (*freePoWContext)(ImplContext *impl_ctx, void *pow_ctx);
+    void *(*get_pow_context)(impl_context_t *impl_ctx,
+                             int8_t *trytes,
+                             int mwm,
+                             int threads);
+    bool (*do_the_pow)(void *pow_ctx);
+    int8_t *(*get_pow_result)(void *pow_ctx);
+    pow_info_t (*get_pow_info)(void *pow_ctx);
+    bool (*free_pow_context)(impl_context_t *impl_ctx, void *pow_ctx);
 
-    /* Linked list */
-    struct list_head list;
+    /* Node in linked list */
+    struct list_head node;
 };
 
-bool registerImplContext(ImplContext *impl_ctx);
-bool initializeImplContext(ImplContext *impl_ctx);
-void destroyImplContext(ImplContext *impl_ctx);
-bool enterImplContext(ImplContext *impl_ctx);
-void exitImplContext(ImplContext *impl_ctx);
-void *getPoWContext(ImplContext *impl_ctx,
-                    int8_t *trytes,
-                    int mwm,
-                    int threads);
-bool doThePoW(ImplContext *impl_ctx, void *pow_ctx);
-bool freePoWContext(ImplContext *impl_ctx, void *pow_ctx);
-int8_t *getPoWResult(ImplContext *impl_ctx, void *pow_ctx);
-PoW_Info getPoWInfo(ImplContext *impl_ctx, void *pow_ctx);
+bool register_impl_context(impl_context_t *impl_ctx);
+bool initialize_impl_context(impl_context_t *impl_ctx);
+void destroy_impl_context(impl_context_t *impl_ctx);
+bool enter_impl_context(impl_context_t *impl_ctx);
+void exit_impl_context(impl_context_t *impl_ctx);
+void *get_pow_context(impl_context_t *impl_ctx,
+                      int8_t *trytes,
+                      int mwm,
+                      int threads);
+bool do_the_pow(impl_context_t *impl_ctx, void *pow_ctx);
+bool free_pow_context(impl_context_t *impl_ctx, void *pow_ctx);
+int8_t *get_pow_result(impl_context_t *impl_ctx, void *pow_ctx);
+pow_info_t get_pow_info(impl_context_t *impl_ctx, void *pow_ctx);
 
 #endif

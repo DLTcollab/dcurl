@@ -17,34 +17,38 @@ int main(int argc, char *const *argv)
     char trytes[TRANSACTION_TRYTES_LENGTH];
     char buf[4];
     int mwm;
-    int cmdOpt;
-    int optIdx;
-    const struct option longOpt[] = {{"broker", required_argument, NULL, 'b'},
-                                     {NULL, 0, NULL, 0}};
+    int cmd_opt;
+    int opt_idx;
+    const struct option long_opt[] = {{"broker", required_argument, NULL, 'b'},
+                                      {NULL, 0, NULL, 0}};
 
     amqp_connection_state_t conn;
     amqp_envelope_t envelope;
-    char *hostIP = NULL;
+    char *host = NULL;
+    dcurl_config config = {.broker_host = NULL};
 
     /* Parse the command line options */
     /* TODO: Support macOS since getopt_long() is GNU extension */
     while (1) {
-        cmdOpt = getopt_long(argc, argv, "b:", longOpt, &optIdx);
-        if (cmdOpt == -1)
+        cmd_opt = getopt_long(argc, argv, "b:", long_opt, &opt_idx);
+        if (cmd_opt == -1)
             break;
 
         /* Invalid option */
-        if (cmdOpt == '?')
+        if (cmd_opt == '?')
             break;
 
-        if (cmdOpt == 'b') {
-            hostIP = optarg;
+        if (cmd_opt == 'b') {
+            host = optarg;
         }
     }
 
-    dcurl_init();
+    dcurl_init(&config);
 
-    if (!connect_broker(&conn, hostIP))
+    if (!connect_broker(&conn, host))
+        goto fail;
+
+    if (!declare_queue(&conn, 1, "incoming_queue"))
         goto fail;
 
     if (!set_consuming_queue(&conn, 1, "incoming_queue"))
@@ -54,7 +58,8 @@ int main(int argc, char *const *argv)
         if (!consume_message(&conn, 1, &envelope))
             goto fail;
 
-        ddprintf(
+        log_debug(
+            0,
             MSG_PREFIX
             "Delivery %u, exchange %.*s, routingkey %.*s, callback queue: %s "
             "\n",
@@ -63,25 +68,28 @@ int main(int argc, char *const *argv)
             (char *) envelope.routing_key.bytes,
             (char *) envelope.message.properties.reply_to.bytes);
         if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
-            ddprintf(MSG_PREFIX "Content-type: %.*s\n",
-                     (int) envelope.message.properties.content_type.len,
-                     (char *) envelope.message.properties.content_type.bytes);
+            log_debug(0, MSG_PREFIX "Content-type: %.*s\n",
+                      (int) envelope.message.properties.content_type.len,
+                      (char *) envelope.message.properties.content_type.bytes);
         }
 
         /* Message body format: transacton | mwm */
         memcpy(trytes, envelope.message.body.bytes, TRANSACTION_TRYTES_LENGTH);
-        memcpy(buf, envelope.message.body.bytes + TRANSACTION_TRYTES_LENGTH, 4);
+        memcpy(
+            buf,
+            (int8_t *) envelope.message.body.bytes + TRANSACTION_TRYTES_LENGTH,
+            4);
         mwm = strtol(buf, NULL, 10);
 
-        ddprintf(MSG_PREFIX "Doing PoW with mwm = %d...\n", mwm);
+        log_debug(0, MSG_PREFIX "Doing PoW with mwm = %d...\n", mwm);
 
         int8_t *ret_trytes = dcurl_entry((int8_t *) trytes, mwm, 0);
         memset(buf, '0', sizeof(buf));
-        ddprintf(MSG_PREFIX "PoW is done\n");
+        log_debug(0, MSG_PREFIX "PoW is done\n");
 
         if (!acknowledge_broker(&conn, 1, &envelope))
             goto fail;
-        ddprintf(MSG_PREFIX "Sending an ack is done\n");
+        log_debug(0, MSG_PREFIX "Sending an ack is done\n");
 
         /* Publish a message of remote PoW result */
         if (!publish_message(
@@ -91,9 +99,9 @@ int main(int argc, char *const *argv)
 
         free(ret_trytes);
         amqp_destroy_envelope(&envelope);
-        ddprintf(MSG_PREFIX
-                 "Publishing PoW result to callback queue is done\n");
-        ddprintf(MSG_PREFIX "---\n");
+        log_debug(
+            0, MSG_PREFIX "Publishing PoW result to callback queue is done\n");
+        log_debug(0, MSG_PREFIX "---\n");
     }
 
 fail:

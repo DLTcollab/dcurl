@@ -79,7 +79,7 @@ struct list_head {
 #define LIST_HEAD(head) struct list_head head = {&(head), &(head)}
 
 /**
- * INIT_LIST_HEAD() - Initialize empty list head
+ * init_list_head() - Initialize empty list head
  * @head: pointer to list head
  *
  * This can also be used to initialize a unlinked list node.
@@ -93,7 +93,7 @@ struct list_head {
  * list_del(_init) on an uninitialized node is undefined (unrelated memory is
  * modified, crashes, ...).
  */
-static inline void INIT_LIST_HEAD(struct list_head *head)
+static inline void init_list_head(struct list_head *head)
 {
     head->next = head;
     head->prev = head;
@@ -169,7 +169,7 @@ static inline void list_del(struct list_head *node)
 static inline void list_del_init(struct list_head *node)
 {
     list_del(node);
-    INIT_LIST_HEAD(node);
+    init_list_head(node);
 }
 
 /**
@@ -263,7 +263,7 @@ static inline void list_splice_init(struct list_head *list,
                                     struct list_head *head)
 {
     list_splice(list, head);
-    INIT_LIST_HEAD(list);
+    init_list_head(list);
 }
 
 /**
@@ -282,7 +282,7 @@ static inline void list_splice_tail_init(struct list_head *list,
                                          struct list_head *head)
 {
     list_splice_tail(list, head);
-    INIT_LIST_HEAD(list);
+    init_list_head(list);
 }
 
 /**
@@ -307,7 +307,7 @@ static inline void list_cut_position(struct list_head *head_to,
         return;
 
     if (head_from == node) {
-        INIT_LIST_HEAD(head_to);
+        init_list_head(head_to);
         return;
     }
 

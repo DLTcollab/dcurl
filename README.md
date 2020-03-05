@@ -16,12 +16,42 @@ IOTA Reference Implementation (IRI) adaptation is available to benefit from hard
 ## Build Instructions
 Check [docs/build-n-test.md](docs/build-n-test.md) for details.
 
+## Source Code Naming Convention
+Check [docs/naming-convention.md](docs/naming-convention.md) for details.
+
 ## Performance
-After integrating dcurl into IRI, performance of [attachToTangle](https://iota.readme.io/reference#attachtotangle) is measured as following.
-* Each sampling is measured with 30 transaction trytes and total 200 samples are measured.
-* mwm = 14, 26 CPU threads to find nonce
-* Settings: enable 2 pow tasks in CPU, 1 pow tasks in GPU at the same time
+After integrating dcurl into IRI, performance of [attachToTangle](https://docs.iota.org/docs/node-software/0.1/iri/references/api-reference#attachtotangle) is measured as the following.
+
+* Setting: MWM = 14, 200 attachToTangle API requests with each containing 2 transactions
+* Local CPU:
+  * AMD Ryzen Threadripper 2990WX 32-Core Processor 
+  * 2 PoW tasks at the same time
+  * Each task uses 32 CPU threads to find nonce
+  * SIMD enabled
+* Remote worker:
+  * The board with Intel/Altera Cyclone V SoC
+  * 1 PoW task at the same time in a board
+  * FPGA acceleration enabled
+  * Connected with local network
+
 ![](https://raw.githubusercontent.com/DLTcollab/dcurl/develop/docs/benchmark.png)
+
+### Conclusion
+
+Except the original IRI, the other instances use the [DLTcollab/IRI](https://github.com/DLTcollab/iri) instead of [iotaledger/IRI](https://github.com/iotaledger/iri).
+
+| IRI version | attachToTangle API behavior | Effect |
+|:-|:-|:-|
+| IOTA IRI | One transaction bundle at the same time **(Synchronized)** | Transactions of a bundle are calculated one by one |
+| DLTCollab IRI | Multiple transaction bundles at the same time | Transactions of different bundles compete for the PoW calculation resources |
+
+The original IRI should be the slowest one since it does not contain any PoW acceleration.
+However, the graph is different from the expectation.
+This is caused by 2 factors:
+* The graph shows the execution time of each API request instead of the overall throughput.
+* The table shows that there are competition of the PoW resources, which means the execution time would be longer than expected.
+
+And from the graph we can see that 4 remote workers would be a good choice to accelerate PoW.
 
 ## IRI Adaptation
 [Modified IRI accepting external PoW Library](https://github.com/DLTcollab/iri)

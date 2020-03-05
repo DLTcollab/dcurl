@@ -14,7 +14,7 @@
 
 int main()
 {
-    char *trytes =
+    char *transaction_trytes =
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
         "9999999999999999999999999999999999999999999999999999999999999999999999"
@@ -59,26 +59,26 @@ int main()
 
     for (int loop_count = 0; loop_count < LOOP_MAX; loop_count++) {
         /* test dcurl Implementation with mwm = 14 */
-        dcurl_init();
-        int8_t *ret_trytes = dcurl_entry((int8_t *) trytes, mwm, 8);
+        dcurl_init(NULL);
+        int8_t *ret_trytes = dcurl_entry((int8_t *) transaction_trytes, mwm, 8);
         assert(ret_trytes);
         dcurl_destroy();
 
-        Trytes_t *trytes_t = initTrytes(ret_trytes, 2673);
-        assert(trytes_t);
-        Trytes_t *hash_trytes = hashTrytes(trytes_t);
-        assert(hash_trytes);
+        trytes_t *trytes = init_trytes(ret_trytes, 2673);
+        assert(trytes);
+        trytes_t *hashed_trytes = hash_trytes(trytes);
+        assert(hashed_trytes);
 
         /* Validation */
-        Trits_t *ret_trits = trits_from_trytes(hash_trytes);
+        trits_t *ret_trits = trits_from_trytes(hashed_trytes);
         for (int i = 243 - 1; i >= 243 - mwm; i--) {
             assert(ret_trits->data[i] == 0);
         }
 
         free(ret_trytes);
-        freeTrobject(trytes_t);
-        freeTrobject(hash_trytes);
-        freeTrobject(ret_trits);
+        free_trinary_object(trytes);
+        free_trinary_object(hashed_trytes);
+        free_trinary_object(ret_trits);
     }
 
     return 0;

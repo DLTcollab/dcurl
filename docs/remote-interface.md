@@ -77,3 +77,17 @@ $ make BUILD_REMOTE=1 BUILD_DEBUG=1 check
 
 ## Requirements
 Remote interface requires RabbitMQ broker
+
+## Fallback mechanism
+If the remote interface is not working for some reason, the PoW calculation will be transferred to the local hardwares.
+The possible situations are:
+
+* Initialization failure:
+The remote interface is not initialized successfully because the RabbitMQ broker it not activated.
+dcurl would record the initialization status of the remote interface.
+If it does not succeed, dcurl would use local hardwares to do the PoW.
+
+* Runtime failure:
+The remote interface is initialized successfully but the remote workers do not exist or the RabbitMQ broker is closed after initialization.
+dcurl would wait 10 seconds for the responding.
+If nothing returns, dcurl would use local hardwares to do the PoW.

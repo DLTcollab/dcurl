@@ -16,7 +16,7 @@
 #include "implcontext.h"
 
 #ifdef __AVX2__
-static void transform256(__m256i *lmid, __m256i *hmid)
+static void transform_256(__m256i *lmid, __m256i *hmid)
 {
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     int t1, t2;
@@ -56,7 +56,7 @@ static void transform256(__m256i *lmid, __m256i *hmid)
     }
 }
 
-static int incr256(__m256i *mid_low, __m256i *mid_high)
+static int incr_256(__m256i *mid_low, __m256i *mid_high)
 {
     int i;
     __m256i carry = _mm256_set_epi64x(LOW00, LOW01, LOW02, LOW03);
@@ -72,7 +72,7 @@ static int incr256(__m256i *mid_low, __m256i *mid_high)
     return i == HASH_TRITS_LENGTH;
 }
 
-static void seri256(__m256i *low, __m256i *high, int n, int8_t *r)
+static void seri_256(__m256i *low, __m256i *high, int n, int8_t *r)
 {
     int index = n >> 6;
     n = n % 64;
@@ -93,7 +93,7 @@ static void seri256(__m256i *low, __m256i *high, int n, int8_t *r)
     }
 }
 
-static int check256(__m256i *l, __m256i *h, int m)
+static int check_256(__m256i *l, __m256i *h, int m)
 {
     __m256i nonce_probe = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
@@ -118,7 +118,7 @@ static int check256(__m256i *l, __m256i *h, int m)
     return -2;
 }
 
-static void para256(int8_t in[], __m256i l[], __m256i h[])
+static void para_256(int8_t in[], __m256i l[], __m256i h[])
 {
     for (int i = 0; i < STATE_TRITS_LENGTH; i++) {
         switch (in[i]) {
@@ -138,7 +138,7 @@ static void para256(int8_t in[], __m256i l[], __m256i h[])
     }
 }
 
-static void incrN256(int n, __m256i *mid_low, __m256i *mid_high)
+static void incr_n_256(int n, __m256i *mid_low, __m256i *mid_high)
 {
     __m256i one = _mm256_set_epi64x(HBITS, HBITS, HBITS, HBITS);
     for (int j = 0; j < n; j++) {
@@ -155,27 +155,28 @@ static void incrN256(int n, __m256i *mid_low, __m256i *mid_high)
 }
 
 
-static int loop256(__m256i *lmid,
-                   __m256i *hmid,
-                   int m,
-                   int8_t *nonce,
-                   int *stopPoW,
-                   uv_rwlock_t *lock)
+static int loop_256(__m256i *lmid,
+                    __m256i *hmid,
+                    int m,
+                    int8_t *nonce,
+                    int *stop_pow,
+                    uv_rwlock_t *lock)
 {
-    int i = 0, n = 0;
+    int i = 0;
     __m256i lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
 
     uv_rwlock_rdlock(lock);
-    for (i = 0; !incr256(lmid, hmid) && !*stopPoW; i++) {
+    for (i = 0; !incr_256(lmid, hmid) && !*stop_pow; i++) {
         uv_rwlock_rdunlock(lock);
+        int n;
         for (int j = 0; j < STATE_TRITS_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
         }
-        transform256(lcpy, hcpy);
-        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
-                          m)) >= 0) {
-            seri256(lmid, hmid, n, nonce);
+        transform_256(lcpy, hcpy);
+        if ((n = check_256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
+                           m)) >= 0) {
+            seri_256(lmid, hmid, n, nonce);
             return i * 256;
         }
         uv_rwlock_rdlock(lock);
@@ -184,16 +185,16 @@ static int loop256(__m256i *lmid,
     return -i * 256 - 1;
 }
 
-static int64_t pwork256(int8_t mid[],
-                        int mwm,
-                        int8_t nonce[],
-                        int n,
-                        int *stopPoW,
-                        uv_rwlock_t *lock)
+static int64_t pwork_256(int8_t mid[],
+                         int mwm,
+                         int8_t nonce[],
+                         int n,
+                         int *stop_pow,
+                         uv_rwlock_t *lock)
 {
     __m256i lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
     int offset = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH;
-    para256(mid, lmid, hmid);
+    para_256(mid, lmid, hmid);
     lmid[offset] = _mm256_set_epi64x(LOW00, LOW01, LOW02, LOW03);
     hmid[offset] = _mm256_set_epi64x(HIGH00, HIGH01, HIGH02, HIGH03);
     lmid[offset + 1] = _mm256_set_epi64x(LOW10, LOW11, LOW12, LOW13);
@@ -206,14 +207,14 @@ static int64_t pwork256(int8_t mid[],
     hmid[offset + 4] = _mm256_set_epi64x(HIGH40, HIGH41, HIGH42, HIGH43);
     lmid[offset + 5] = _mm256_set_epi64x(LOW50, LOW51, LOW52, LOW53);
     hmid[offset + 5] = _mm256_set_epi64x(HIGH50, HIGH51, HIGH52, HIGH53);
-    incrN256(n, lmid, hmid);
+    incr_n_256(n, lmid, hmid);
 
-    return loop256(lmid, hmid, mwm, nonce, stopPoW, lock);
+    return loop_256(lmid, hmid, mwm, nonce, stop_pow, lock);
 }
 
 #else /* AVX1 */
 
-static void transform256(__m256d *lmid, __m256d *hmid)
+static void transform_256(__m256d *lmid, __m256d *hmid)
 {
     __m256d one = _mm256_set_pd(HBITS, HBITS, HBITS, HBITS);
     int j, r, t1, t2;
@@ -253,7 +254,7 @@ static void transform256(__m256d *lmid, __m256d *hmid)
     }
 }
 
-static int incr256(__m256d *mid_low, __m256d *mid_high)
+static int incr_256(__m256d *mid_low, __m256d *mid_high)
 {
     int i;
     __m256d carry;
@@ -268,7 +269,7 @@ static int incr256(__m256d *mid_low, __m256d *mid_high)
     return i == HASH_TRITS_LENGTH;
 }
 
-static void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
+static void seri_256(__m256d *low, __m256d *high, int n, int8_t *r)
 {
     int i = 0, index = 0;
     if (n > 63 && n < 128) {
@@ -301,7 +302,7 @@ static void seri256(__m256d *low, __m256d *high, int n, int8_t *r)
     }
 }
 
-static int check256(__m256d *l, __m256d *h, int m)
+static int check_256(__m256d *l, __m256d *h, int m)
 {
     int i, j;  // omit init for speed
 
@@ -317,6 +318,7 @@ static int check256(__m256d *l, __m256d *h, int m)
     for (j = 0; j < 4; j++) {
         for (i = 0; i < 64; i++) {
             long long np = ((dl) nonce_probe[j]).l;
+            // cppcheck-suppress shiftTooManyBitsSigned ; The most significant bit is not used as a signed bit
             if ((np >> i) & 1) {
                 return i + j * 64;
             }
@@ -325,7 +327,7 @@ static int check256(__m256d *l, __m256d *h, int m)
     return -2;
 }
 
-static void para256(int8_t in[], __m256d l[], __m256d h[])
+static void para_256(int8_t in[], __m256d l[], __m256d h[])
 {
     int i = 0;
     for (i = 0; i < STATE_TRITS_LENGTH; i++) {
@@ -346,7 +348,7 @@ static void para256(int8_t in[], __m256d l[], __m256d h[])
     }
 }
 
-static void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
+static void incr_n_256(int n, __m256d *mid_low, __m256d *mid_high)
 {
     int i, j;
     for (j = 0; j < n; j++) {
@@ -362,27 +364,28 @@ static void incrN256(int n, __m256d *mid_low, __m256d *mid_high)
     }
 }
 
-static int loop256(__m256d *lmid,
-                   __m256d *hmid,
-                   int m,
-                   int8_t *nonce,
-                   int *stopPoW,
-                   uv_rwlock_t *lock)
+static int loop_256(__m256d *lmid,
+                    __m256d *hmid,
+                    int m,
+                    int8_t *nonce,
+                    int *stop_pow,
+                    uv_rwlock_t *lock)
 {
-    int i = 0, n = 0, j = 0;
+    int i = 0;
 
     __m256d lcpy[STATE_TRITS_LENGTH * 2], hcpy[STATE_TRITS_LENGTH * 2];
     uv_rwlock_rdlock(lock);
-    for (i = 0; !incr256(lmid, hmid) && !*stopPoW; i++) {
+    for (i = 0; !incr_256(lmid, hmid) && !*stop_pow; i++) {
         uv_rwlock_rdunlock(lock);
+        int n, j;
         for (j = 0; j < STATE_TRITS_LENGTH; j++) {
             lcpy[j] = lmid[j];
             hcpy[j] = hmid[j];
         }
-        transform256(lcpy, hcpy);
-        if ((n = check256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
-                          m)) >= 0) {
-            seri256(lmid, hmid, n, nonce);
+        transform_256(lcpy, hcpy);
+        if ((n = check_256(lcpy + STATE_TRITS_LENGTH, hcpy + STATE_TRITS_LENGTH,
+                           m)) >= 0) {
+            seri_256(lmid, hmid, n, nonce);
             return i * 256;
         }
         uv_rwlock_rdlock(lock);
@@ -391,16 +394,16 @@ static int loop256(__m256d *lmid,
     return -i * 256 - 1;
 }
 
-static long long int pwork256(int8_t mid[],
-                              int mwm,
-                              int8_t nonce[],
-                              int n,
-                              int *stopPoW,
-                              uv_rwlock_t *lock)
+static long long int pwork_256(int8_t mid[],
+                               int mwm,
+                               int8_t nonce[],
+                               int n,
+                               int *stop_pow,
+                               uv_rwlock_t *lock)
 {
     __m256d lmid[STATE_TRITS_LENGTH], hmid[STATE_TRITS_LENGTH];
     int offset = HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH;
-    para256(mid, lmid, hmid);
+    para_256(mid, lmid, hmid);
     lmid[offset] = _mm256_set_pd(LOW00, LOW01, LOW02, LOW03);
     hmid[offset] = _mm256_set_pd(HIGH00, HIGH01, HIGH02, HIGH03);
     lmid[offset + 1] = _mm256_set_pd(LOW10, LOW11, LOW12, LOW13);
@@ -413,36 +416,36 @@ static long long int pwork256(int8_t mid[],
     hmid[offset + 4] = _mm256_set_pd(HIGH40, HIGH41, HIGH42, HIGH43);
     lmid[offset + 5] = _mm256_set_pd(LOW50, LOW51, LOW52, LOW53);
     hmid[offset + 5] = _mm256_set_pd(HIGH50, HIGH51, HIGH52, HIGH53);
-    incrN256(n, lmid, hmid);
+    incr_n_256(n, lmid, hmid);
 
-    return loop256(lmid, hmid, mwm, nonce, stopPoW, lock);
+    return loop_256(lmid, hmid, mwm, nonce, stop_pow, lock);
 }
 
 #endif /* __AVX2__ */
 
 static void work_cb(uv_work_t *req)
 {
-    Pwork_struct *pworkInfo = (Pwork_struct *) req->data;
-    pworkInfo->ret =
-        pwork256(pworkInfo->mid, pworkInfo->mwm, pworkInfo->nonce, pworkInfo->n,
-                 pworkInfo->stopPoW, pworkInfo->lock);
+    pwork_t *pwork_info = (pwork_t *) req->data;
+    pwork_info->ret =
+        pwork_256(pwork_info->mid, pwork_info->mwm, pwork_info->nonce,
+                  pwork_info->n, pwork_info->stop_pow, pwork_info->lock);
 
-    uv_rwlock_wrlock(pworkInfo->lock);
-    if (pworkInfo->ret >= 0) {
-        *pworkInfo->stopPoW = 1;
+    uv_rwlock_wrlock(pwork_info->lock);
+    if (pwork_info->ret >= 0) {
+        *pwork_info->stop_pow = 1;
         /* This means this thread got the result */
-        pworkInfo->n = -1;
+        pwork_info->n = -1;
     }
-    uv_rwlock_wrunlock(pworkInfo->lock);
+    uv_rwlock_wrunlock(pwork_info->lock);
 }
 
-static int8_t *tx_to_cstate(Trytes_t *tx)
+static int8_t *tx_to_cstate(trytes_t *tx)
 {
-    Trytes_t *inn = NULL;
-    Trits_t *tr = NULL;
+    trytes_t *inn = NULL;
+    trits_t *tr = NULL;
     int8_t tyt[TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] = {0};
 
-    Curl *c = initCurl();
+    curl_t *c = init_curl();
     int8_t *c_state = (int8_t *) malloc(STATE_TRITS_LENGTH);
     if (!c || !c_state)
         goto fail;
@@ -450,11 +453,11 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
     /* Copy tx->data[:TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH] to tyt */
     memcpy(tyt, tx->data, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
 
-    inn = initTrytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
+    inn = init_trytes(tyt, TRANSACTION_TRYTES_LENGTH - HASH_TRYTES_LENGTH);
     if (!inn)
         goto fail;
 
-    Absorb(c, inn);
+    absorb(c, inn);
 
     tr = trits_from_trytes(tx);
     if (!tr)
@@ -470,19 +473,19 @@ static int8_t *tx_to_cstate(Trytes_t *tx)
            c->state->len - tr->len +
                (TRANSACTION_TRITS_LENGTH - HASH_TRITS_LENGTH));
 
-    freeTrobject(inn);
-    freeTrobject(tr);
-    freeCurl(c);
+    free_trinary_object(inn);
+    free_trinary_object(tr);
+    free_curl(c);
     return c_state;
 fail:
-    freeTrobject(inn);
-    freeTrobject(tr);
-    freeCurl(c);
+    free_trinary_object(inn);
+    free_trinary_object(tr);
+    free_curl(c);
     free(c_state);
     return NULL;
 }
 
-static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
+static void nonce_to_result(trytes_t *tx, trytes_t *nonce, int8_t *ret)
 {
     int rst_len = tx->len - NONCE_TRYTES_LENGTH + nonce->len;
 
@@ -491,26 +494,26 @@ static void nonce_to_result(Trytes_t *tx, Trytes_t *nonce, int8_t *ret)
            rst_len - (tx->len - NONCE_TRYTES_LENGTH));
 }
 
-static bool PowAVX(void *pow_ctx)
+static bool pow_avx(void *pow_ctx)
 {
     bool res = true;
-    Trits_t *nonce_trit = NULL;
-    Trytes_t *tx_tryte = NULL, *nonce_tryte = NULL;
+    trits_t *nonce_trit = NULL;
+    trytes_t *tx_tryte = NULL, *nonce_tryte = NULL;
     struct timespec start_time, end_time;
 
     /* Initialize the context */
-    PoW_AVX_Context *ctx = (PoW_AVX_Context *) pow_ctx;
-    ctx->stopPoW = 0;
+    pow_avx_context_t *ctx = (pow_avx_context_t *) pow_ctx;
+    ctx->stop_pow = 0;
     ctx->pow_info.time = 0;
     ctx->pow_info.hash_count = 0;
     uv_rwlock_init(&ctx->lock);
     uv_loop_t *loop_ptr = &ctx->loop;
     uv_work_t *work_req = ctx->work_req;
-    Pwork_struct *pitem = ctx->pitem;
+    pwork_t *pitem = ctx->pitem;
     int8_t **nonce_array = ctx->nonce_array;
 
     /* Prepare the input trytes for algorithm */
-    tx_tryte = initTrytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
+    tx_tryte = init_trytes(ctx->input_trytes, TRANSACTION_TRYTES_LENGTH);
     if (!tx_tryte)
         return false;
 
@@ -528,7 +531,7 @@ static bool PowAVX(void *pow_ctx)
         pitem[i].nonce = nonce_array[i];
         pitem[i].n = i;
         pitem[i].lock = &ctx->lock;
-        pitem[i].stopPoW = &ctx->stopPoW;
+        pitem[i].stop_pow = &ctx->stop_pow;
         pitem[i].ret = 0;
         work_req[i].data = &pitem[i];
         uv_queue_work(loop_ptr, &work_req[i], work_cb, NULL);
@@ -536,17 +539,17 @@ static bool PowAVX(void *pow_ctx)
 
     uv_run(loop_ptr, UV_RUN_DEFAULT);
 
-    int completedIndex = -1;
+    int completed_index = -1;
     for (int i = 0; i < ctx->num_threads; i++) {
         if (pitem[i].n == -1)
-            completedIndex = i;
+            completed_index = i;
         ctx->pow_info.hash_count +=
             (uint64_t)(pitem[i].ret >= 0 ? pitem[i].ret : -pitem[i].ret + 1);
     }
     clock_gettime(CLOCK_REALTIME, &end_time);
     ctx->pow_info.time = diff_in_second(start_time, end_time);
 
-    nonce_trit = initTrits(nonce_array[completedIndex], NONCE_TRITS_LENGTH);
+    nonce_trit = init_trits(nonce_array[completed_index], NONCE_TRITS_LENGTH);
     if (!nonce_trit) {
         res = false;
         goto fail;
@@ -564,22 +567,22 @@ fail:
     /* Free resource */
     uv_rwlock_destroy(&ctx->lock);
     free(c_state);
-    freeTrobject(tx_tryte);
-    freeTrobject(nonce_trit);
-    freeTrobject(nonce_tryte);
+    free_trinary_object(tx_tryte);
+    free_trinary_object(nonce_trit);
+    free_trinary_object(nonce_tryte);
 
     return res;
 }
 
-static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
+static bool pow_avx_context_initialize(impl_context_t *impl_ctx)
 {
     impl_ctx->num_max_thread = get_nthds_per_phys_proc();
     int nproc = get_avail_phys_nprocs();
     if (impl_ctx->num_max_thread <= 0 || nproc <= 0)
         return false;
 
-    PoW_AVX_Context *ctx = (PoW_AVX_Context *) malloc(sizeof(PoW_AVX_Context) *
-                                                      impl_ctx->num_max_thread);
+    pow_avx_context_t *ctx = (pow_avx_context_t *) malloc(
+        sizeof(pow_avx_context_t) * impl_ctx->num_max_thread);
     if (!ctx)
         return false;
 
@@ -587,7 +590,7 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
     void *work_req_chunk =
         malloc(impl_ctx->num_max_thread * sizeof(uv_work_t) * nproc);
     void *pitem_chunk =
-        malloc(impl_ctx->num_max_thread * sizeof(Pwork_struct) * nproc);
+        malloc(impl_ctx->num_max_thread * sizeof(pwork_t) * nproc);
     void *nonce_ptr_chunk =
         malloc(impl_ctx->num_max_thread * sizeof(int8_t *) * nproc);
     void *nonce_chunk =
@@ -596,16 +599,13 @@ static bool PoWAVX_Context_Initialize(ImplContext *impl_ctx)
         goto fail;
 
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
-        ctx[i].work_req =
-            (uv_work_t *) (work_req_chunk + i * sizeof(uv_work_t) * nproc);
-        ctx[i].pitem =
-            (Pwork_struct *) (pitem_chunk + i * sizeof(Pwork_struct) * nproc);
-        ctx[i].nonce_array =
-            (int8_t **) (nonce_ptr_chunk + i * sizeof(int8_t *) * nproc);
+        ctx[i].work_req = (uv_work_t *) (work_req_chunk) + i * nproc;
+        ctx[i].pitem = (pwork_t *) (pitem_chunk) + i * nproc;
+        ctx[i].nonce_array = (int8_t **) (nonce_ptr_chunk) + i * nproc;
         for (int j = 0; j < nproc; j++)
-            ctx[i].nonce_array[j] =
-                (int8_t *) (nonce_chunk + i * NONCE_TRITS_LENGTH * nproc +
-                            j * NONCE_TRITS_LENGTH);
+            ctx[i].nonce_array[j] = (int8_t *) (nonce_chunk) +
+                                    i * NONCE_TRITS_LENGTH * nproc +
+                                    j * NONCE_TRITS_LENGTH;
         ctx[i].num_max_threads = nproc;
         impl_ctx->bitmap = impl_ctx->bitmap << 1 | 0x1;
         uv_loop_init(&ctx[i].loop);
@@ -627,9 +627,9 @@ fail:
     return false;
 }
 
-static void PoWAVX_Context_Destroy(ImplContext *impl_ctx)
+static void pow_avx_context_destroy(impl_context_t *impl_ctx)
 {
-    PoW_AVX_Context *ctx = (PoW_AVX_Context *) impl_ctx->context;
+    pow_avx_context_t *ctx = (pow_avx_context_t *) impl_ctx->context;
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         uv_loop_close(&ctx[i].loop);
     }
@@ -640,21 +640,21 @@ static void PoWAVX_Context_Destroy(ImplContext *impl_ctx)
     free(ctx);
 }
 
-static void *PoWAVX_getPoWContext(ImplContext *impl_ctx,
-                                  int8_t *trytes,
-                                  int mwm,
-                                  int threads)
+static void *pow_avx_get_pow_context(impl_context_t *impl_ctx,
+                                     int8_t *trytes,
+                                     int mwm,
+                                     int threads)
 {
     uv_mutex_lock(&impl_ctx->lock);
     for (int i = 0; i < impl_ctx->num_max_thread; i++) {
         if (impl_ctx->bitmap & (0x1 << i)) {
             impl_ctx->bitmap &= ~(0x1 << i);
             uv_mutex_unlock(&impl_ctx->lock);
-            PoW_AVX_Context *ctx =
-                impl_ctx->context + sizeof(PoW_AVX_Context) * i;
+            pow_avx_context_t *ctx =
+                (pow_avx_context_t *) impl_ctx->context + i;
             memcpy(ctx->input_trytes, trytes, TRANSACTION_TRYTES_LENGTH);
             ctx->mwm = mwm;
-            ctx->indexOfContext = i;
+            ctx->index_of_context = i;
             if (threads > 0 && threads < ctx->num_max_threads)
                 ctx->num_threads = threads;
             else
@@ -666,41 +666,42 @@ static void *PoWAVX_getPoWContext(ImplContext *impl_ctx,
     return NULL; /* It should not happen */
 }
 
-static bool PoWAVX_freePoWContext(ImplContext *impl_ctx, void *pow_ctx)
+static bool pow_avx_free_pow_context(impl_context_t *impl_ctx, void *pow_ctx)
 {
     uv_mutex_lock(&impl_ctx->lock);
-    impl_ctx->bitmap |= 0x1 << ((PoW_AVX_Context *) pow_ctx)->indexOfContext;
+    impl_ctx->bitmap |= 0x1
+                        << ((pow_avx_context_t *) pow_ctx)->index_of_context;
     uv_mutex_unlock(&impl_ctx->lock);
     return true;
 }
 
-static int8_t *PoWAVX_getPoWResult(void *pow_ctx)
+static int8_t *pow_avx_get_pow_result(void *pow_ctx)
 {
     int8_t *ret =
         (int8_t *) malloc(sizeof(int8_t) * (TRANSACTION_TRYTES_LENGTH));
     if (!ret)
         return NULL;
-    memcpy(ret, ((PoW_AVX_Context *) pow_ctx)->output_trytes,
+    memcpy(ret, ((pow_avx_context_t *) pow_ctx)->output_trytes,
            TRANSACTION_TRYTES_LENGTH);
     return ret;
 }
 
-static PoW_Info PoWAVX_getPoWInfo(void *pow_ctx)
+static pow_info_t pow_avx_get_pow_info(void *pow_ctx)
 {
-    return ((PoW_AVX_Context *) pow_ctx)->pow_info;
+    return ((pow_avx_context_t *) pow_ctx)->pow_info;
 }
 
-ImplContext PoWAVX_Context = {
+impl_context_t pow_avx_context = {
     .context = NULL,
     .description = "CPU (Intel AVX)",
     .bitmap = 0,
     .num_max_thread = 0,
     .num_working_thread = 0,
-    .initialize = PoWAVX_Context_Initialize,
-    .destroy = PoWAVX_Context_Destroy,
-    .getPoWContext = PoWAVX_getPoWContext,
-    .freePoWContext = PoWAVX_freePoWContext,
-    .doThePoW = PowAVX,
-    .getPoWResult = PoWAVX_getPoWResult,
-    .getPoWInfo = PoWAVX_getPoWInfo,
+    .initialize = pow_avx_context_initialize,
+    .destroy = pow_avx_context_destroy,
+    .get_pow_context = pow_avx_get_pow_context,
+    .free_pow_context = pow_avx_free_pow_context,
+    .do_the_pow = pow_avx,
+    .get_pow_result = pow_avx_get_pow_result,
+    .get_pow_info = pow_avx_get_pow_info,
 };

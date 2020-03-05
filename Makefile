@@ -1,4 +1,4 @@
-VERSION = 0.5.0
+VERSION = 0.6.0
 
 OUT ?= ./build
 SRC := src
@@ -22,12 +22,15 @@ endif
 ifneq ("$(BUILD_DEBUG)","0")
     CFLAGS += -Og -g3 -DENABLE_DEBUG
     ifneq ("$(BUILD_DEBUG)","1")
-        include mk/sanitizers.mk
+        include mk/dynamic-analysis.mk
     endif
 else
     # Enable all the valid optimizations for standard programs in release build
     CFLAGS += -O3
 endif
+
+# Static code analysis
+include mk/static-analysis.mk
 
 # Check specific CPU features available on build host
 include mk/cpu-features.mk
@@ -72,7 +75,7 @@ include mk/opencl.mk
 endif
 
 ifeq ("$(BUILD_FPGA_ACCEL)","1")
-CFLAGS += -DENABLE_FPGA_ACCEL
+CFLAGS += -DENABLE_FPGA
 endif
 
 ifeq ("$(BUILD_REMOTE)","1")
@@ -137,17 +140,17 @@ endif
 
 ifeq ("$(BUILD_JNI)","1")
 OBJS += \
-	jni/iri-pearldiver-exlib.o
+	jni/iri_pearldiver_exlib.o
 endif
 
 ifeq ("$(BUILD_COMPAT)", "1")
 OBJS += \
-	compat-ccurl.o
+	compat_ccurl.o
 endif
 
 ifeq ("$(BUILD_FPGA_ACCEL)","1")
 OBJS += \
-	pow_fpga_accel.o
+	pow_fpga.o
 endif
 
 ifeq ("$(BUILD_REMOTE)", "1")
@@ -157,7 +160,7 @@ OBJS += \
 
 WORKER_EXCLUDE_OBJS := remote_interface.o
 ifeq ("$(BUILD_JNI)", "1")
-WORKER_EXCLUDE_OBJS += jni/iri-pearldiver-exlib.o
+WORKER_EXCLUDE_OBJS += jni/iri_pearldiver_exlib.o
 endif
 WORKER_OBJS := $(addprefix $(OUT)/worker-,$(filter-out $(WORKER_EXCLUDE_OBJS), $(OBJS)))
 WORKER_CFLAGS := $(filter-out -DENABLE_REMOTE, $(CFLAGS))

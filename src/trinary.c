@@ -14,14 +14,14 @@
 #include "constants.h"
 #include "curl.h"
 
-static int8_t TrytesToTritsMappings[][3] = {
+int8_t trytes_to_trits_mappings[][3] = {
     {0, 0, 0},  {1, 0, 0},  {-1, 1, 0},   {0, 1, 0},   {1, 1, 0},   {-1, -1, 1},
     {0, -1, 1}, {1, -1, 1}, {-1, 0, 1},   {0, 0, 1},   {1, 0, 1},   {-1, 1, 1},
     {0, 1, 1},  {1, 1, 1},  {-1, -1, -1}, {0, -1, -1}, {1, -1, -1}, {-1, 0, -1},
     {0, 0, -1}, {1, 0, -1}, {-1, 1, -1},  {0, 1, -1},  {1, 1, -1},  {-1, -1, 0},
     {0, -1, 0}, {1, -1, 0}, {-1, 0, 0}};
 
-void freeTrobject(Trobject_t *t)
+void free_trinary_object(trinary_object_t *t)
 {
     if (t) {
         if (t->data)
@@ -30,13 +30,13 @@ void freeTrobject(Trobject_t *t)
     }
 }
 
-static bool validateTrits(Trobject_t *trits)
+static bool validate_trits(trinary_object_t *trits)
 {
     if (trits->type != TYPE_TRITS)
         return false;
 
 #if defined(__SSE4_2__) || defined(__ARM_NEON)
-    return validateTrits_sse42(trits);
+    return validate_trits_sse42(trits);
 #endif
     for (int i = 0; i < trits->len; i++)
         if (trits->data[i] < -1 || trits->data[i] > 1)
@@ -44,13 +44,13 @@ static bool validateTrits(Trobject_t *trits)
     return true;
 }
 
-static bool validateTrytes(Trobject_t *trytes)
+static bool validate_trytes(trinary_object_t *trytes)
 {
     if (trytes->type != TYPE_TRYTES)
         return false;
 
 #if defined(__SSE4_2__)
-    return validateTrytes_sse42(trytes);
+    return validate_trytes_sse42(trytes);
 #endif
     for (int i = 0; i < trytes->len; i++)
         if ((trytes->data[i] < 'A' || trytes->data[i] > 'Z') &&
@@ -59,11 +59,11 @@ static bool validateTrytes(Trobject_t *trytes)
     return true;
 }
 
-Trobject_t *initTrits(int8_t *src, int len)
+trinary_object_t *init_trits(int8_t *src, int len)
 {
-    Trobject_t *trits = NULL;
+    trinary_object_t *trits;
 
-    trits = (Trobject_t *) malloc(sizeof(Trobject_t));
+    trits = (trinary_object_t *) malloc(sizeof(trinary_object_t));
     if (!trits)
         return NULL;
 
@@ -81,8 +81,8 @@ Trobject_t *initTrits(int8_t *src, int len)
     trits->data[len] = '\0';
 
     /* Check validation */
-    if (!validateTrits(trits)) {
-        freeTrobject(trits);
+    if (!validate_trits(trits)) {
+        free_trinary_object(trits);
         /* Not availabe src */
         return NULL;
     }
@@ -90,11 +90,11 @@ Trobject_t *initTrits(int8_t *src, int len)
     return trits;
 }
 
-Trobject_t *initTrytes(int8_t *src, int len)
+trinary_object_t *init_trytes(int8_t *src, int len)
 {
-    Trobject_t *trytes = NULL;
+    trinary_object_t *trytes;
 
-    trytes = (Trobject_t *) malloc(sizeof(Trobject_t));
+    trytes = (trinary_object_t *) malloc(sizeof(trinary_object_t));
     if (!trytes) {
         return NULL;
     }
@@ -113,8 +113,8 @@ Trobject_t *initTrytes(int8_t *src, int len)
     trytes->data[len] = '\0';
 
     /* Check validation */
-    if (!validateTrytes(trytes)) {
-        freeTrobject(trytes);
+    if (!validate_trytes(trytes)) {
+        free_trinary_object(trytes);
         /* Not available src */
         return NULL;
     }
@@ -122,13 +122,13 @@ Trobject_t *initTrytes(int8_t *src, int len)
     return trytes;
 }
 
-Trobject_t *trytes_from_trits(Trobject_t *trits)
+trinary_object_t *trytes_from_trits(trinary_object_t *trits)
 {
     if (!trits) {
         return NULL;
     }
 
-    if (trits->len % 3 != 0 || !validateTrits(trits)) {
+    if (trits->len % 3 != 0 || !validate_trits(trits)) {
         /* Not available trits to convert */
         return NULL;
     }
@@ -136,7 +136,7 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
 #if defined(__SSE4_2__)
     return trytes_from_trits_sse42(trits);
 #endif
-    Trobject_t *trytes = NULL;
+    trinary_object_t *trytes = NULL;
     int8_t *src = (int8_t *) malloc(trits->len / 3);
 
     /* Start converting */
@@ -146,21 +146,21 @@ Trobject_t *trytes_from_trits(Trobject_t *trits)
 
         if (j < 0)
             j += 27;
-        src[i] = TryteAlphabet[j];
+        src[i] = tryte_alphabet[j];
     }
 
-    trytes = initTrytes(src, trits->len / 3);
+    trytes = init_trytes(src, trits->len / 3);
     free(src);
 
     return trytes;
 }
 
-Trobject_t *trits_from_trytes(Trobject_t *trytes)
+trinary_object_t *trits_from_trytes(trinary_object_t *trytes)
 {
     if (!trytes)
         return NULL;
 
-    if (!validateTrytes(trytes)) {
+    if (!validate_trytes(trytes)) {
         /* trytes is not available to convert */
         return NULL;
     }
@@ -168,39 +168,39 @@ Trobject_t *trits_from_trytes(Trobject_t *trytes)
 #if defined(__SSE4_2__)
     return trits_from_trytes_sse42(trytes);
 #endif
-    Trobject_t *trits = NULL;
+    trinary_object_t *trits = NULL;
     int8_t *src = (int8_t *) malloc(trytes->len * 3);
 
     /* Start converting */
     for (int i = 0; i < trytes->len; i++) {
         int idx = (trytes->data[i] == '9') ? 0 : trytes->data[i] - 'A' + 1;
         for (int j = 0; j < 3; j++) {
-            src[i * 3 + j] = TrytesToTritsMappings[idx][j];
+            src[i * 3 + j] = trytes_to_trits_mappings[idx][j];
         }
     }
 
-    trits = initTrits(src, trytes->len * 3);
+    trits = init_trits(src, trytes->len * 3);
     free(src);
 
     return trits;
 }
 
-Trobject_t *hashTrytes(Trobject_t *t)
+trinary_object_t *hash_trytes(trinary_object_t *t)
 {
     if (t->type != TYPE_TRYTES)
         return NULL;
 
-    Curl *c = initCurl();
+    curl_t *c = init_curl();
     if (!c)
         return NULL;
-    Absorb(c, t);
-    Trobject_t *ret = Squeeze(c);
+    absorb(c, t);
+    trinary_object_t *ret = squeeze(c);
 
-    freeCurl(c);
+    free_curl(c);
     return ret;
 }
 
-bool compareTrobject(Trobject_t *a, Trobject_t *b)
+bool compare_trinary_object(trinary_object_t *a, trinary_object_t *b)
 {
     if (a->type != b->type || a->len != b->len)
         return false;

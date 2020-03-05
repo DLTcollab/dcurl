@@ -24,8 +24,8 @@
 #if defined(ENABLE_OPENCL)
 #include "pow_cl.h"
 #endif
-#if defined(ENABLE_FPGA_ACCEL)
-#include "pow_fpga_accel.h"
+#if defined(ENABLE_FPGA)
+#include "pow_fpga.h"
 #endif
 
 #include <stdint.h>

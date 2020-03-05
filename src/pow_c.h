@@ -16,45 +16,45 @@
 #include "trinary.h"
 #include "uv.h"
 
-typedef struct _pwork_struct Pwork_struct;
+typedef struct pwork_s pwork_t;
 
-struct _pwork_struct {
+struct pwork_s {
     int8_t *mid;
     int mwm;
     int8_t *nonce;
     int n;
     uv_rwlock_t *lock;
-    int *stopPoW;
+    int *stop_pow;
     int index;
     int64_t ret;
 };
 
-typedef struct _pow_c_context PoW_C_Context;
+typedef struct pow_c_context_s pow_c_context_t;
 
-struct _pow_c_context {
+struct pow_c_context_s {
     /* Resource of computing */
     uv_rwlock_t lock;
     /* Data type of libtuv */
     uv_loop_t loop;
     uv_work_t *work_req;
-    Pwork_struct *pitem;
+    pwork_t *pitem;
     int8_t **nonce_array;
-    int stopPoW;
+    int stop_pow;
     int num_threads;
     int num_max_threads;
     /* Management of Multi-thread */
-    int indexOfContext;
+    int index_of_context;
     /* Arguments of PoW */
     int8_t input_trytes[TRANSACTION_TRYTES_LENGTH];  /* 2673 */
     int8_t output_trytes[TRANSACTION_TRYTES_LENGTH]; /* 2673 */
     int mwm;
     /* PoW-related information */
-    PoW_Info pow_info;
+    pow_info_t pow_info;
 };
 
 #define HBITS 0xFFFFFFFFFFFFFFFFuLL
 #define LBITS 0x0000000000000000uLL
-#define INCR_START HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27
+#define INCR_START (HASH_TRITS_LENGTH - NONCE_TRITS_LENGTH + 4 + 27)
 #define LOW0 \
     0xDB6DB6DB6DB6DB6DuLL  // 0b1101101101101101101101101101101101101101101101101101101101101101L;
 #define HIGH0 \

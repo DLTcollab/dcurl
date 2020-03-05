@@ -18,23 +18,23 @@
 #define TYPE_TRITS 1
 #define TYPE_TRYTES 2
 
-typedef struct _trinary_object {
+typedef struct trinary_object_s {
     int8_t *data;
     int len;
     int type;
-} Trobject_t;
+} trinary_object_t;
 
-typedef Trobject_t Trits_t;
-typedef Trobject_t Trytes_t;
+typedef trinary_object_t trits_t;
+typedef trinary_object_t trytes_t;
 
-Trobject_t *initTrits(int8_t *src, int len);
-Trobject_t *initTrytes(int8_t *src, int len);
+trinary_object_t *init_trits(int8_t *src, int len);
+trinary_object_t *init_trytes(int8_t *src, int len);
 
-Trobject_t *trytes_from_trits(Trobject_t *trits);
-Trobject_t *trits_from_trytes(Trobject_t *trytes);
-Trobject_t *hashTrytes(Trobject_t *t);
+trinary_object_t *trytes_from_trits(trinary_object_t *trits);
+trinary_object_t *trits_from_trytes(trinary_object_t *trytes);
+trinary_object_t *hash_trytes(trinary_object_t *t);
 
-bool compareTrobject(Trobject_t *a, Trobject_t *b);
-void freeTrobject(Trobject_t *t);
+bool compare_trinary_object(trinary_object_t *a, trinary_object_t *b);
+void free_trinary_object(trinary_object_t *t);
 
 #endif
