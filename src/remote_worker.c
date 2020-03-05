@@ -24,7 +24,8 @@ int main(int argc, char *const *argv)
 
     amqp_connection_state_t conn;
     amqp_envelope_t envelope;
-    char *host_ip = NULL;
+    char *host = NULL;
+    dcurl_config config = {.broker_host = NULL};
 
     /* Parse the command line options */
     /* TODO: Support macOS since getopt_long() is GNU extension */
@@ -38,13 +39,13 @@ int main(int argc, char *const *argv)
             break;
 
         if (cmd_opt == 'b') {
-            host_ip = optarg;
+            host = optarg;
         }
     }
 
-    dcurl_init();
+    dcurl_init(&config);
 
-    if (!connect_broker(&conn, host_ip))
+    if (!connect_broker(&conn, host))
         goto fail;
 
     if (!declare_queue(&conn, 1, "incoming_queue"))

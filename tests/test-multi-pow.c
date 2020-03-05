@@ -79,7 +79,7 @@ int main()
     pthread_t threads[THREAD_MAX];
     dcurl_item items[THREAD_MAX];
 
-    dcurl_init();
+    dcurl_init(NULL);
 
     for (int i = 0; i < THREAD_MAX; i++) {
         memcpy(items[i].input_trytes, transaction_trytes, TRANSACTION_TRYTES_LENGTH);

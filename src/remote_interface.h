@@ -44,6 +44,8 @@ struct remote_impl_context_s {
                                               available */
     int num_max_thread;
     int num_working_thread;
+    /* RabbitMQ broker hostname */
+    char *broker_host;
 
     /* Functions of Implementation Context */
     bool (*initialize)(remote_impl_context_t *remote_ctx);

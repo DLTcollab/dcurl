@@ -71,7 +71,7 @@ extern remote_impl_context_t remote_context;
 static uv_sem_t notify_remote;
 #endif
 
-bool dcurl_init()
+bool dcurl_init(dcurl_config *config)
 {
     bool ret = false;
 
@@ -107,6 +107,11 @@ bool dcurl_init()
 #endif
 
 #if defined(ENABLE_REMOTE)
+    if (!config) {
+        remote_context.broker_host = DEFAULT_BROKER_HOST;
+    } else {
+        remote_context.broker_host = config->broker_host;
+    }
     if (register_remote_context(&remote_context)) {
         runtime_caps |= CAP_REMOTE;
         ret |= true;
