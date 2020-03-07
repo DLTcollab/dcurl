@@ -41,6 +41,9 @@ include mk/submodule.mk
 # Board specific compiler flags
 include mk/board.mk
 
+# Generate document
+include mk/docgen.mk
+
 # Assign the hardware to CPU if no hardware is specified
 PLATFORMS := $(BUILD_AVX) $(BUILD_SSE) $(BUILD_GENERIC) $(BUILD_GPU) $(BUILD_FPGA_ACCEL)
 ENABLE_PLATFORMS := $(findstring 1,$(PLATFORMS))
