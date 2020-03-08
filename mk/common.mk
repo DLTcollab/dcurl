@@ -38,4 +38,4 @@ $(OUT)/local.mk:
 clean:
 	$(RM) $(deps) $(TESTS) $(LIBS) $(OBJS)
 distclean:
-	$(RM) -r $(OUT)
+	$(RM) -r $(OUT) $(DOC_PATH)
