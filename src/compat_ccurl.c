@@ -20,7 +20,7 @@ char *ccurl_pow(char *trytes, int mwm)
 {
     pthread_mutex_lock(&mtx);
     if (!is_initialized) {
-        dcurl_init();
+        dcurl_init(NULL);
         is_initialized = true;
     }
     pthread_mutex_unlock(&mtx);
