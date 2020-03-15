@@ -17,7 +17,7 @@ BUILD_SSE ?= 0
 BUILD_GPU ?= 0
 
 # Build FPGA backend or not
-BUILD_FPGA_ACCEL ?= 0
+BUILD_FPGA ?= 0
 
 # Build facilities of remote procedure calls
 BUILD_REMOTE ?= 0

@@ -45,7 +45,7 @@ include mk/board.mk
 include mk/docgen.mk
 
 # Assign the hardware to CPU if no hardware is specified
-PLATFORMS := $(BUILD_AVX) $(BUILD_SSE) $(BUILD_GENERIC) $(BUILD_GPU) $(BUILD_FPGA_ACCEL)
+PLATFORMS := $(BUILD_AVX) $(BUILD_SSE) $(BUILD_GENERIC) $(BUILD_GPU) $(BUILD_FPGA)
 ENABLE_PLATFORMS := $(findstring 1,$(PLATFORMS))
 ifneq ("$(ENABLE_PLATFORMS)","1")
     ifeq ("$(call cpu_feature,AVX)","1")
@@ -77,7 +77,7 @@ ifeq ("$(BUILD_GPU)","1")
 include mk/opencl.mk
 endif
 
-ifeq ("$(BUILD_FPGA_ACCEL)","1")
+ifeq ("$(BUILD_FPGA)","1")
 CFLAGS += -DENABLE_FPGA
 endif
 
@@ -151,7 +151,7 @@ OBJS += \
 	compat_ccurl.o
 endif
 
-ifeq ("$(BUILD_FPGA_ACCEL)","1")
+ifeq ("$(BUILD_FPGA)","1")
 OBJS += \
 	pow_fpga.o
 endif

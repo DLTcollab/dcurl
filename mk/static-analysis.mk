@@ -39,7 +39,7 @@ static-analysis:
 	  $(MAKE) \
 	    BUILD_AVX=1 \
 	    BUILD_GPU=1 \
-	    BUILD_FPGA_ACCEL=1 \
+	    BUILD_FPGA=1 \
 	    BUILD_REMOTE=1 \
 	    BUILD_JNI=1 \
 	    BUILD_STAT=1

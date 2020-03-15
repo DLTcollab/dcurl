@@ -126,7 +126,7 @@ $ git clone git@github.com:DLTcollab/dcurl.git
 ### Build the remote worker
 ```bash
 $ cd dcurl
-$ make BUILD_REMOTE=1 BOARD=de10nano BUILD_FPGA_ACCEL=1
+$ make BUILD_REMOTE=1 BOARD=de10nano BUILD_FPGA=1
 ```
 
 ### Execute the remote worker

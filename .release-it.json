@@ -1,7 +1,7 @@
 {
   "hooks": {
     "before:github:release": [
-      "make BUILD_REMOTE=1 BUILD_DEBUG=1 BOARD=de10nano BUILD_FPGA_ACCEL=1",
+      "make BUILD_REMOTE=1 BUILD_DEBUG=1 BOARD=de10nano BUILD_FPGA=1",
       "tar zcvf remote-worker.tar.gz --directory=build remote-worker"
     ]
   },

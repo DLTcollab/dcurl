@@ -16,7 +16,7 @@
     - ``BUILD_AVX``: build the Intel AVX-accelerated Curl backend.
     - ``BUILD_SSE``: build the Intel SSE-accelerated Curl backend.
     - ``BUILD_GPU``: build the OpenCL-based GPU accelerations.
-    - ``BUILD_FPGA_ACCEL``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
+    - ``BUILD_FPGA``: build the interface interacting with the Cyclone V FPGA based accelerator. Verified on DE10-nano board and Arrow SoCKit board.
     - ``BUILD_REMOTE``: build with the remote interface and create the remote worker executable for calculating PoW on remote devices.
     - ``BUILD_JNI``: build a JAR file including the shared library and the JAVA bytecode for IRI. The build system would generate JNI header file
                      downloading from [latest JAVA source](https://github.com/DLTcollab/iri).
@@ -105,7 +105,7 @@ Success.
 * Test with Arrow SoCKit board
 ```shell
 $ sh init_curl_pow.sh # set up kernel module
-$ make BUILD_STAT=1 BUILD_FPGA_ACCEL=1 check
+$ make BUILD_STAT=1 BUILD_FPGA=1 check
 ```
 
 * Expected Results
