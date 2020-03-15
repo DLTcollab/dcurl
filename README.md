@@ -19,6 +19,11 @@ Check [docs/build-n-test.md](docs/build-n-test.md) for details.
 ## Source Code Naming Convention
 Check [docs/naming-convention.md](docs/naming-convention.md) for details.
 
+## Generate Document
+```
+$ make doc
+```
+
 ## Performance
 After integrating dcurl into IRI, performance of [attachToTangle](https://docs.iota.org/docs/node-software/0.1/iri/references/api-reference#attachtotangle) is measured as the following.
 
