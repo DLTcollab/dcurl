@@ -2,15 +2,16 @@ package pow
 
 /*
 #cgo LDFLAGS: -ldcurl
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-extern bool dcurl_init();
-extern bool dcurl_destroy();
+extern bool dcurl_init(void *config);
+extern void dcurl_destroy();
 extern int8_t *dcurl_entry(int8_t *trytes, int mwm, int threads);
-
+bool dcurl_init_wrapper(){
+	return dcurl_init(NULL);
+}
 char *dcurl_wrapper(char* trytes, int mwm, int threads){
 	return (char*) dcurl_entry((int8_t*) trytes, mwm, threads);
 }
@@ -31,23 +32,22 @@ var (
 )
 
 func init() {
+	C.dcurl_init_wrapper()
 	proofOfWorkFuncs["Dcurl"] = DcurlProofOfWork
 	proofOfWorkFuncs["SyncDcurl"] = SyncDcurlProofOfWork
 }
 
-func DcurlProofOfWork(trytes Trytes, mwm int, parallelism ...int) (Trytes, error) {
-	C.dcurl_init()
-	defer C.dcurl_destroy()
+func DcurlDestroy() {
+	C.dcurl_destroy()
+}
 
+func DcurlProofOfWork(trytes Trytes, mwm int, parallelism ...int) (Trytes, error) {
 	return DcurlEntry(trytes, mwm, parallelism...)
 }
 
 var DcurlEntryMutex = sync.Mutex{}
 
 func SyncDcurlProofOfWork(trytes Trytes, mwm int, parallelism ...int) (Trytes, error) {
-	C.dcurl_init()
-	defer C.dcurl_destroy()
-
 	DcurlEntryMutex.Lock()
 	defer DcurlEntryMutex.Unlock()
 
