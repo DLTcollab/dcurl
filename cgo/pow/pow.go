@@ -19,6 +19,7 @@ char *dcurl_wrapper(char* trytes, int mwm, int threads){
 import "C"
 import (
 	"sync"
+	"unsafe"
 
 	. "github.com/iotaledger/iota.go/consts"
 	. "github.com/iotaledger/iota.go/trinary"
@@ -71,8 +72,10 @@ func DcurlEntry(trytes Trytes, mwm int, parallelism ...int) (Trytes, error) {
 	}
 
 	returnTrytesC := C.dcurl_wrapper(C.CString(trytes), C.int(mwm), C.int(numThread))
-	returnTrytesGO := C.GoString(returnTrytesC)
-	nonce := returnTrytesGO[len(returnTrytesGO)-NonceTrinarySize/3-1 : len(returnTrytesGO)-1]
+	returnTrytesGO := C.GoString(returnTrytesC)[:TransactionTrytesSize]
+	C.free(unsafe.Pointer(returnTrytesC))
+	// Seperate the nonce from the end of the trytes
+	nonce := returnTrytesGO[len(returnTrytesGO)-NonceTrinarySize/3 : len(returnTrytesGO)]
 
 	return nonce, nil
 }
