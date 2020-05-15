@@ -48,3 +48,8 @@ func TestSyncDcurlProofOfWork(t *testing.T) {
 	}
 	waitingGroup.Wait()
 }
+
+func TestDcurlDestory(t *testing.T) {
+	DcurlDestroy()
+	t.Log("Dcurl destroyed")
+}
