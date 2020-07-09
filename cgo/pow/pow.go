@@ -18,7 +18,11 @@ char *dcurl_wrapper(char* trytes, int mwm, int threads){
 */
 import "C"
 import (
+	"log"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"unsafe"
 
 	. "github.com/iotaledger/iota.go/consts"
@@ -36,6 +40,15 @@ func init() {
 	C.dcurl_init_wrapper()
 	proofOfWorkFuncs["Dcurl"] = DcurlProofOfWork
 	proofOfWorkFuncs["SyncDcurl"] = SyncDcurlProofOfWork
+
+	logger := log.New(os.Stdout, "WARN", log.Ldate | log.Ltime)
+	gracefulShutdown := make(chan os.Signal)
+	signal.Notify(gracefulShutdown, syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		<- gracefulShutdown
+		logger.Println("Received shutdown request: Destorying dcurl")
+		DcurlDestroy()
+	}()
 }
 
 func DcurlDestroy() {
