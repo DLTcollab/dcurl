@@ -125,7 +125,7 @@ bool declare_callback_queue(amqp_connection_state_t *conn,
     /* Declare a exclusive private queues with TTL = 10s */
     amqp_table_entry_t entries[1];
     amqp_table_t table;
-    entries[0].key = amqp_cstring_bytes("x-message-ttl");
+    entries[0].key = amqp_cstring_bytes("x-expires");
     entries[0].value.kind = AMQP_FIELD_KIND_U32;
     entries[0].value.value.u32 = 10 * 1000;  // 10s
     table.num_entries = 1;
@@ -180,9 +180,12 @@ bool wait_response_message(amqp_connection_state_t *conn,
 #endif
     size_t body_target;
     size_t body_received;
+    amqp_bytes_t consumer_tag;
+    amqp_basic_consume_ok_t *consume;
 
-    amqp_basic_consume(*conn, channel, callback_queue, amqp_empty_bytes, 0, 1,
-                       0, amqp_empty_table);
+    consume = amqp_basic_consume(*conn, channel, callback_queue,
+                                 amqp_empty_bytes, 0, 1, 0, amqp_empty_table);
+    consumer_tag = amqp_bytes_malloc_dup(consume->consumer_tag);
     if (!die_on_amqp_error(amqp_get_rpc_reply(*conn), "Set the callback queue"))
         return false;
 
@@ -274,6 +277,10 @@ bool wait_response_message(amqp_connection_state_t *conn,
                   (int) frame.payload.body_fragment.len,
                   (char *) frame.payload.body_fragment.bytes);
         log_debug(0, "---\n");
+
+        /* Cancel the consumer */
+        amqp_basic_cancel(*conn, channel, consumer_tag);
+        amqp_bytes_free(consumer_tag);
 
         /* everything was fine, we can quit now because we received the reply */
         return true;
