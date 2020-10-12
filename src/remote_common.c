@@ -120,7 +120,7 @@ bool declare_queue(amqp_connection_state_t *conn,
 
 bool declare_callback_queue(amqp_connection_state_t *conn,
                             amqp_channel_t channel,
-                            amqp_bytes_t *reply_to_queue)
+                            amqp_bytes_t reply_to_queue)
 {
     /* Declare a exclusive private queues with TTL = 10s */
     amqp_table_entry_t entries[1];
@@ -132,12 +132,11 @@ bool declare_callback_queue(amqp_connection_state_t *conn,
     table.entries = entries;
 
     amqp_queue_declare_ok_t *r =
-        amqp_queue_declare(*conn, channel, amqp_empty_bytes, 0, 0, 1, 0, table);
+        amqp_queue_declare(*conn, channel, reply_to_queue, 0, 0, 1, 0, table);
     if (!r || !die_on_amqp_error(amqp_get_rpc_reply(*conn),
                                  "Declaring the private queue with TTL = 10s"))
         return false;
 
-    *reply_to_queue = amqp_bytes_malloc_dup(r->queue);
     return true;
 }
 

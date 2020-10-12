@@ -24,7 +24,7 @@ bool declare_queue(amqp_connection_state_t *conn,
 
 bool declare_callback_queue(amqp_connection_state_t *conn,
                             amqp_channel_t channel,
-                            amqp_bytes_t *reply_to_queue);
+                            amqp_bytes_t reply_to_queue);
 
 bool set_consuming_queue(amqp_connection_state_t *conn,
                          amqp_channel_t channel,

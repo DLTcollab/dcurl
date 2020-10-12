@@ -113,6 +113,7 @@ fail_to_inittrytes:
 static bool remote_do_pow(remote_impl_context_t *remote_ctx, void *pow_ctx)
 {
     char buf[4];
+    char queue_name[12];
     char messagebody[TRANSACTION_TRYTES_LENGTH + 4];
 
     amqp_bytes_t reply_to_queue;
@@ -124,8 +125,12 @@ static bool remote_do_pow(remote_impl_context_t *remote_ctx, void *pow_ctx)
     snprintf(buf, sizeof(buf), "%d", ctx->mwm);
     memcpy(messagebody + TRANSACTION_TRYTES_LENGTH, buf, 4);
 
+    /* Generate callback queue name with the format "number#" */
+    snprintf(queue_name, sizeof(queue_name), "number%d", ctx->index_of_context);
+    reply_to_queue = amqp_cstring_bytes(queue_name);
+
     if (!declare_callback_queue(&remote_ctx->conn[ctx->index_of_context], 1,
-                                &reply_to_queue))
+                                reply_to_queue))
         goto fail;
 
     if (!publish_message_with_reply_to(&remote_ctx->conn[ctx->index_of_context],
@@ -137,8 +142,6 @@ static bool remote_do_pow(remote_impl_context_t *remote_ctx, void *pow_ctx)
                                reply_to_queue, (char *) (ctx->output_trytes),
                                TRANSACTION_TRYTES_LENGTH))
         goto fail;
-
-    amqp_bytes_free(reply_to_queue);
 
     pow_validation(ctx->output_trytes, ctx->mwm);
 
