@@ -41,11 +41,11 @@ func init() {
 	proofOfWorkFuncs["Dcurl"] = DcurlProofOfWork
 	proofOfWorkFuncs["SyncDcurl"] = SyncDcurlProofOfWork
 
-	logger := log.New(os.Stdout, "WARN", log.Ldate | log.Ltime)
+	logger := log.New(os.Stdout, "WARN", log.Ldate|log.Ltime)
 	gracefulShutdown := make(chan os.Signal)
 	signal.Notify(gracefulShutdown, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
-		<- gracefulShutdown
+		<-gracefulShutdown
 		logger.Println("Received shutdown request: Destorying dcurl")
 		DcurlDestroy()
 	}()
